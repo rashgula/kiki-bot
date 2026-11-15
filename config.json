@@ -1,0 +1,11 @@
+{
+  "token": "YOUR_BOT_TOKEN_HERE",
+  "prefix": "&",
+  "owners": [123456789012345678],
+  "antinuke": true,
+  "whitelist": [],
+  "welcome_channel_id": null,
+  "autorole_id": null,
+  "ticket_category_id": null,
+  "staff_role_id": null
+}

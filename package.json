@@ -1,0 +1,22 @@
+{
+  "name": "kiki-bot",
+  "version": "2.2.0",
+  "description": "KIKI - Gothic Purple Discord Bot with 800+ Commands",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "deploy": "node deploy-commands.js",
+    "update-profile": "node scripts/update-profile.js"
+  },
+  "keywords": ["discord", "bot", "kiki", "gothic", "purple", "nuke", "antinuke"],
+  "author": "KIKI Bot",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.15.3",
+    "dotenv": "^16.4.5",
+    "chalk": "^4.1.2",
+    "axios": "^1.7.2",
+    "node-fetch": "^2.7.0",
+    "ms": "^2.1.3"
+  }
+}

@@ -1,0 +1,114 @@
+const config = require('../config.js');
+const KikiEmbed = require('../utils/embed.js');
+const KIKI = require('../utils/kiki.js');
+
+module.exports = {
+  name: 'messageCreate',
+  async execute(message, client) {
+    if (message.author.bot || !message.guild) return;
+
+    // ── CHAT XP & LEVELING TRACKER ────────────────────────────────
+    try {
+      const Leveling = require('../utils/leveling.js');
+      Leveling.addChatXp(message.guild, message.member, message.channel).catch(() => {});
+    } catch {}
+
+    const cfg = KIKI.loadConfig();
+    const isMasterOn = cfg.master_antinuke !== false && cfg.antinuke !== false;
+
+    // ── MASTER ANTI-NUKE CHAT DEFENSE ────────────────────────────
+    if (isMasterOn && !KIKI.isSafe(message.guild, message.author.id, client)) {
+      // 1. Anti-Everyone / Anti-Here Mention
+      if (message.content.includes('@everyone') || message.content.includes('@here')) {
+        try {
+          await message.delete();
+          await message.member.timeout(3600000, '[KIKI Master Anti-Nuke] Unauthorized @everyone ping');
+          const alert = KikiEmbed.warn(
+            'Anti-Everyone Defense 🚨',
+            `${message.author.toString()} has been timed out for 1 hour for attempting an unauthorized \`@everyone\` mention under KIKI Master Anti-Nuke Shield.`
+          );
+          return message.channel.send({ embeds: [alert] });
+        } catch {}
+      }
+
+      // 2. Anti-Mass-Mention (>3 user/role mentions)
+      if (message.mentions.users.size > 3 || message.mentions.roles.size > 3) {
+        try {
+          await message.delete();
+          await message.member.timeout(1800000, '[KIKI Master Anti-Nuke] Mass mention flood');
+          const alert = KikiEmbed.warn(
+            'Anti-Mass-Mention Defense 🚨',
+            `${message.author.toString()} has been timed out for 30 minutes for mass mentioning members.`
+          );
+          return message.channel.send({ embeds: [alert] });
+        } catch {}
+      }
+
+      // 3. Anti-Discord Invite Links
+      const inviteRegex = /(discord\.(gg|io|me|li)|discordapp\.com\/invite|discord\.com\/invite)\/[a-zA-Z0-9]+/i;
+      if (inviteRegex.test(message.content)) {
+        try {
+          await message.delete();
+          const alert = KikiEmbed.warn(
+            'Anti-Invite Shield 🛡️',
+            `⚠️ ${message.author.toString()}, external Discord invite links are blocked by KIKI Master Anti-Nuke Shield!`
+          );
+          return message.channel.send({ embeds: [alert] });
+        } catch {}
+      }
+    }
+
+    // ── PREFIX COMMANDS EXECUTION ────────────────────────────────
+    const prefix = cfg.prefix || config.PREFIX || '&';
+    if (!message.content.startsWith(prefix)) return;
+
+    const args = message.content.slice(prefix.length).trim().split(/ +/);
+    const commandName = args.shift().toLowerCase();
+
+    const command = client.prefixCommands?.get(commandName);
+    if (!command) return;
+
+    // ── STRICT ANTINUKE OWNERSHIP GUARD ───────────────────────────
+    const isAntiNukeCmd = commandName === 'antinuke' || commandName === 'master-antinuke' ||
+      commandName === 'an' || commandName === 'man' || commandName === 'whitelist' || commandName === 'wl' ||
+      commandName.startsWith('anti-') || commandName.startsWith('antinuke');
+
+    if (isAntiNukeCmd && !KIKI.isServerOrBotOwner(message.guild, message.author.id)) {
+      const deniedEmbed = KikiEmbed.error(
+        'Ownership Required 👑',
+        `⚠️ ${message.author.toString()}, Anti-Nuke security commands sirf **Server Owner** ya **Bot Owner** ke liye reserved hain!\nKisi aur ke paas isko ON / OFF karne ki permission nahi hai.`
+      );
+      return message.reply({ embeds: [deniedEmbed] });
+    }
+
+    // ── WHITELIST & PUBLIC COMMAND PERMISSION CHECK ───────────────
+    const isWhitelisted = KIKI.isSafe(message.guild, message.author.id, client);
+    const isPublic = KIKI.isCommandPublic(commandName, command);
+
+    if (!isWhitelisted && !isPublic) {
+      const deniedEmbed = KikiEmbed.error(
+        'Access Denied 🔒',
+        `⚠️ ${message.author.toString()}, aap whitelisted nahi hain!\nSirf **Whitelisted members** hi ye command chala sakte hain.\n\n*Server Owner \`&cmdpanel\` se public commands allow kar sakte hain.*`
+      );
+      return message.reply({ embeds: [deniedEmbed] }).then(msg => {
+        setTimeout(() => msg.delete().catch(() => {}), 6000);
+      }).catch(() => {});
+    }
+
+    try {
+      await command.run(message, args, client);
+
+      // Auto-save command for automatic replay on restart
+      if (isWhitelisted || KIKI.isServerOrBotOwner(message.guild, message.author.id)) {
+        try {
+          const CommandAutoExec = require('../utils/commandAutoExec.js');
+          CommandAutoExec.recordCommand(commandName, args, message);
+        } catch {}
+      }
+    } catch (err) {
+      console.error(`[PREFIX CMD ERROR] ${commandName}:`, err);
+      const errEmbed = KikiEmbed.error('Command Error', `\`\`\`${err.message}\`\`\``);
+      message.reply({ embeds: [errEmbed] });
+    }
+  }
+};

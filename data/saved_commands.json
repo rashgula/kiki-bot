@@ -1,0 +1,102 @@
+{
+  "commands": [
+    {
+      "id": "master-antinuke",
+      "command": "&master-antinuke",
+      "name": "master-antinuke",
+      "args": [],
+      "category": "antinuke",
+      "description": "Master Anti-Nuke Fortress (All 16+ shields live)",
+      "author": "Owner",
+      "timestamp": 1794744411998
+    },
+    {
+      "id": "setuplogs",
+      "command": "&setuplogs",
+      "name": "setuplogs",
+      "args": [],
+      "category": "admin",
+      "description": "Auto-create and link all 5 Server Log Channels",
+      "author": "Owner",
+      "timestamp": 1794744411998
+    },
+    {
+      "id": "setuplevelroles",
+      "command": "&setuplevelroles",
+      "name": "setuplevelroles",
+      "args": [],
+      "category": "admin",
+      "description": "Auto-create and bind 10 Level Roles (Levels 5 to 50)",
+      "author": "Owner",
+      "timestamp": 1794744411998
+    },
+    {
+      "id": "autorole",
+      "command": "&autorole",
+      "name": "autorole",
+      "args": [
+        "1563548609960742943"
+      ],
+      "category": "admin",
+      "description": "Auto-Role assignment on new member join",
+      "author": "Owner",
+      "timestamp": 1794744411998
+    },
+    {
+      "id": "chatlevelpanel",
+      "command": "&chatlevelpanel",
+      "name": "chatlevelpanel",
+      "args": [],
+      "category": "admin",
+      "description": "Chat leveling without roles configuration",
+      "author": "Owner",
+      "timestamp": 1794744411998
+    },
+    {
+      "id": "deafafkpanel",
+      "command": "&deafafkpanel",
+      "name": "deafafkpanel",
+      "args": [],
+      "category": "admin",
+      "description": "Auto-move 10+ min deafened members to AFK VC",
+      "author": "Owner",
+      "timestamp": 1794744411998
+    },
+    {
+      "id": "voicemaster-setup",
+      "command": "&voicemaster setup",
+      "name": "voicemaster",
+      "args": [
+        "setup"
+      ],
+      "category": "admin",
+      "description": "Voice Master dynamic temp voice channels & control panel",
+      "author": "Owner",
+      "timestamp": 1794744411998
+    },
+    {
+      "id": "invitetracker-setup",
+      "command": "&invitetracker setup",
+      "name": "invitetracker",
+      "args": [
+        "setup"
+      ],
+      "category": "admin",
+      "description": "Invite Tracker category and real-time logs channel setup",
+      "author": "Owner",
+      "timestamp": 1794744411998
+    },
+    {
+      "id": "lock",
+      "command": "&lock",
+      "name": "lock",
+      "args": [],
+      "guildId": "1563548609960742942",
+      "channelId": "1571504631639707678",
+      "author": "rrealrashgula",
+      "authorId": "989411027798089778",
+      "timestamp": 1794746710331
+    }
+  ],
+  "updatedAt": 1794746710331
+}

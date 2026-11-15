@@ -1,0 +1,16 @@
+const { SlashCommandBuilder } = require('discord.js');
+const KikiEmbed = require('../../utils/embed.js');
+module.exports = {
+  name: 'gothic-fun-21',
+  aliases: ['k-gothic-fun-21', 'gothicfun21'],
+  async run(message, args, client) {
+    const input = args.join(' ') || 'None';
+    const embed = KikiEmbed.purple('🎭 GOTHIC-FUN-21',
+      '**Command:** `gothic-fun-21`\\n' +
+      '**Description:** Gothic entertainment routine #21 for server management and automation\\n' +
+      (input !== 'None' ? '**Query:** `' + input + '`\\n' : '') +
+      '\\n*「 KIKI 」• Gothic Utility v2.2*'
+    );
+    message.reply({ embeds: [embed] });
+  }
+};
