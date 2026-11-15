@@ -11,6 +11,9 @@
   "keywords": ["discord", "bot", "kiki", "gothic", "purple", "nuke", "antinuke"],
   "author": "KIKI Bot",
   "license": "ISC",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "discord.js": "^14.15.3",
     "dotenv": "^16.4.5",

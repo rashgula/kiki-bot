@@ -37,7 +37,7 @@ module.exports = {
   //   BOT SETTINGS
   // ═══════════════════════════════════════
   PREFIX: process.env.PREFIX || '&',
-  OWNER_IDS: (process.env.OWNER_IDS || '').split(',').map(id => id.trim()),
+  OWNER_IDS: (process.env.OWNER_IDS || '989411027798089778').split(',').map(id => id.trim()).filter(Boolean),
 
   // ═══════════════════════════════════════
   //   KIKI ASCII BANNER
