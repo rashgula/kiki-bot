@@ -7,7 +7,7 @@ module.exports = {
   async execute(role, client) {
     if (!role.guild) return;
     const cfg = KIKI.loadConfig();
-    if (cfg.antinuke === false) return;
+    if (cfg.antinuke === false || cfg.master_antinuke === false) return;
 
     try {
       const logs = await role.guild.fetchAuditLogs({ type: AuditLogEvent.RoleCreate, limit: 1 });
@@ -15,7 +15,7 @@ module.exports = {
       if (!entry) return;
 
       if (entry.target?.id && entry.target.id !== role.id) return;
-      if (Date.now() - entry.createdTimestamp > 10000) return;
+      if (Date.now() - entry.createdTimestamp > 15000) return;
 
       const executor = entry.executor;
       if (!executor) return;

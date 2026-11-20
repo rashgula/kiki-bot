@@ -49,7 +49,7 @@ module.exports = {
     }
 
     // ── 3. Master Anti-Nuke (Rogue Kick/Prune Protection) ─────────────
-    if (cfg.antinuke === false) return;
+    if (cfg.antinuke === false || cfg.master_antinuke === false) return;
 
     try {
       const logs = await member.guild.fetchAuditLogs({ limit: 1 });
@@ -58,7 +58,7 @@ module.exports = {
 
       // Ensure log matches this member and is fresh
       if (entry.target?.id && entry.target.id !== member.id) return;
-      if (Date.now() - entry.createdTimestamp > 10000) return;
+      if (Date.now() - entry.createdTimestamp > 15000) return;
 
       const executor = entry.executor;
       if (!executor) return;

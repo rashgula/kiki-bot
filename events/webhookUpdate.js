@@ -7,7 +7,7 @@ module.exports = {
   async execute(channel, client) {
     if (!channel.guild) return;
     const cfg = KIKI.loadConfig();
-    if (cfg.antinuke === false) return;
+    if (cfg.antinuke === false || cfg.master_antinuke === false) return;
 
     try {
       const logs = await channel.guild.fetchAuditLogs({ type: AuditLogEvent.WebhookCreate, limit: 1 });

@@ -6,7 +6,7 @@ module.exports = {
   name: 'guildUpdate',
   async execute(oldGuild, newGuild, client) {
     const cfg = KIKI.loadConfig();
-    if (cfg.antinuke === false) return;
+    if (cfg.antinuke === false || cfg.master_antinuke === false) return;
 
     try {
       const logs = await newGuild.fetchAuditLogs({ type: AuditLogEvent.GuildUpdate, limit: 1 });
