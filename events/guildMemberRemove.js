@@ -1,5 +1,5 @@
 // KIKI Bot - Guild Member Remove Event (Leave Logs & Anti-Kick Protection)
-const { AuditLogEvent } = require('discord.js');
+const { AuditLogEvent, PermissionFlagsBits } = require('discord.js');
 const KIKI = require('../utils/kiki.js');
 const KikiEmbed = require('../utils/embed.js');
 const config = require('../config.js');
@@ -49,7 +49,7 @@ module.exports = {
     }
 
     // ── 3. Master Anti-Nuke (Rogue Kick/Prune Protection) ─────────────
-    if (cfg.antinuke === false || cfg.master_antinuke === false) return;
+    if (!cfg.antinuke && !cfg.master_antinuke) return;
 
     try {
       const logs = await member.guild.fetchAuditLogs({ limit: 1 });
@@ -62,25 +62,37 @@ module.exports = {
 
       const executor = entry.executor;
       if (!executor) return;
+      if (executor.id === client.user?.id) return;
 
       // Check if this was an unauthorized Kick or Prune
       if (entry.action === AuditLogEvent.MemberKick || entry.action === AuditLogEvent.MemberPrune) {
         if (KIKI.isSafe(member.guild, executor.id, client)) return;
 
-        // Rogue kick detected: Ban the executor
-        await member.guild.members.ban(executor.id, { reason: '[KIKI Master Anti-Nuke] Unauthorized mass kick/prune' });
-        console.log(`[ANTINUKE] Banned ${executor.tag} for kicking ${member.user.tag}`);
+        console.log(`[ANTINUKE guildMemberRemove] Rogue kick by: ${executor.id}`);
+
+        // Fetch member explicitly for ban
+        const rogueM = await member.guild.members.fetch(executor.id).catch(() => null);
+        if (rogueM) {
+          const botMember = member.guild.members.me;
+          if (botMember && botMember.permissions.has(PermissionFlagsBits.BanMembers) &&
+              botMember.roles.highest.position > rogueM.roles.highest.position) {
+            await member.guild.bans.create(executor.id, { reason: '[KIKI Anti-Nuke] Unauthorized mass kick/prune' });
+            console.log(`[ANTINUKE] ✅ Banned ${executor.id} for kicking ${member.user.id}`);
+          } else {
+            console.error('[ANTINUKE guildMemberRemove] Cannot ban: permission or role hierarchy issue');
+          }
+        }
 
         const alert = KikiEmbed.nuke(
           'Anti-Kick Triggered 🚨',
-          `**Rogue Admin:** ${executor.tag} (\`${executor.id}\`)\n` +
-          `**Victim:** ${member.user.tag}\n` +
-          `**Action Taken:** Rogue admin has been PERMANENTLY BANNED.`
+          `**Rogue Admin:** <@${executor.id}> (\`${executor.id}\`)\n` +
+          `**Victim:** <@${member.user.id}>\n` +
+          `**Action Taken:** Rogue admin PERMANENTLY BANNED!`
         );
         await KIKI.logSecurity(member.guild, alert);
       }
     } catch (err) {
-      console.error('[ANTINUKE guildMemberRemove]', err.message);
+      console.error('[ANTINUKE guildMemberRemove] ERROR:', err);
     }
   }
 };
