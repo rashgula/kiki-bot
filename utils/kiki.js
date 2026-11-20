@@ -60,6 +60,10 @@ const KIKI = {
     const idStr = String(userId);
     if (guild && idStr === String(guild.ownerId)) return true;
     if (this.isOwner(idStr)) return true;
+    // Extra trusted co-owner IDs allowed to use antinuke setup
+    const cfg = this.loadConfig();
+    const coOwners = (cfg.co_owners || []).map(String);
+    if (coOwners.includes(idStr)) return true;
     return false;
   },
 
