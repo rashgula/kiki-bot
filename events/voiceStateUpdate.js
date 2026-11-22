@@ -1,11 +1,8 @@
-// KIKI Bot - Voice State Update Event (Voice Logs + Voice XP via join/leave tracking)
+// KIKI Bot - Voice State Update Event (Comprehensive Voice Logs & VC Integrations)
 const { ChannelType } = require('discord.js');
 const KIKI = require('../utils/kiki.js');
 const KikiEmbed = require('../utils/embed.js');
 const config = require('../config.js');
-
-// In-memory join time tracker: { guildId_userId: joinTimestamp }
-const voiceJoinTime = new Map();
 
 module.exports = {
   name: 'voiceStateUpdate',
@@ -13,13 +10,15 @@ module.exports = {
     const guild = newState.guild || oldState.guild;
     if (!guild) return;
 
-    // Track Deaf AFK transitions in real time
+    // 1. Deaf AFK Mover Handler
     try {
       const DeafMover = require('../utils/deafMover.js');
       DeafMover.onVoiceStateUpdate(oldState, newState);
-    } catch {}
+    } catch (e) {
+      console.error('[DEAF MOVER ERROR]', e.message);
+    }
 
-    // Voice Master Temporary Channels Handler
+    // 2. Voice Master Temporary Channels Handler
     try {
       const VoiceMaster = require('../utils/voiceMaster.js');
       await VoiceMaster.handleVoiceStateUpdate(oldState, newState);
@@ -27,159 +26,193 @@ module.exports = {
       console.error('[VOICE MASTER ERROR]', e.message);
     }
 
-    const member = newState.member || oldState.member;
-    if (!member || member.user.bot) return;
-
-    const key = `${guild.id}_${member.id}`;
-
-    // ── VOICE XP TRACKING (join/leave based) ──────────────────────────
-    try {
-      const Leveling = require('../utils/leveling.js');
-      const wasInVC = !!oldState.channelId;
-      const isInVC = !!newState.channelId;
-      const wasDeaf = oldState.deaf || oldState.selfDeaf;
-      const isDeaf = newState.deaf || newState.selfDeaf;
-      const isAfk = newState.channelId === guild.afkChannelId;
-      const wasAfk = oldState.channelId === guild.afkChannelId;
-
-      // User JOINED a voice channel (not AFK, not deafened)
-      if (!wasInVC && isInVC && !isDeaf && !isAfk) {
-        voiceJoinTime.set(key, Date.now());
-        console.log(`[VOICE XP] ${member.user.tag} joined VC — tracking started`);
-      }
-
-      // User LEFT voice channel — award XP for time spent
-      else if (wasInVC && !isInVC) {
-        const joinTime = voiceJoinTime.get(key);
-        if (joinTime && !wasDeaf && !wasAfk) {
-          const secondsSpent = Math.floor((Date.now() - joinTime) / 1000);
-          if (secondsSpent >= 60) { // Minimum 1 minute to get XP
-            const minutes = Math.floor(secondsSpent / 60);
-            const xpPerMin = Math.floor(Math.random() * 6) + 18; // 18-23 XP/min
-            const totalXp = minutes * xpPerMin;
-            const res = await Leveling.addVoiceXp(guild, member, totalXp, secondsSpent);
-            console.log(`[VOICE XP] +${totalXp} XP -> ${member.user.tag} (${minutes} min in VC | Total: ${res?.user?.xp} XP | Level: ${res?.user?.level})`);
-          }
-        }
-        voiceJoinTime.delete(key);
-      }
-
-      // User UN-deafened while in VC — start tracking now
-      else if (wasInVC && isInVC && wasDeaf && !isDeaf && !isAfk) {
-        voiceJoinTime.set(key, Date.now());
-        console.log(`[VOICE XP] ${member.user.tag} un-deafened in VC — tracking started`);
-      }
-
-      // User self-deafened while in VC — stop tracking (no XP while deaf)
-      else if (wasInVC && isInVC && !wasDeaf && isDeaf) {
-        voiceJoinTime.delete(key);
-        console.log(`[VOICE XP] ${member.user.tag} deafened — tracking stopped`);
-      }
-
-      // User moved channels — no XP pause needed, tracking continues
-    } catch (e) {
-      console.error('[VOICE XP ERROR]', e.message);
+    // Resolve member with fetch fallback
+    let member = newState.member || oldState.member;
+    const userId = newState.id || oldState.id;
+    if (!member && userId) {
+      member = guild.members.cache.get(userId) || await guild.members.fetch(userId).catch(() => null);
     }
+    if (!member || member.user?.bot) return;
 
-    // ── VOICE LOGS ─────────────────────────────────────────────────────
-    const cfg = KIKI.loadConfig();
-    const logChannelId = cfg.voice_log_channel_id;
-    if (!logChannelId) return;
+    // 3. Voice Security & Activity Logs
+    const logChannel = KIKI.getGuildChannel(guild, 'voice_log_channel_id');
+    if (!logChannel || !logChannel.isTextBased()) return;
 
     try {
-      const logChannel = guild.channels.cache.get(logChannelId) ||
-        await guild.channels.fetch(logChannelId).catch(() => null);
-      if (!logChannel || logChannel.type !== ChannelType.GuildText) return;
+      const userTag = member.user?.tag || member.user?.username || 'Unknown User';
+      const userAvatar = member.user?.displayAvatarURL?.({ dynamic: true }) || null;
+      const memberMention = member.user?.toString() || `<@${member.id}>`;
 
-      // 1. User Joined Voice Channel
+      // Helper to send log embed
+      const sendVoiceLog = async (embed) => {
+        try {
+          await logChannel.send({ embeds: [embed] });
+        } catch (err) {
+          console.error('[VOICE LOG SEND ERROR]', err.message);
+        }
+      };
+
+      // ── A. USER JOINED VOICE CHANNEL ──
       if (!oldState.channelId && newState.channelId) {
+        const channelName = newState.channel?.name || 'Voice Channel';
+        const memberCount = newState.channel?.members?.size || 1;
+
         const embed = KikiEmbed.build({
           title: '🔊 Voice Channel Joined',
-          description: `${member.user.toString()} (\`${member.user.tag}\`) joined a voice channel.`,
+          description: `${memberMention} (\`${userTag}\`) joined voice channel.`,
           color: config.COLORS.GREEN || 0x2ECC71,
-          thumbnail: member.user.displayAvatarURL({ dynamic: true }),
+          thumbnail: userAvatar,
           fields: [
-            { name: '👤 Member', value: `${member.user.tag} (\`${member.user.id}\`)`, inline: true },
-            { name: '🔊 Channel', value: `<#${newState.channelId}> (\`${newState.channel?.name}\`)`, inline: true },
-            { name: '👥 In VC', value: `${newState.channel?.members?.size || 1} members`, inline: true }
+            { name: '👤 Member', value: `${userTag} (\`${member.id}\`)`, inline: true },
+            { name: '🔊 Channel', value: `<#${newState.channelId}> (\`${channelName}\`)`, inline: true },
+            { name: '👥 In VC', value: `${memberCount} members`, inline: true }
           ]
         });
-        return await logChannel.send({ embeds: [embed] }).catch(() => {});
+        return await sendVoiceLog(embed);
       }
 
-      // 2. User Left Voice Channel
+      // ── B. USER LEFT VOICE CHANNEL ──
       if (oldState.channelId && !newState.channelId) {
+        const channelName = oldState.channel?.name || 'Voice Channel';
+
         const embed = KikiEmbed.build({
           title: '🔇 Voice Channel Left',
-          description: `${member.user.toString()} (\`${member.user.tag}\`) left voice channel.`,
+          description: `${memberMention} (\`${userTag}\`) disconnected from voice channel.`,
           color: config.COLORS.RED || 0xE74C3C,
-          thumbnail: member.user.displayAvatarURL({ dynamic: true }),
+          thumbnail: userAvatar,
           fields: [
-            { name: '👤 Member', value: `${member.user.tag} (\`${member.user.id}\`)`, inline: true },
-            { name: '🔊 Channel', value: `\`#${oldState.channel?.name || 'Voice Channel'}\``, inline: true }
+            { name: '👤 Member', value: `${userTag} (\`${member.id}\`)`, inline: true },
+            { name: '🔊 Channel', value: `\`#${channelName}\``, inline: true }
           ]
         });
-        return await logChannel.send({ embeds: [embed] }).catch(() => {});
+        return await sendVoiceLog(embed);
       }
 
-      // 3. User Switched / Moved Voice Channel
+      // ── C. USER SWITCHED / MOVED VOICE CHANNEL ──
       if (oldState.channelId && newState.channelId && oldState.channelId !== newState.channelId) {
+        const oldChannelName = oldState.channel?.name || 'Voice Channel';
+        const newChannelName = newState.channel?.name || 'Voice Channel';
+
         const embed = KikiEmbed.build({
           title: '🔄 Voice Channel Switched',
-          description: `${member.user.toString()} (\`${member.user.tag}\`) moved to another voice channel.`,
+          description: `${memberMention} (\`${userTag}\`) moved to another voice channel.`,
           color: config.COLORS.TEAL || 0x1ABC9C,
-          thumbnail: member.user.displayAvatarURL({ dynamic: true }),
+          thumbnail: userAvatar,
           fields: [
-            { name: '👤 Member', value: `${member.user.tag} (\`${member.user.id}\`)`, inline: true },
-            { name: '📤 Old Channel', value: `\`#${oldState.channel?.name || 'Voice Channel'}\``, inline: true },
-            { name: '📥 New Channel', value: `<#${newState.channelId}> (\`${newState.channel?.name || 'Voice Channel'}\`)`, inline: true }
+            { name: '👤 Member', value: `${userTag} (\`${member.id}\`)`, inline: true },
+            { name: '📤 Old Channel', value: `\`#${oldChannelName}\``, inline: true },
+            { name: '📥 New Channel', value: `<#${newState.channelId}> (\`${newChannelName}\`)`, inline: true }
           ]
         });
-        return await logChannel.send({ embeds: [embed] }).catch(() => {});
+        return await sendVoiceLog(embed);
       }
 
-      // 4. Server Mute Status Changed
+      // ── D. MICROPHONE MUTE / UNMUTE (SELF MUTE) ──
+      if (oldState.channelId && oldState.selfMute !== newState.selfMute) {
+        const isMuted = newState.selfMute;
+        const currentCh = newState.channelId || oldState.channelId;
+
+        const embed = KikiEmbed.build({
+          title: isMuted ? '🎙️ Microphone Muted' : '🎙️ Microphone Unmuted',
+          description: `${memberMention} ${isMuted ? 'muted' : 'unmuted'} their microphone in <#${currentCh}>.`,
+          color: isMuted ? 0xE67E22 : config.COLORS.GREEN,
+          thumbnail: userAvatar,
+          fields: [
+            { name: '👤 Member', value: `${userTag} (\`${member.id}\`)`, inline: true },
+            { name: '🔊 Channel', value: `<#${currentCh}>`, inline: true }
+          ]
+        });
+        return await sendVoiceLog(embed);
+      }
+
+      // ── E. HEADPHONES DEAFEN / UNDEAFEN (SELF DEAFEN) ──
+      if (oldState.channelId && oldState.selfDeaf !== newState.selfDeaf) {
+        const isDeaf = newState.selfDeaf;
+        const currentCh = newState.channelId || oldState.channelId;
+
+        const embed = KikiEmbed.build({
+          title: isDeaf ? '🎧 Audio Deafened' : '🎧 Audio Undeafened',
+          description: `${memberMention} ${isDeaf ? 'deafened' : 'undeafened'} their audio in <#${currentCh}>.`,
+          color: isDeaf ? 0xE74C3C : config.COLORS.GREEN,
+          thumbnail: userAvatar,
+          fields: [
+            { name: '👤 Member', value: `${userTag} (\`${member.id}\`)`, inline: true },
+            { name: '🔊 Channel', value: `<#${currentCh}>`, inline: true }
+          ]
+        });
+        return await sendVoiceLog(embed);
+      }
+
+      // ── F. SERVER MUTE / UNMUTE (ADMIN ACTION) ──
       if (oldState.channelId && oldState.serverMute !== newState.serverMute) {
         const isMuted = newState.serverMute;
+        const currentCh = newState.channelId || oldState.channelId;
+
         const embed = KikiEmbed.build({
           title: isMuted ? '🔇 Member Server-Muted' : '🔊 Member Server-Unmuted',
-          description: `${member.user.toString()} was ${isMuted ? 'server-muted' : 'unmuted'} in <#${newState.channelId || oldState.channelId}>.`,
+          description: `${memberMention} was ${isMuted ? '**server-muted**' : '**server-unmuted**'} in <#${currentCh}>.`,
           color: isMuted ? config.COLORS.GOLD : config.COLORS.GREEN,
+          thumbnail: userAvatar,
           fields: [
-            { name: '👤 Member', value: `${member.user.tag} (\`${member.user.id}\`)`, inline: true },
-            { name: '🔊 Channel', value: `<#${newState.channelId || oldState.channelId}>`, inline: true }
+            { name: '👤 Member', value: `${userTag} (\`${member.id}\`)`, inline: true },
+            { name: '🔊 Channel', value: `<#${currentCh}>`, inline: true }
           ]
         });
-        return await logChannel.send({ embeds: [embed] }).catch(() => {});
+        return await sendVoiceLog(embed);
       }
 
-      // 5. Server Deafen Status Changed
+      // ── G. SERVER DEAFEN / UNDEAFEN (ADMIN ACTION) ──
       if (oldState.channelId && oldState.serverDeaf !== newState.serverDeaf) {
         const isDeaf = newState.serverDeaf;
+        const currentCh = newState.channelId || oldState.channelId;
+
         const embed = KikiEmbed.build({
           title: isDeaf ? '🔕 Member Server-Deafened' : '🔔 Member Server-Undeafened',
-          description: `${member.user.toString()} was ${isDeaf ? 'server-deafened' : 'undeafened'} in <#${newState.channelId || oldState.channelId}>.`,
+          description: `${memberMention} was ${isDeaf ? '**server-deafened**' : '**server-undeafened**'} in <#${currentCh}>.`,
           color: isDeaf ? config.COLORS.GOLD : config.COLORS.GREEN,
+          thumbnail: userAvatar,
           fields: [
-            { name: '👤 Member', value: `${member.user.tag} (\`${member.user.id}\`)`, inline: true },
-            { name: '🔊 Channel', value: `<#${newState.channelId || oldState.channelId}>`, inline: true }
+            { name: '👤 Member', value: `${userTag} (\`${member.id}\`)`, inline: true },
+            { name: '🔊 Channel', value: `<#${currentCh}>`, inline: true }
           ]
         });
-        return await logChannel.send({ embeds: [embed] }).catch(() => {});
+        return await sendVoiceLog(embed);
       }
 
-      // 6. Live Streaming Started
-      if (!oldState.streaming && newState.streaming && newState.channelId) {
+      // ── H. LIVE STREAMING (SCREEN SHARE) ──
+      if (oldState.channelId && oldState.streaming !== newState.streaming) {
+        const isStreaming = newState.streaming;
+        const currentCh = newState.channelId || oldState.channelId;
+
         const embed = KikiEmbed.build({
-          title: '📺 Member Started Streaming',
-          description: `${member.user.toString()} started live streaming in <#${newState.channelId}>.`,
+          title: isStreaming ? '📺 Screen Share Started' : '📺 Screen Share Ended',
+          description: `${memberMention} ${isStreaming ? 'started streaming' : 'stopped streaming'} in <#${currentCh}>.`,
           color: config.COLORS.PRIMARY,
+          thumbnail: userAvatar,
           fields: [
-            { name: '👤 Member', value: `${member.user.tag} (\`${member.user.id}\`)`, inline: true },
-            { name: '🔊 Channel', value: `<#${newState.channelId}>`, inline: true }
+            { name: '👤 Member', value: `${userTag} (\`${member.id}\`)`, inline: true },
+            { name: '🔊 Channel', value: `<#${currentCh}>`, inline: true }
           ]
         });
-        return await logChannel.send({ embeds: [embed] }).catch(() => {});
+        return await sendVoiceLog(embed);
+      }
+
+      // ── I. CAMERA VIDEO ──
+      if (oldState.channelId && oldState.selfVideo !== newState.selfVideo) {
+        const isVideoOn = newState.selfVideo;
+        const currentCh = newState.channelId || oldState.channelId;
+
+        const embed = KikiEmbed.build({
+          title: isVideoOn ? '📹 Camera Video Turned ON' : '📹 Camera Video Turned OFF',
+          description: `${memberMention} turned ${isVideoOn ? 'ON' : 'OFF'} camera in <#${currentCh}>.`,
+          color: config.COLORS.PRIMARY,
+          thumbnail: userAvatar,
+          fields: [
+            { name: '👤 Member', value: `${userTag} (\`${member.id}\`)`, inline: true },
+            { name: '🔊 Channel', value: `<#${currentCh}>`, inline: true }
+          ]
+        });
+        return await sendVoiceLog(embed);
       }
     } catch (err) {
       console.error('[VOICE LOG ERROR]', err.message);

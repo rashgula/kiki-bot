@@ -60,9 +60,10 @@ module.exports = {
     }
 
     // 4. Welcome Message Card
-    if (cfg.welcome_channel_id) {
+    const welcomeChannel = KIKI.getGuildChannel(guild, 'welcome_channel_id');
+    if (welcomeChannel) {
       try {
-        const channel = guild.channels.cache.get(cfg.welcome_channel_id) || await guild.channels.fetch(cfg.welcome_channel_id).catch(() => null);
+        const channel = welcomeChannel;
         if (channel) {
           const embed = KikiEmbed.build({
             title: `👋 Welcome to ${guild.name}!`,

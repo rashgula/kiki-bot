@@ -1,8 +1,8 @@
-# 📜 KIKI • All Bot Commands Directory (1135+ Commands)
+# 📜 KIKI • All Bot Commands Directory (1137+ Commands)
 
 > Complete catalog of all commands loaded in KIKI Gothic Purple Bot.
 > Prefix: `&` | Slash: `/<command>`
-> Last Synchronized: 15/11/2026, 7:28:56 pm
+> Last Synchronized: 23/11/2026, 12:49:24 am
 
 ═══════════════════════════════════════════════════════════════════
 
@@ -946,7 +946,7 @@
 
 ───────────────────────────────────────────────────────────────────
 
-## 📊 UTILITY (258 Commands)
+## 📊 UTILITY (260 Commands)
 
 | Command Name | Aliases | Type | Description |
 | :--- | :--- | :---: | :--- |
@@ -978,6 +978,7 @@
 | `define-word-lookup` | `k-define-word-lookup`, `definewordlookup` | `Prefix (&) + Slash (/)` | 📖 Query dictionary definition and etymology |
 | `editsnipe-last-msg` | `k-editsnipe-last-msg`, `editsnipelastmsg` | `Prefix (&) + Slash (/)` | 🎯 Display previous version of recently edited message |
 | `emoji-list-all` | `k-emoji-list-all`, `emojilistall` | `Prefix (&) + Slash (/)` | 😀 Catalog of custom server emojis and IDs |
+| `emojisteal` | `esteal`, `stealemoji`, `addemoji`, `ea` | `Prefix (&) + Slash (/)` | 🎭 Kisi bhi emoji ko apne server mein add karo! |
 | `help` | `h`, `commands`, `cmds` | `Prefix (&) + Slash (/)` | 🔮 View KIKI Gothic Purple command library (1,114+ Commands) |
 | `hex-to-rgb` | `k-hex-to-rgb`, `hextorgb` | `Prefix (&) + Slash (/)` | 🔄 Convert hex color code to RGB values |
 | `id-lookup` | `k-id-lookup`, `idlookup` | `Prefix (&) + Slash (/)` | 🔍 Resolve Snowflake ID to entity details |
@@ -1008,6 +1009,7 @@
 | `shorten-link-url` | `k-shorten-link-url`, `shortenlinkurl` | `Prefix (&) + Slash (/)` | 🔗 Create shortened URL redirect |
 | `snipe-last-deleted` | `k-snipe-last-deleted`, `snipelastdeleted` | `Prefix (&) + Slash (/)` | 🎯 Display the most recently deleted channel message |
 | `sticker-list-all` | `k-sticker-list-all`, `stickerlistall` | `Prefix (&) + Slash (/)` | 🏷️ Catalog of custom server stickers and IDs |
+| `stickersteal` | `ssteal`, `stealsticker`, `addsticker`, `sa` | `Prefix (&) + Slash (/)` | 🎟️ Kisi message ke sticker ko apne server mein add karo! |
 | `text-clap-words` | `k-text-clap-words`, `textclapwords` | `Prefix (&) + Slash (/)` | 👏 Place clap emojis between all words |
 | `text-emojify-str` | `k-text-emojify-str`, `textemojifystr` | `Prefix (&) + Slash (/)` | 🅰️ Turn letters into regional indicator emojis |
 | `text-lowercase-str` | `k-text-lowercase-str`, `textlowercasestr` | `Prefix (&) + Slash (/)` | 🔡 Convert string to all small letters |

@@ -86,9 +86,14 @@ module.exports = {
   name: 'rank',
   aliases: ['level', 'vcrank', 'vclevel', 'xp'],
   async run(message, args) {
-    const targetUser = message.mentions.users.first() ||
-      (args[0] ? message.guild.members.cache.get(args[0])?.user : null) ||
-      message.author;
+    let targetUser = message.mentions?.users?.first();
+    if (!targetUser && args[0]) {
+      const cleanId = args[0].replace(/[<@!>]/g, '');
+      const m = message.guild.members.cache.get(cleanId) ||
+        await message.guild.members.fetch(cleanId).catch(() => null);
+      if (m) targetUser = m.user;
+    }
+    if (!targetUser) targetUser = message.author;
 
     const guild = message.guild;
     const userData = Leveling.getUser(guild.id, targetUser.id);

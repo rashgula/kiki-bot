@@ -7,6 +7,12 @@ module.exports = {
   async execute(message, client) {
     if (message.author.bot || !message.guild) return;
 
+    // ── CACHE MESSAGE FOR ACCURATE DELETE & EDIT LOGS ────────────
+    try {
+      const MessageCache = require('../utils/messageCache.js');
+      MessageCache.add(message);
+    } catch {}
+
     // ── CHAT XP & LEVELING TRACKER ────────────────────────────────
     try {
       const Leveling = require('../utils/leveling.js');

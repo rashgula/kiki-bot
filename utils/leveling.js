@@ -140,6 +140,7 @@ const Leveling = {
     scheduleSave();
 
     if (newLevel > oldLevel) {
+      saveDataImmediate(data); // Immediate disk persistence on level up
       await this.handleLevelUp(guild, member, oldLevel, newLevel);
       return { oldLevel, newLevel, leveledUp: true, user };
     }
@@ -151,7 +152,7 @@ const Leveling = {
   async handleLevelUp(guild, member, oldLevel, newLevel) {
     try {
       const cfg = KIKI.loadConfig();
-      const levelRoles = cfg.level_roles || {};
+      const levelRoles = KIKI.getGuildLevelRoles(guild);
       const stackRoles = cfg.level_stack_roles !== false; // default true
 
       let newlyAwardedRole = null;
@@ -209,12 +210,11 @@ const Leveling = {
       }
 
       // ── Level Up Announcement ──
-      const announceChannelId = cfg.level_channel_id || cfg.voice_log_channel_id || cfg.log_channel_id;
-      if (announceChannelId) {
-        const channel = guild.channels.cache.get(announceChannelId) ||
-          await guild.channels.fetch(announceChannelId).catch(() => null);
+      const channel = KIKI.getGuildChannel(guild, 'level_channel_id') ||
+        KIKI.getGuildChannel(guild, 'voice_log_channel_id') ||
+        KIKI.getGuildChannel(guild, 'security_log_channel_id');
 
-        if (channel && channel.isTextBased()) {
+      if (channel && channel.isTextBased()) {
           const userData = this.getUser(guild.id, member.id);
           const fields = [
             { name: '⭐ New Level', value: `\`Level ${newLevel}\``, inline: true },
@@ -240,7 +240,6 @@ const Leveling = {
 
           await channel.send({ content: `${member.user.toString()}`, embeds: [embed] }).catch(() => {});
         }
-      }
     } catch (err) {
       console.error('[LEVEL UP HANDLER ERROR]', err.message);
     }
@@ -257,6 +256,11 @@ const Leveling = {
       try {
         for (const [, guild] of client.guilds.cache) {
           if (!guild.available) continue;
+
+          // If voiceStates cache is empty, fetch to hydrate active sessions
+          if (guild.voiceStates.cache.size === 0) {
+            await guild.fetch().catch(() => {});
+          }
 
           for (const state of guild.voiceStates.cache.values()) {
             // Must be in a voice channel and not in AFK channel

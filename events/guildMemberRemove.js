@@ -11,10 +11,9 @@ module.exports = {
     const cfg = KIKI.loadConfig();
 
     // ── 1. Leave Log / Goodbye Card ─────────────────────────────────
-    if (cfg.leave_channel_id) {
+    const leaveChannel = KIKI.getGuildChannel(member.guild, 'leave_channel_id');
+    if (leaveChannel) {
       try {
-        const leaveChannel = member.guild.channels.cache.get(cfg.leave_channel_id) ||
-          await member.guild.channels.fetch(cfg.leave_channel_id).catch(() => null);
 
         if (leaveChannel) {
           const joinedAt = member.joinedTimestamp

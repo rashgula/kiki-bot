@@ -1,8 +1,8 @@
 {
   "name": "kiki-commands-registry",
   "version": "2.2",
-  "updatedAt": 1794751136313,
-  "totalCommands": 1135,
+  "updatedAt": 1795375164801,
+  "totalCommands": 1137,
   "builtTogetherModules": [
     {
       "module": "Automated Level Roles System (5 - 50)",
@@ -11278,6 +11278,20 @@
         "isPrefix": true
       },
       {
+        "name": "emojisteal",
+        "file": "emoji-steal.js",
+        "category": "utility",
+        "description": "🎭 Kisi bhi emoji ko apne server mein add karo!",
+        "aliases": [
+          "esteal",
+          "stealemoji",
+          "addemoji",
+          "ea"
+        ],
+        "isSlash": true,
+        "isPrefix": true
+      },
+      {
         "name": "help",
         "file": "help.js",
         "category": "utility",
@@ -11639,6 +11653,20 @@
         "aliases": [
           "k-sticker-list-all",
           "stickerlistall"
+        ],
+        "isSlash": true,
+        "isPrefix": true
+      },
+      {
+        "name": "stickersteal",
+        "file": "sticker-steal.js",
+        "category": "utility",
+        "description": "🎟️ Kisi message ke sticker ko apne server mein add karo!",
+        "aliases": [
+          "ssteal",
+          "stealsticker",
+          "addsticker",
+          "sa"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -14042,6 +14070,6 @@
         "isPrefix": true
       }
     ],
-    "_total": 1135
+    "_total": 1137
   }
 }

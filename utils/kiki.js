@@ -79,13 +79,77 @@ const KIKI = {
     return wl.includes(idStr);
   },
 
+  // Get guild-specific channel safely (multi-server aware)
+  getGuildChannel(guild, key) {
+    if (!guild) return null;
+    const cfg = this.loadConfig();
+    const gData = cfg.guilds?.[guild.id];
+    let chId = gData?.[key];
+
+    // Check guild-specific ID first
+    if (chId && guild.channels.cache.has(chId)) {
+      return guild.channels.cache.get(chId);
+    }
+
+    // Check top-level config ID if it belongs to this guild
+    chId = cfg[key];
+    if (chId && guild.channels.cache.has(chId)) {
+      return guild.channels.cache.get(chId);
+    }
+
+    // Smart fallback by channel name matching in this guild
+    const nameMap = {
+      voice_log_channel_id: ['voice-logs', 'voice-log', 'voicelogs'],
+      chat_log_channel_id: ['chat-logs', 'chat-log', 'chatlogs', 'msg-logs'],
+      security_log_channel_id: ['security-logs', 'security-log', 'securitylogs', 'mod-logs'],
+      log_channel_id: ['security-logs', 'security-log', 'logs'],
+      welcome_channel_id: ['welcome', 'joins', 'join-logs'],
+      leave_channel_id: ['leave-logs', 'leave', 'leaves'],
+      level_channel_id: ['vc-levels', 'levels', 'level-logs', 'ranks'],
+      chat_level_channel_id: ['chat-levels', 'chat-level']
+    };
+
+    const targetNames = nameMap[key] || [];
+    const matched = guild.channels.cache.find(c => {
+      if (c.type !== 0) return false;
+      const lower = c.name.toLowerCase();
+      return targetNames.some(t => lower.includes(t));
+    });
+
+    return matched || null;
+  },
+
+  // Get level roles for this guild
+  getGuildLevelRoles(guild) {
+    if (!guild) return {};
+    const cfg = this.loadConfig();
+    const gRoles = cfg.guilds?.[guild.id]?.level_roles;
+    if (gRoles && Object.keys(gRoles).length > 0) return gRoles;
+
+    const topRoles = cfg.level_roles || {};
+    // Check if top-level roles exist in this guild
+    const hasAny = Object.values(topRoles).some(id => guild.roles.cache.has(id));
+    if (hasAny) return topRoles;
+
+    // Smart fallback: find roles by name in this guild
+    const result = {};
+    for (const lvl of [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]) {
+      const role = guild.roles.cache.find(r => {
+        const lower = r.name.toLowerCase();
+        return lower.includes(`level ${lvl}`) || lower.includes(`level-${lvl}`);
+      });
+      if (role) result[String(lvl)] = role.id;
+    }
+    return result;
+  },
+
   // Log an alert to the configured security channel
   async logSecurity(guild, embed) {
-    const cfg = this.loadConfig();
-    const logId = cfg.log_channel_id || cfg.security_log_channel_id;
-    if (logId && guild) {
-      const ch = guild.channels.cache.get(logId);
-      if (ch) await ch.send({ embeds: [embed] }).catch(() => {});
+    if (!guild) return;
+    const ch = this.getGuildChannel(guild, 'security_log_channel_id') ||
+      this.getGuildChannel(guild, 'log_channel_id');
+    if (ch) {
+      await ch.send({ embeds: [embed] }).catch(() => {});
     }
   },
 

@@ -34,12 +34,17 @@ async function ensureLevelRoles(guild) {
   if (!botMember || !botMember.permissions.has(PermissionFlagsBits.ManageRoles)) return 0;
 
   const cfg = KIKI.loadConfig();
+  if (!cfg.guilds) cfg.guilds = {};
+  if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
+  if (!cfg.guilds[guild.id].level_roles) cfg.guilds[guild.id].level_roles = {};
+
+  const isPrimaryGuild = String(guild.id) === '1563548609960742942';
   if (!cfg.level_roles) cfg.level_roles = {};
   let modified = false;
   let verifiedCount = 0;
 
   for (const def of LEVEL_DEFINITIONS) {
-    const existingId = cfg.level_roles[String(def.level)];
+    const existingId = cfg.guilds[guild.id].level_roles[String(def.level)] || (isPrimaryGuild ? cfg.level_roles[String(def.level)] : null);
     let role = existingId ? guild.roles.cache.get(existingId) : null;
 
     if (!role) {
@@ -68,7 +73,11 @@ async function ensureLevelRoles(guild) {
 
     if (role) {
       verifiedCount++;
-      if (cfg.level_roles[String(def.level)] !== role.id) {
+      if (cfg.guilds[guild.id].level_roles[String(def.level)] !== role.id) {
+        cfg.guilds[guild.id].level_roles[String(def.level)] = role.id;
+        modified = true;
+      }
+      if (isPrimaryGuild && cfg.level_roles[String(def.level)] !== role.id) {
         cfg.level_roles[String(def.level)] = role.id;
         modified = true;
       }
@@ -87,11 +96,16 @@ async function ensureLogChannels(guild) {
   if (!botMember || !botMember.permissions.has(PermissionFlagsBits.ManageChannels)) return 0;
 
   const cfg = KIKI.loadConfig();
+  if (!cfg.guilds) cfg.guilds = {};
+  if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
+
+  const isPrimaryGuild = String(guild.id) === '1563548609960742942';
   let modified = false;
   let verifiedCount = 0;
 
   // 1. Ensure Category
-  let category = cfg.logs_category_id ? guild.channels.cache.get(cfg.logs_category_id) : null;
+  const savedCatId = cfg.guilds[guild.id].logs_category_id || (isPrimaryGuild ? cfg.logs_category_id : null);
+  let category = savedCatId ? guild.channels.cache.get(savedCatId) : null;
   if (!category) {
     category = guild.channels.cache.find(
       c => c.type === ChannelType.GuildCategory && (
@@ -125,13 +139,15 @@ async function ensureLogChannels(guild) {
         ],
         reason: '[KIKI Boot Restorer] Auto-create logs category'
       });
-      cfg.logs_category_id = category.id;
+      cfg.guilds[guild.id].logs_category_id = category.id;
+      if (isPrimaryGuild) cfg.logs_category_id = category.id;
       modified = true;
     } catch (err) {
       console.error('[BOOT RESTORER] Could not auto-create logs category:', err.message);
     }
-  } else if (cfg.logs_category_id !== category.id) {
-    cfg.logs_category_id = category.id;
+  } else if (cfg.guilds[guild.id].logs_category_id !== category.id) {
+    cfg.guilds[guild.id].logs_category_id = category.id;
+    if (isPrimaryGuild) cfg.logs_category_id = category.id;
     modified = true;
   }
 
@@ -139,7 +155,7 @@ async function ensureLogChannels(guild) {
 
   // 2. Ensure each Log Channel
   for (const def of LOG_CHANNEL_DEFINITIONS) {
-    const existingId = cfg[def.key];
+    const existingId = cfg.guilds[guild.id][def.key] || (isPrimaryGuild ? cfg[def.key] : null);
     let ch = existingId ? guild.channels.cache.get(existingId) : null;
 
     if (!ch) {
@@ -188,13 +204,19 @@ async function ensureLogChannels(guild) {
 
     if (ch) {
       verifiedCount++;
-      if (cfg[def.key] !== ch.id) {
-        cfg[def.key] = ch.id;
+      if (cfg.guilds[guild.id][def.key] !== ch.id) {
+        cfg.guilds[guild.id][def.key] = ch.id;
         modified = true;
       }
-      if (def.key === 'security_log_channel_id' && cfg.log_channel_id !== ch.id) {
-        cfg.log_channel_id = ch.id;
-        modified = true;
+      if (isPrimaryGuild) {
+        if (cfg[def.key] !== ch.id) {
+          cfg[def.key] = ch.id;
+          modified = true;
+        }
+        if (def.key === 'security_log_channel_id' && cfg.log_channel_id !== ch.id) {
+          cfg.log_channel_id = ch.id;
+          modified = true;
+        }
       }
     }
   }
@@ -239,6 +261,9 @@ function ensureAntiNukeState() {
 }
 
 function ensureLevelAnnounceChannels(guild) {
+  const isPrimaryGuild = String(guild.id) === '1563548609960742942';
+  if (!isPrimaryGuild) return;
+
   const cfg = KIKI.loadConfig();
   let modified = false;
 
@@ -255,7 +280,7 @@ function ensureLevelAnnounceChannels(guild) {
   if (cfg.chat_level_channel_id) {
     const ch = guild.channels.cache.get(cfg.chat_level_channel_id);
     if (!ch) {
-      cfg.chat_level_channel_id = null; // Reset invalid channel
+      cfg.chat_level_channel_id = null;
       modified = true;
     }
   }
