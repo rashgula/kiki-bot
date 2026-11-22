@@ -1,5 +1,6 @@
 // KIKI Bot - Message Delete Event (Chat Logs)
-const { ChannelType } = require('discord.js');
+// Fixed: message.author null check for Railway cache miss
+const { ChannelType, AuditLogEvent } = require('discord.js');
 const KIKI = require('../utils/kiki.js');
 const KikiEmbed = require('../utils/embed.js');
 const config = require('../config.js');
@@ -7,7 +8,9 @@ const config = require('../config.js');
 module.exports = {
   name: 'messageDelete',
   async execute(message, client) {
-    if (!message.guild || message.author?.bot) return;
+    if (!message.guild) return;
+    // On Railway, message may be partial (not cached) — allow partial messages through
+    if (message.author?.bot) return;
 
     const cfg = KIKI.loadConfig();
     const chatLogId = cfg.chat_log_channel_id;
@@ -17,18 +20,39 @@ module.exports = {
     if (message.channelId === chatLogId) return;
 
     try {
-      const logChannel = message.guild.channels.cache.get(chatLogId) || await message.guild.channels.fetch(chatLogId).catch(() => null);
+      const logChannel = message.guild.channels.cache.get(chatLogId) ||
+        await message.guild.channels.fetch(chatLogId).catch(() => null);
       if (!logChannel || logChannel.type !== ChannelType.GuildText) return;
+
+      // Fetch author from audit log if message is partial (not cached)
+      let authorTag = message.author ? `${message.author.tag} (\`${message.author.id}\`)` : 'Unknown User';
+      let authorAvatar = message.author?.displayAvatarURL({ dynamic: true }) || null;
+      let executorInfo = '';
+
+      // Try to get who deleted it from audit log
+      try {
+        const logs = await message.guild.fetchAuditLogs({ type: AuditLogEvent.MessageDelete, limit: 1 });
+        const entry = logs.entries.first();
+        if (entry && Date.now() - entry.createdTimestamp < 5000) {
+          if (entry.executor && entry.executor.id !== entry.target?.id) {
+            executorInfo = `\n🛡️ **Deleted by:** ${entry.executor.tag} (\`${entry.executor.id}\`)`;
+          }
+        }
+      } catch {}
 
       const content = message.content
         ? (message.content.length > 1000 ? message.content.slice(0, 1000) + '...' : message.content)
-        : '*[No text content or embedded message]*';
+        : '*[No text content / message not cached]*';
 
       const fields = [
-        { name: '👤 Author', value: message.author ? `${message.author.tag} (\`${message.author.id}\`)` : 'Unknown User', inline: true },
-        { name: '💬 Channel', value: `${message.channel.toString()} (\`#${message.channel.name}\`)`, inline: true },
+        { name: '👤 Author', value: authorTag, inline: true },
+        { name: '💬 Channel', value: message.channel ? `${message.channel.toString()} (\`#${message.channel.name}\`)` : `\`${message.channelId}\``, inline: true },
         { name: '📄 Deleted Content', value: content }
       ];
+
+      if (executorInfo) {
+        fields.push({ name: '🔍 Deleted By', value: executorInfo.replace('\n🛡️ **Deleted by:** ', '') });
+      }
 
       if (message.attachments && message.attachments.size > 0) {
         const attachUrls = message.attachments.map(a => a.url).join('\n');
@@ -40,9 +64,9 @@ module.exports = {
 
       const embed = KikiEmbed.build({
         title: '🗑️ Message Deleted',
-        description: `Ek message delete kiya gaya in ${message.channel.toString()}`,
+        description: `Ek message delete kiya gaya in ${message.channel?.toString() || `<#${message.channelId}>`}`,
         color: config.COLORS.RED || 0xE74C3C,
-        thumbnail: message.author?.displayAvatarURL({ dynamic: true }) || null,
+        thumbnail: authorAvatar,
         fields
       });
 
