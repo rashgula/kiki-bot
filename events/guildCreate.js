@@ -28,10 +28,22 @@ module.exports = {
       // 4. Auto-Create / Bind Level 5 to 50 Roles in new server
       const rolesCount = await bootRestorer.ensureLevelRoles(guild);
 
-      // 5. Ensure Announce Channels
-      bootRestorer.ensureLevelAnnounceChannels(guild);
+      // 5. Ensure Announce Channels (level-logs & chat-levels)
+      await bootRestorer.ensureLevelAnnounceChannels(guild);
 
-      // 6. Register Slash Commands specifically for this new server immediately
+      // 6. Ensure Voice Master Dynamic Channels (Category + Join VC + Control Panel + VM Logs)
+      await bootRestorer.ensureVoiceMaster(guild);
+
+      // 7. Ensure Invite Tracker (Category + invite-logs)
+      await bootRestorer.ensureInviteTracker(guild);
+
+      // 8. Ensure Auto-Role (🔮・Member)
+      await bootRestorer.ensureAutoRole(guild);
+
+      // 9. Ensure Deaf AFK Mover (💤・AFK Lounge, 10m)
+      await bootRestorer.ensureDeafAfk(guild);
+
+      // 10. Register Slash Commands specifically for this new server immediately
       try {
         const slashCmds = [];
         for (const [, cmd] of client.commands) {
@@ -72,6 +84,10 @@ module.exports = {
             `🛡️ **Master Anti-Nuke:** 🟢 \`ACTIVE (16+ Defense Modules Live)\`\n` +
             `👑 **Level Roles (5-50):** 🟢 \`${rolesCount}/10 Roles Auto-Configured\`\n` +
             `📜 **Server Logs:** 🟢 \`${logsCount}/5 Channels Created & Linked\`\n` +
+            `🔊 **Voice Master:** 🟢 \`ACTIVE (➕ Join to Create & 🎛️ Control Panel)\`\n` +
+            `📩 **Invite Tracker:** 🟢 \`ACTIVE (📩 invite-logs Linked)\`\n` +
+            `🏷️ **Auto-Role on Join:** 🟢 \`ACTIVE (@🔮・Member)\`\n` +
+            `💤 **Deaf AFK Mover:** 🟢 \`ACTIVE (💤・AFK Lounge • 10m)\`\n` +
             `🎙️ **Voice XP:** 🟢 \`Active (18-23 XP/min in VC)\`\n` +
             `💬 **Chat XP:** 🟢 \`Active (15-25 XP/msg)\`\n` +
             `📌 **Default Prefix:** \`${config.PREFIX}\` | **Slash Commands:** \`/<command>\`\n\n` +

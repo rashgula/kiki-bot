@@ -255,28 +255,423 @@ function ensureAntiNukeState() {
   return false;
 }
 
-function ensureLevelAnnounceChannels(guild) {
+async function ensureLevelAnnounceChannels(guild) {
+  const botMember = guild.members.me;
+  if (!botMember || !botMember.permissions.has(PermissionFlagsBits.ManageChannels)) return;
+
   const cfg = KIKI.loadConfig();
   if (!cfg.guilds) cfg.guilds = {};
   if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
 
+  const gData = cfg.guilds[guild.id];
   let modified = false;
 
-  const levelChannel = KIKI.getGuildChannel(guild, 'level_channel_id');
-  if (levelChannel && cfg.guilds[guild.id].level_channel_id !== levelChannel.id) {
-    cfg.guilds[guild.id].level_channel_id = levelChannel.id;
+  const categoryId = gData.logs_category_id || guild.channels.cache.find(c => c.type === ChannelType.GuildCategory && c.name.includes('SERVER LOGS'))?.id;
+
+  // 1. Voice Level Channel
+  let levelChannel = gData.level_channel_id ? guild.channels.cache.get(gData.level_channel_id) : null;
+  if (!levelChannel) {
+    levelChannel = guild.channels.cache.find(c => c.type === ChannelType.GuildText && (c.name === '🔮・level-logs' || c.name === 'level-logs' || c.name === 'vc-levels'));
+  }
+  if (!levelChannel && categoryId) {
+    try {
+      levelChannel = await guild.channels.create({
+        name: '🔮・level-logs',
+        type: ChannelType.GuildText,
+        parent: categoryId,
+        topic: 'Voice Level-Up and Tier Role Rewards Announcements',
+        permissionOverwrites: [
+          {
+            id: guild.roles.everyone.id,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
+            deny: [PermissionFlagsBits.SendMessages]
+          },
+          {
+            id: botMember.id,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks, PermissionFlagsBits.AttachFiles]
+          }
+        ],
+        reason: `[KIKI Boot Restorer] Auto-create Voice Level announcement channel in ${guild.name}`
+      });
+      gData.level_channel_id = levelChannel.id;
+      modified = true;
+    } catch (e) {
+      console.error(`[BOOT RESTORER] Error creating level-logs in ${guild.name}:`, e.message);
+    }
+  } else if (levelChannel && gData.level_channel_id !== levelChannel.id) {
+    gData.level_channel_id = levelChannel.id;
     modified = true;
   }
 
-  const chatLevelChannel = KIKI.getGuildChannel(guild, 'chat_level_channel_id');
-  if (chatLevelChannel && cfg.guilds[guild.id].chat_level_channel_id !== chatLevelChannel.id) {
-    cfg.guilds[guild.id].chat_level_channel_id = chatLevelChannel.id;
+  // 2. Chat Level Channel
+  let chatLevelChannel = gData.chat_level_channel_id ? guild.channels.cache.get(gData.chat_level_channel_id) : null;
+  if (!chatLevelChannel) {
+    chatLevelChannel = guild.channels.cache.find(c => c.type === ChannelType.GuildText && (c.name === '💬・chat-levels' || c.name === 'chat-levels'));
+  }
+  if (!chatLevelChannel && categoryId) {
+    try {
+      chatLevelChannel = await guild.channels.create({
+        name: '💬・chat-levels',
+        type: ChannelType.GuildText,
+        parent: categoryId,
+        topic: 'Text Chat Level-Up Announcements and Activity Celebrations',
+        permissionOverwrites: [
+          {
+            id: guild.roles.everyone.id,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
+            deny: [PermissionFlagsBits.SendMessages]
+          },
+          {
+            id: botMember.id,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks, PermissionFlagsBits.AttachFiles]
+          }
+        ],
+        reason: `[KIKI Boot Restorer] Auto-create Chat Level announcement channel in ${guild.name}`
+      });
+      gData.chat_level_channel_id = chatLevelChannel.id;
+      modified = true;
+    } catch (e) {
+      console.error(`[BOOT RESTORER] Error creating chat-levels in ${guild.name}:`, e.message);
+    }
+  } else if (chatLevelChannel && gData.chat_level_channel_id !== chatLevelChannel.id) {
+    gData.chat_level_channel_id = chatLevelChannel.id;
+    modified = true;
+  }
+
+  gData.chat_level_alerts = true;
+  gData.chat_xp_enabled = true;
+
+  if (modified) {
+    KIKI.saveConfig(cfg);
+  }
+}
+
+async function ensureVoiceMaster(guild) {
+  const botMember = guild.members.me;
+  if (!botMember || !botMember.permissions.has([PermissionFlagsBits.ManageChannels, PermissionFlagsBits.MoveMembers])) return false;
+
+  const cfg = KIKI.loadConfig();
+  if (!cfg.guilds) cfg.guilds = {};
+  if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
+
+  const gData = cfg.guilds[guild.id];
+  let modified = false;
+
+  // 1. Ensure Category
+  let category = gData.voice_master_category_id ? guild.channels.cache.get(gData.voice_master_category_id) : null;
+  if (!category) {
+    category = guild.channels.cache.find(c => c.type === ChannelType.GuildCategory && (c.name.toLowerCase().includes('voice master') || c.name === '🔊・VOICE MASTER'));
+  }
+  if (!category) {
+    try {
+      category = await guild.channels.create({
+        name: '🔊・VOICE MASTER',
+        type: ChannelType.GuildCategory,
+        permissionOverwrites: [
+          {
+            id: guild.roles.everyone.id,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect]
+          }
+        ],
+        reason: `[KIKI Boot Restorer] Auto-ensure Voice Master Category in ${guild.name}`
+      });
+      gData.voice_master_category_id = category.id;
+      modified = true;
+    } catch (e) {
+      console.error(`[BOOT RESTORER VM] Category error in ${guild.name}:`, e.message);
+    }
+  } else if (gData.voice_master_category_id !== category.id) {
+    gData.voice_master_category_id = category.id;
+    modified = true;
+  }
+
+  if (!category) return false;
+
+  // 2. Ensure Interface Text Channel
+  let interfaceChannel = gData.voice_master_interface_id ? guild.channels.cache.get(gData.voice_master_interface_id) : null;
+  if (!interfaceChannel) {
+    interfaceChannel = guild.channels.cache.find(c => c.parentId === category.id && (c.name.includes('voice-control') || c.name.includes('control')));
+  }
+  if (!interfaceChannel) {
+    try {
+      interfaceChannel = await guild.channels.create({
+        name: '🎛️・voice-control',
+        type: ChannelType.GuildText,
+        parent: category.id,
+        permissionOverwrites: [
+          {
+            id: guild.roles.everyone.id,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
+            deny: [PermissionFlagsBits.SendMessages]
+          },
+          {
+            id: botMember.id,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks]
+          }
+        ],
+        reason: `[KIKI Boot Restorer] Auto-ensure Voice Control channel in ${guild.name}`
+      });
+      gData.voice_master_interface_id = interfaceChannel.id;
+      modified = true;
+    } catch (e) {
+      console.error(`[BOOT RESTORER VM] Interface error in ${guild.name}:`, e.message);
+    }
+  } else if (gData.voice_master_interface_id !== interfaceChannel.id) {
+    gData.voice_master_interface_id = interfaceChannel.id;
+    modified = true;
+  }
+
+  // 3. Ensure Join to Create Voice Channel
+  let joinChannel = gData.voice_master_channel_id ? guild.channels.cache.get(gData.voice_master_channel_id) : null;
+  if (!joinChannel) {
+    joinChannel = guild.channels.cache.find(c => c.parentId === category.id && (c.name.includes('Join to Create') || c.name.includes('join-to-create')));
+  }
+  if (!joinChannel) {
+    try {
+      joinChannel = await guild.channels.create({
+        name: '➕・Join to Create',
+        type: ChannelType.GuildVoice,
+        parent: category.id,
+        permissionOverwrites: [
+          {
+            id: guild.roles.everyone.id,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect, PermissionFlagsBits.Speak]
+          }
+        ],
+        reason: `[KIKI Boot Restorer] Auto-ensure Join to Create VC in ${guild.name}`
+      });
+      gData.voice_master_channel_id = joinChannel.id;
+      modified = true;
+    } catch (e) {
+      console.error(`[BOOT RESTORER VM] Join VC error in ${guild.name}:`, e.message);
+    }
+  } else if (gData.voice_master_channel_id !== joinChannel.id) {
+    gData.voice_master_channel_id = joinChannel.id;
+    modified = true;
+  }
+
+  // 4. Ensure VM Audit Logs
+  let vmLogChannel = gData.voice_master_log_channel_id ? guild.channels.cache.get(gData.voice_master_log_channel_id) : null;
+  if (!vmLogChannel) {
+    vmLogChannel = guild.channels.cache.find(c => c.parentId === category.id && (c.name.includes('vm-logs') || c.name.includes('voice-master-logs')));
+  }
+  if (!vmLogChannel) {
+    try {
+      vmLogChannel = await guild.channels.create({
+        name: '🔊〢vm-logs',
+        type: ChannelType.GuildText,
+        parent: category.id,
+        permissionOverwrites: [
+          {
+            id: guild.roles.everyone.id,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
+            deny: [PermissionFlagsBits.SendMessages]
+          },
+          {
+            id: botMember.id,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks]
+          }
+        ],
+        reason: `[KIKI Boot Restorer] Auto-ensure VM logs channel in ${guild.name}`
+      });
+      gData.voice_master_log_channel_id = vmLogChannel.id;
+      modified = true;
+    } catch (e) {
+      console.error(`[BOOT RESTORER VM] Log channel error in ${guild.name}:`, e.message);
+    }
+  } else if (gData.voice_master_log_channel_id !== vmLogChannel.id) {
+    gData.voice_master_log_channel_id = vmLogChannel.id;
+    modified = true;
+  }
+
+  // 5. Send Control Panel Message in Interface if empty
+  if (interfaceChannel) {
+    try {
+      const messages = await interfaceChannel.messages.fetch({ limit: 5 }).catch(() => null);
+      if (!messages || messages.size === 0) {
+        const VoiceMaster = require('./voiceMaster.js');
+        const panelMsg = await interfaceChannel.send({
+          embeds: [VoiceMaster.buildPanelEmbed()],
+          components: VoiceMaster.buildPanelComponents()
+        });
+        gData.voice_master_panel_message_id = panelMsg.id;
+        modified = true;
+      }
+    } catch (e) {}
+  }
+
+  gData.voice_master_enabled = true;
+  if (modified) {
+    KIKI.saveConfig(cfg);
+  }
+  return true;
+}
+
+async function ensureInviteTracker(guild) {
+  const botMember = guild.members.me;
+  if (!botMember || !botMember.permissions.has(PermissionFlagsBits.ManageChannels)) return false;
+
+  const cfg = KIKI.loadConfig();
+  if (!cfg.guilds) cfg.guilds = {};
+  if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
+
+  const gData = cfg.guilds[guild.id];
+  let modified = false;
+
+  // 1. Ensure Category
+  let category = gData.invite_tracker_category_id ? guild.channels.cache.get(gData.invite_tracker_category_id) : null;
+  if (!category) {
+    category = guild.channels.cache.find(c => c.type === ChannelType.GuildCategory && (c.name.toLowerCase().includes('invite tracker') || c.name === '📩・INVITE TRACKER'));
+  }
+  if (!category) {
+    try {
+      category = await guild.channels.create({
+        name: '📩・INVITE TRACKER',
+        type: ChannelType.GuildCategory,
+        reason: `[KIKI Boot Restorer] Auto-ensure Invite Tracker Category in ${guild.name}`
+      });
+      gData.invite_tracker_category_id = category.id;
+      modified = true;
+    } catch (e) {
+      console.error(`[BOOT RESTORER INV] Category error in ${guild.name}:`, e.message);
+    }
+  } else if (gData.invite_tracker_category_id !== category.id) {
+    gData.invite_tracker_category_id = category.id;
+    modified = true;
+  }
+
+  if (!category) return false;
+
+  // 2. Ensure invite-logs channel
+  let channel = gData.invite_tracker_channel_id ? guild.channels.cache.get(gData.invite_tracker_channel_id) : null;
+  if (!channel) {
+    channel = guild.channels.cache.find(c => c.parentId === category.id && (c.name === 'invite-logs' || c.name === '📩・invite-logs'));
+  }
+  if (!channel) {
+    try {
+      channel = await guild.channels.create({
+        name: '📩・invite-logs',
+        type: ChannelType.GuildText,
+        parent: category.id,
+        topic: 'Real-time Invite Tracking Logs • Who invited, all-time invites & leave tracking',
+        permissionOverwrites: [
+          {
+            id: guild.roles.everyone.id,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
+            deny: [PermissionFlagsBits.SendMessages]
+          },
+          {
+            id: botMember.id,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks, PermissionFlagsBits.AttachFiles]
+          }
+        ],
+        reason: `[KIKI Boot Restorer] Auto-ensure invite-logs channel in ${guild.name}`
+      });
+      gData.invite_tracker_channel_id = channel.id;
+      modified = true;
+    } catch (e) {
+      console.error(`[BOOT RESTORER INV] Channel error in ${guild.name}:`, e.message);
+    }
+  } else if (gData.invite_tracker_channel_id !== channel.id) {
+    gData.invite_tracker_channel_id = channel.id;
+    modified = true;
+  }
+
+  gData.invite_tracker_enabled = true;
+  if (modified) {
+    KIKI.saveConfig(cfg);
+  }
+  return true;
+}
+
+async function ensureAutoRole(guild) {
+  const botMember = guild.members.me;
+  if (!botMember || !botMember.permissions.has(PermissionFlagsBits.ManageRoles)) return false;
+
+  const cfg = KIKI.loadConfig();
+  if (!cfg.guilds) cfg.guilds = {};
+  if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
+
+  const gData = cfg.guilds[guild.id];
+  let roleId = gData.autorole_id;
+  let role = roleId ? guild.roles.cache.get(roleId) : null;
+
+  if (!role) {
+    role = guild.roles.cache.find(r =>
+      r.name.toLowerCase() === 'member' ||
+      r.name.toLowerCase() === 'members' ||
+      r.name === '🔮・Member'
+    );
+  }
+
+  if (!role) {
+    try {
+      role = await guild.roles.create({
+        name: '🔮・Member',
+        color: '#9B59B6',
+        reason: `[KIKI Boot Restorer] Auto-ensure default Member role in ${guild.name}`
+      });
+    } catch (e) {
+      console.error(`[BOOT RESTORER AUTOROLE] Error creating role in ${guild.name}:`, e.message);
+    }
+  }
+
+  if (role && gData.autorole_id !== role.id) {
+    gData.autorole_id = role.id;
+    KIKI.saveConfig(cfg);
+    return true;
+  }
+  return !!role;
+}
+
+async function ensureDeafAfk(guild) {
+  const cfg = KIKI.loadConfig();
+  if (!cfg.guilds) cfg.guilds = {};
+  if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
+
+  const gData = cfg.guilds[guild.id];
+  let channelId = gData.deaf_afk_channel_id;
+  let channel = channelId ? guild.channels.cache.get(channelId) : null;
+
+  if (!channel && guild.afkChannelId) {
+    channel = guild.channels.cache.get(guild.afkChannelId);
+  }
+
+  if (!channel) {
+    channel = guild.channels.cache.find(c => c.type === ChannelType.GuildVoice && (c.name.toLowerCase().includes('afk') || c.name.toLowerCase().includes('lounge')));
+  }
+
+  const botMember = guild.members.me;
+  if (!channel && botMember?.permissions.has(PermissionFlagsBits.ManageChannels)) {
+    try {
+      channel = await guild.channels.create({
+        name: '💤・AFK Lounge',
+        type: ChannelType.GuildVoice,
+        reason: `[KIKI Boot Restorer] Auto-ensure AFK voice channel in ${guild.name}`
+      });
+    } catch (e) {
+      console.error(`[BOOT RESTORER DEAF] Error creating AFK VC in ${guild.name}:`, e.message);
+    }
+  }
+
+  let modified = false;
+  if (channel && gData.deaf_afk_channel_id !== channel.id) {
+    gData.deaf_afk_channel_id = channel.id;
+    modified = true;
+  }
+  if (gData.deaf_mover_enabled !== true) {
+    gData.deaf_mover_enabled = true;
+    modified = true;
+  }
+  if (gData.deaf_timeout_minutes !== 10) {
+    gData.deaf_timeout_minutes = 10;
     modified = true;
   }
 
   if (modified) {
     KIKI.saveConfig(cfg);
   }
+  return !!channel;
 }
 
 async function autoSyncSlashCommands(client) {
@@ -357,6 +752,10 @@ module.exports = {
   ensureLevelRoles,
   ensureLogChannels,
   ensureLevelAnnounceChannels,
+  ensureVoiceMaster,
+  ensureInviteTracker,
+  ensureAutoRole,
+  ensureDeafAfk,
   autoSyncSlashCommands,
   sendDiscordBootAlert,
   async restoreAndVerify(client) {
@@ -383,10 +782,22 @@ module.exports = {
         const logsCount = await ensureLogChannels(guild);
         totalLogsVerified += logsCount;
 
-        // 3. Ensure Announce Channels
-        ensureLevelAnnounceChannels(guild);
+        // 3. Ensure Announce Channels (level-logs & chat-levels)
+        await ensureLevelAnnounceChannels(guild);
 
-        // 4. Send Live Boot Confirmation Card into Security Log Channel
+        // 4. Ensure Voice Master Dynamic VC System (Category + Join VC + Control Panel + VM Logs)
+        await ensureVoiceMaster(guild);
+
+        // 5. Ensure Invite Tracker (Category + invite-logs)
+        await ensureInviteTracker(guild);
+
+        // 6. Ensure Auto-Role (🔮・Member)
+        await ensureAutoRole(guild);
+
+        // 7. Ensure Deaf AFK Mover (💤・AFK Lounge, 10m)
+        await ensureDeafAfk(guild);
+
+        // 8. Send Live Boot Confirmation Card into Security Log Channel
         await sendDiscordBootAlert(guild, { roles: rolesCount, logs: logsCount });
       } catch (err) {
         console.error(`[BOOT RESTORER ERROR] Guild ${guild.name}:`, err.message);
