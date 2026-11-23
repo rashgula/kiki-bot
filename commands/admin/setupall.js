@@ -29,22 +29,23 @@ async function executeFullSetup(guild, client, updateCallback) {
   const cfg = KIKI.loadConfig();
   if (!cfg.guilds) cfg.guilds = {};
   if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
+  cfg.guilds[guild.id].configured = true;
   KIKI.saveConfig(cfg);
 
   // Step 1: Ensure Server Logs (5 Channels)
-  const logsCount = await bootRestorer.ensureLogChannels(guild);
+  const logsCount = await bootRestorer.ensureLogChannels(guild, true);
 
   // Step 2: Ensure 10 Level Roles (5 to 50)
-  const rolesCount = await bootRestorer.ensureLevelRoles(guild);
+  const rolesCount = await bootRestorer.ensureLevelRoles(guild, true);
 
   // Step 3: Ensure Level Announcement Channels (level-logs & chat-levels)
-  await bootRestorer.ensureLevelAnnounceChannels(guild);
+  await bootRestorer.ensureLevelAnnounceChannels(guild, true);
 
   // Step 4: Ensure Voice Master Dynamic Channels (Category + Join VC + Control Panel + VM Logs)
-  await bootRestorer.ensureVoiceMaster(guild);
+  await bootRestorer.ensureVoiceMaster(guild, true);
 
   // Step 5: Ensure Invite Tracker (Category + invite-logs)
-  await bootRestorer.ensureInviteTracker(guild);
+  await bootRestorer.ensureInviteTracker(guild, true);
   try {
     const InviteTracker = require('../../utils/inviteTracker.js');
     if (guild.members.me?.permissions.has(PermissionFlagsBits.ManageGuild)) {
@@ -56,10 +57,10 @@ async function executeFullSetup(guild, client, updateCallback) {
   } catch (e) {}
 
   // Step 6: Ensure Auto-Role (@🔮・Member)
-  await bootRestorer.ensureAutoRole(guild);
+  await bootRestorer.ensureAutoRole(guild, true);
 
   // Step 7: Ensure Deaf AFK Mover (💤・AFK Lounge • 10m)
-  await bootRestorer.ensureDeafAfk(guild);
+  await bootRestorer.ensureDeafAfk(guild, true);
 
   // Step 8: Master Anti-Nuke (16 Shields Live)
   const freshCfg = KIKI.loadConfig();

@@ -17,7 +17,7 @@ const READ_ONLY_COMMANDS = [
   'rank', 'level', 'vcrank', 'vclevel', 'xp', 'leaderboard', 'top', 'vctop', 'lb',
   'chatrank', 'chatlevel', 'crank', 'clevel', 'cxp', 'chatleaderboard', 'chatlb', 'chattop', 'clb',
   'tarot', '8ball', 'kikiquote', 'roast', 'roll', 'dice', 'coinflip', 'rps', 'ship',
-  'savedcmds', 'autocmds', 'autoexec', 'savedcommands'
+  'savedcmds', 'autocmds', 'autoexec', 'savedcommands', 'setupall'
 ];
 
 function loadSavedCommands() {
@@ -265,6 +265,7 @@ const CommandAutoExec = {
 
         // Generic mock runner for custom future commands
         for (const [, guild] of client.guilds.cache) {
+          if (item.guildId && guild.id !== item.guildId) continue;
           const defaultChannel = item.channelId
             ? (guild.channels.cache.get(item.channelId) || guild.channels.cache.find(c => c.isTextBased()))
             : guild.channels.cache.find(c => c.isTextBased());

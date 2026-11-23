@@ -1,9 +1,8 @@
-// KIKI Bot - Guild Join Event (Auto-Setup & Guild Isolation on Invite)
+// KIKI Bot - Guild Join Event (Greeting & Slash Sync Only — NO Auto-Creation without &setupall!)
 const { ChannelType, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const chalk = require('chalk');
 const KIKI = require('../utils/kiki.js');
 const KikiEmbed = require('../utils/embed.js');
-const bootRestorer = require('../utils/bootRestorer.js');
 const config = require('../config.js');
 
 module.exports = {
@@ -16,34 +15,17 @@ module.exports = {
       await guild.channels.fetch().catch(() => {});
       await guild.roles.fetch().catch(() => {});
 
-      // 2. Ensure Guild entry in config.json
+      // 2. Initialize Guild entry in config (clean state, NOT configured yet)
       const cfg = KIKI.loadConfig();
       if (!cfg.guilds) cfg.guilds = {};
-      if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
-      KIKI.saveConfig(cfg);
+      if (!cfg.guilds[guild.id]) {
+        cfg.guilds[guild.id] = {
+          configured: false
+        };
+        KIKI.saveConfig(cfg);
+      }
 
-      // 3. Auto-Create / Bind all 5 Log Channels in new server
-      const logsCount = await bootRestorer.ensureLogChannels(guild);
-
-      // 4. Auto-Create / Bind Level 5 to 50 Roles in new server
-      const rolesCount = await bootRestorer.ensureLevelRoles(guild);
-
-      // 5. Ensure Announce Channels (level-logs & chat-levels)
-      await bootRestorer.ensureLevelAnnounceChannels(guild);
-
-      // 6. Ensure Voice Master Dynamic Channels (Category + Join VC + Control Panel + VM Logs)
-      await bootRestorer.ensureVoiceMaster(guild);
-
-      // 7. Ensure Invite Tracker (Category + invite-logs)
-      await bootRestorer.ensureInviteTracker(guild);
-
-      // 8. Ensure Auto-Role (🔮・Member)
-      await bootRestorer.ensureAutoRole(guild);
-
-      // 9. Ensure Deaf AFK Mover (💤・AFK Lounge, 10m)
-      await bootRestorer.ensureDeafAfk(guild);
-
-      // 10. Register Slash Commands specifically for this new server immediately
+      // 3. Register Slash Commands specifically for this new server immediately
       try {
         const slashCmds = [];
         for (const [, cmd] of client.commands) {
@@ -58,7 +40,7 @@ module.exports = {
         console.error(`[GUILD CREATE SLASH ERROR] ${guild.name}:`, err.message);
       }
 
-      // 7. Update Invite Tracker Cache for this guild
+      // 4. Update Invite Tracker Cache for this guild if permitted
       try {
         const InviteTracker = require('../utils/inviteTracker.js');
         if (guild.members.me?.permissions.has(PermissionFlagsBits.ManageGuild)) {
@@ -69,32 +51,25 @@ module.exports = {
         }
       } catch (e) {}
 
-      // 8. Send Welcome & Status Embed in the new server's Security Log channel or System Channel
-      const targetChannel = KIKI.getGuildChannel(guild, 'security_log_channel_id') ||
-        guild.systemChannel ||
+      // 5. Send Greeting Embed in the server's System Channel or First Available Text Channel
+      const targetChannel = guild.systemChannel ||
         guild.channels.cache.find(c => c.type === ChannelType.GuildText && c.permissionsFor(guild.members.me)?.has(PermissionFlagsBits.SendMessages));
 
       if (targetChannel) {
         const inviteUrl = KIKI.getBotInviteUrl(client.user.id);
         const embed = KikiEmbed.build({
-          title: `🔮 KIKI Joined ${guild.name} • Setup 100% Ready!`,
+          title: `🔮 KIKI Joined ${guild.name}!`,
           description:
-            `**Namaste! KIKI gothic discord bot aapke server me successfully activate ho chuka hai.** ✨\n\n` +
-            `Aapko kisi bhi setup command ko run karne ki zaroorat nahi hai. KIKI ne aapke server ke liye automatically alag channels aur roles create aur bind kar diye hain taaki koi bhi setting dusre server se overwrite na ho!\n\n` +
-            `🛡️ **Master Anti-Nuke:** 🟢 \`ACTIVE (16+ Defense Modules Live)\`\n` +
-            `👑 **Level Roles (5-50):** 🟢 \`${rolesCount}/10 Roles Auto-Configured\`\n` +
-            `📜 **Server Logs:** 🟢 \`${logsCount}/5 Channels Created & Linked\`\n` +
-            `🔊 **Voice Master:** 🟢 \`ACTIVE (➕ Join to Create & 🎛️ Control Panel)\`\n` +
-            `📩 **Invite Tracker:** 🟢 \`ACTIVE (📩 invite-logs Linked)\`\n` +
-            `🏷️ **Auto-Role on Join:** 🟢 \`ACTIVE (@🔮・Member)\`\n` +
-            `💤 **Deaf AFK Mover:** 🟢 \`ACTIVE (💤・AFK Lounge • 10m)\`\n` +
-            `🎙️ **Voice XP:** 🟢 \`Active (18-23 XP/min in VC)\`\n` +
-            `💬 **Chat XP:** 🟢 \`Active (15-25 XP/msg)\`\n` +
-            `📌 **Default Prefix:** \`${config.PREFIX}\` | **Slash Commands:** \`/<command>\`\n\n` +
-            `*💡 Tip: Aap meri profile/bio par click karke direct blue **"Add App"** button dabakar bhi mujhe kisi aur server me add kar sakte hain.*\n` +
-            `*Type \`${config.PREFIX}help\` to browse all 1,114+ commands.*`,
+            `**Namaste! KIKI gothic discord bot is server me successfully connect ho chuka hai.** 💜\n\n` +
+            `⚙️ **Server Setup:**\n` +
+            `Agar aap is server me sabhi log channels, level roles, Voice Master aur systems setup karna chahte hain, toh sirf **\`&setupall\`** run karein!\n` +
+            `*(Bina command run kiye bot koi bhi channel ya role create nahi karega).* ✨\n\n` +
+            `• 🚀 **1-Click Full Setup:** \`&setupall\` ya \`/setupall\`\n` +
+            `• 📜 **Command Library:** \`&help\` (1,114+ Commands)\n` +
+            `• 📌 **Prefix:** \`${config.PREFIX}\`\n\n` +
+            `*💡 Tip: Aap meri profile/bio par click karke direct blue **"Add App"** button dabakar bhi mujhe kisi aur server me add kar sakte hain.*`,
           color: config.COLORS.PRIMARY || 0x9B59B6,
-          footer: { text: `Multi-Server Isolation Engine • KIKI v${config.BOT_VERSION}` },
+          footer: { text: `KIKI v${config.BOT_VERSION} • Multi-Server Isolation` },
           timestamp: true
         });
 

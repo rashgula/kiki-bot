@@ -29,7 +29,7 @@ const LOG_CHANNEL_DEFINITIONS = [
   { key: 'security_log_channel_id', name: '🛡️・security-logs', topic: 'Anti-Nuke alerts and server security audit logs' }
 ];
 
-async function ensureLevelRoles(guild) {
+async function ensureLevelRoles(guild, createIfMissing = false) {
   const botMember = guild.members.me;
   if (!botMember || !botMember.permissions.has(PermissionFlagsBits.ManageRoles)) return 0;
 
@@ -56,8 +56,8 @@ async function ensureLevelRoles(guild) {
       );
     }
 
-    if (!role) {
-      // Auto-create role so user NEVER needs to run &setuplevelroles again!
+    if (!role && createIfMissing) {
+      // Create role ONLY when explicitly requested (e.g. &setupall)
       try {
         role = await guild.roles.create({
           name: def.name,
@@ -92,7 +92,7 @@ async function ensureLevelRoles(guild) {
   return verifiedCount;
 }
 
-async function ensureLogChannels(guild) {
+async function ensureLogChannels(guild, createIfMissing = false) {
   const botMember = guild.members.me;
   if (!botMember || !botMember.permissions.has(PermissionFlagsBits.ManageChannels)) return 0;
 
@@ -116,7 +116,7 @@ async function ensureLogChannels(guild) {
     );
   }
 
-  if (!category) {
+  if (!category && createIfMissing) {
     try {
       category = await guild.channels.create({
         name: '🔮・SERVER LOGS',
@@ -166,8 +166,8 @@ async function ensureLogChannels(guild) {
       );
     }
 
-    if (!ch && categoryId) {
-      // Auto-create missing log channel so user NEVER has to run &setuplogs again!
+    if (!ch && categoryId && createIfMissing) {
+      // Create missing log channel ONLY when requested
       try {
         const isPublicView = Boolean(def.isPublic);
         ch = await guild.channels.create({
@@ -255,7 +255,7 @@ function ensureAntiNukeState() {
   return false;
 }
 
-async function ensureLevelAnnounceChannels(guild) {
+async function ensureLevelAnnounceChannels(guild, createIfMissing = false) {
   const botMember = guild.members.me;
   if (!botMember || !botMember.permissions.has(PermissionFlagsBits.ManageChannels)) return;
 
@@ -273,7 +273,7 @@ async function ensureLevelAnnounceChannels(guild) {
   if (!levelChannel) {
     levelChannel = guild.channels.cache.find(c => c.type === ChannelType.GuildText && (c.name === '🔮・level-logs' || c.name === 'level-logs' || c.name === 'vc-levels'));
   }
-  if (!levelChannel && categoryId) {
+  if (!levelChannel && categoryId && createIfMissing) {
     try {
       levelChannel = await guild.channels.create({
         name: '🔮・level-logs',
@@ -308,7 +308,7 @@ async function ensureLevelAnnounceChannels(guild) {
   if (!chatLevelChannel) {
     chatLevelChannel = guild.channels.cache.find(c => c.type === ChannelType.GuildText && (c.name === '💬・chat-levels' || c.name === 'chat-levels'));
   }
-  if (!chatLevelChannel && categoryId) {
+  if (!chatLevelChannel && categoryId && createIfMissing) {
     try {
       chatLevelChannel = await guild.channels.create({
         name: '💬・chat-levels',
@@ -338,15 +338,17 @@ async function ensureLevelAnnounceChannels(guild) {
     modified = true;
   }
 
-  gData.chat_level_alerts = true;
-  gData.chat_xp_enabled = true;
+  if (createIfMissing) {
+    gData.chat_level_alerts = true;
+    gData.chat_xp_enabled = true;
+  }
 
   if (modified) {
     KIKI.saveConfig(cfg);
   }
 }
 
-async function ensureVoiceMaster(guild) {
+async function ensureVoiceMaster(guild, createIfMissing = false) {
   const botMember = guild.members.me;
   if (!botMember || !botMember.permissions.has([PermissionFlagsBits.ManageChannels, PermissionFlagsBits.MoveMembers])) return false;
 
@@ -362,7 +364,7 @@ async function ensureVoiceMaster(guild) {
   if (!category) {
     category = guild.channels.cache.find(c => c.type === ChannelType.GuildCategory && (c.name.toLowerCase().includes('voice master') || c.name === '🔊・VOICE MASTER'));
   }
-  if (!category) {
+  if (!category && createIfMissing) {
     try {
       category = await guild.channels.create({
         name: '🔊・VOICE MASTER',
@@ -392,7 +394,7 @@ async function ensureVoiceMaster(guild) {
   if (!interfaceChannel) {
     interfaceChannel = guild.channels.cache.find(c => c.parentId === category.id && (c.name.includes('voice-control') || c.name.includes('control')));
   }
-  if (!interfaceChannel) {
+  if (!interfaceChannel && createIfMissing) {
     try {
       interfaceChannel = await guild.channels.create({
         name: '🎛️・voice-control',
@@ -426,7 +428,7 @@ async function ensureVoiceMaster(guild) {
   if (!joinChannel) {
     joinChannel = guild.channels.cache.find(c => c.parentId === category.id && (c.name.includes('Join to Create') || c.name.includes('join-to-create')));
   }
-  if (!joinChannel) {
+  if (!joinChannel && createIfMissing) {
     try {
       joinChannel = await guild.channels.create({
         name: '➕・Join to Create',
@@ -455,7 +457,7 @@ async function ensureVoiceMaster(guild) {
   if (!vmLogChannel) {
     vmLogChannel = guild.channels.cache.find(c => c.parentId === category.id && (c.name.includes('vm-logs') || c.name.includes('voice-master-logs')));
   }
-  if (!vmLogChannel) {
+  if (!vmLogChannel && createIfMissing) {
     try {
       vmLogChannel = await guild.channels.create({
         name: '🔊〢vm-logs',
@@ -485,7 +487,7 @@ async function ensureVoiceMaster(guild) {
   }
 
   // 5. Send Control Panel Message in Interface if empty
-  if (interfaceChannel) {
+  if (interfaceChannel && createIfMissing) {
     try {
       const messages = await interfaceChannel.messages.fetch({ limit: 5 }).catch(() => null);
       if (!messages || messages.size === 0) {
@@ -500,14 +502,16 @@ async function ensureVoiceMaster(guild) {
     } catch (e) {}
   }
 
-  gData.voice_master_enabled = true;
+  if (createIfMissing) {
+    gData.voice_master_enabled = true;
+  }
   if (modified) {
     KIKI.saveConfig(cfg);
   }
   return true;
 }
 
-async function ensureInviteTracker(guild) {
+async function ensureInviteTracker(guild, createIfMissing = false) {
   const botMember = guild.members.me;
   if (!botMember || !botMember.permissions.has(PermissionFlagsBits.ManageChannels)) return false;
 
@@ -523,7 +527,7 @@ async function ensureInviteTracker(guild) {
   if (!category) {
     category = guild.channels.cache.find(c => c.type === ChannelType.GuildCategory && (c.name.toLowerCase().includes('invite tracker') || c.name === '📩・INVITE TRACKER'));
   }
-  if (!category) {
+  if (!category && createIfMissing) {
     try {
       category = await guild.channels.create({
         name: '📩・INVITE TRACKER',
@@ -547,7 +551,7 @@ async function ensureInviteTracker(guild) {
   if (!channel) {
     channel = guild.channels.cache.find(c => c.parentId === category.id && (c.name === 'invite-logs' || c.name === '📩・invite-logs'));
   }
-  if (!channel) {
+  if (!channel && createIfMissing) {
     try {
       channel = await guild.channels.create({
         name: '📩・invite-logs',
@@ -577,14 +581,16 @@ async function ensureInviteTracker(guild) {
     modified = true;
   }
 
-  gData.invite_tracker_enabled = true;
+  if (createIfMissing) {
+    gData.invite_tracker_enabled = true;
+  }
   if (modified) {
     KIKI.saveConfig(cfg);
   }
   return true;
 }
 
-async function ensureAutoRole(guild) {
+async function ensureAutoRole(guild, createIfMissing = false) {
   const botMember = guild.members.me;
   if (!botMember || !botMember.permissions.has(PermissionFlagsBits.ManageRoles)) return false;
 
@@ -604,7 +610,7 @@ async function ensureAutoRole(guild) {
     );
   }
 
-  if (!role) {
+  if (!role && createIfMissing) {
     try {
       role = await guild.roles.create({
         name: '🔮・Member',
@@ -624,7 +630,7 @@ async function ensureAutoRole(guild) {
   return !!role;
 }
 
-async function ensureDeafAfk(guild) {
+async function ensureDeafAfk(guild, createIfMissing = false) {
   const cfg = KIKI.loadConfig();
   if (!cfg.guilds) cfg.guilds = {};
   if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
@@ -642,7 +648,7 @@ async function ensureDeafAfk(guild) {
   }
 
   const botMember = guild.members.me;
-  if (!channel && botMember?.permissions.has(PermissionFlagsBits.ManageChannels)) {
+  if (!channel && botMember?.permissions.has(PermissionFlagsBits.ManageChannels) && createIfMissing) {
     try {
       channel = await guild.channels.create({
         name: '💤・AFK Lounge',
@@ -659,13 +665,15 @@ async function ensureDeafAfk(guild) {
     gData.deaf_afk_channel_id = channel.id;
     modified = true;
   }
-  if (gData.deaf_mover_enabled !== true) {
-    gData.deaf_mover_enabled = true;
-    modified = true;
-  }
-  if (gData.deaf_timeout_minutes !== 10) {
-    gData.deaf_timeout_minutes = 10;
-    modified = true;
+  if (createIfMissing) {
+    if (gData.deaf_mover_enabled !== true) {
+      gData.deaf_mover_enabled = true;
+      modified = true;
+    }
+    if (gData.deaf_timeout_minutes !== 10) {
+      gData.deaf_timeout_minutes = 10;
+      modified = true;
+    }
   }
 
   if (modified) {
@@ -770,34 +778,42 @@ module.exports = {
 
     for (const [, guild] of client.guilds.cache) {
       try {
+        const gData = cfg.guilds?.[guild.id];
+        const isConfigured = gData?.configured === true || String(guild.id) === '1563548609960742942';
+
+        // Do NOT auto-create channels/roles on unconfigured servers!
+        if (!isConfigured) {
+          continue;
+        }
+
         // Hydrate guild cache
         await guild.channels.fetch().catch(() => {});
         await guild.roles.fetch().catch(() => {});
 
-        // 1. Auto-Verify & Self-Heal Level Roles (5 to 50)
-        const rolesCount = await ensureLevelRoles(guild);
+        // 1. Auto-Verify & Bind existing Level Roles (5 to 50) without creating new ones
+        const rolesCount = await ensureLevelRoles(guild, false);
         totalRolesVerified += rolesCount;
 
-        // 2. Auto-Verify & Self-Heal Log Channels (All 5)
-        const logsCount = await ensureLogChannels(guild);
+        // 2. Auto-Verify & Bind existing Log Channels without creating new ones
+        const logsCount = await ensureLogChannels(guild, false);
         totalLogsVerified += logsCount;
 
         // 3. Ensure Announce Channels (level-logs & chat-levels)
-        await ensureLevelAnnounceChannels(guild);
+        await ensureLevelAnnounceChannels(guild, false);
 
         // 4. Ensure Voice Master Dynamic VC System (Category + Join VC + Control Panel + VM Logs)
-        await ensureVoiceMaster(guild);
+        await ensureVoiceMaster(guild, false);
 
         // 5. Ensure Invite Tracker (Category + invite-logs)
-        await ensureInviteTracker(guild);
+        await ensureInviteTracker(guild, false);
 
         // 6. Ensure Auto-Role (🔮・Member)
-        await ensureAutoRole(guild);
+        await ensureAutoRole(guild, false);
 
         // 7. Ensure Deaf AFK Mover (💤・AFK Lounge, 10m)
-        await ensureDeafAfk(guild);
+        await ensureDeafAfk(guild, false);
 
-        // 8. Send Live Boot Confirmation Card into Security Log Channel
+        // 8. Send Live Boot Confirmation Card into Security Log Channel only for configured server
         await sendDiscordBootAlert(guild, { roles: rolesCount, logs: logsCount });
       } catch (err) {
         console.error(`[BOOT RESTORER ERROR] Guild ${guild.name}:`, err.message);
