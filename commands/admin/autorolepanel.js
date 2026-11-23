@@ -16,7 +16,7 @@ const stagedRoles = new Map();
 
 function buildPanelEmbed(guild, stagedRoleId = null, notice = null) {
   const cfg = KIKI.loadConfig();
-  const currentRoleId = cfg.autorole_id;
+  const currentRoleId = cfg.guilds?.[guild.id]?.autorole_id || (guild.roles.cache.has(cfg.autorole_id) ? cfg.autorole_id : null);
   const currentRole = currentRoleId ? guild.roles.cache.get(currentRoleId) : null;
   const stagedRole = stagedRoleId ? guild.roles.cache.get(stagedRoleId) : null;
 
@@ -210,11 +210,12 @@ module.exports = {
       if (customId === 'ar_btn_save') {
         const stagedRoleId = stagedRoles.get(guild.id);
         const cfg = KIKI.loadConfig();
+        const currentGuildRoleId = cfg.guilds?.[guild.id]?.autorole_id || (guild.roles.cache.has(cfg.autorole_id) ? cfg.autorole_id : null);
 
         if (!stagedRoleId) {
-          if (cfg.autorole_id) {
+          if (currentGuildRoleId) {
             return interaction.reply({
-              embeds: [KikiEmbed.warn('Already Saved', `Auto-Role pehle se hi <@&${cfg.autorole_id}> par configured hai! Naya role change karne ke liye pehle dropdown se role chunein.`)],
+              embeds: [KikiEmbed.warn('Already Saved', `Auto-Role pehle se hi <@&${currentGuildRoleId}> par configured hai! Naya role change karne ke liye pehle dropdown se role chunein.`)],
               ephemeral: true
             });
           }
@@ -233,8 +234,11 @@ module.exports = {
           });
         }
 
-        // Commit to persistent configuration
-        cfg.autorole_id = role.id;
+        // Commit to persistent configuration (isolated per guild)
+        if (!cfg.guilds) cfg.guilds = {};
+        if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
+        cfg.guilds[guild.id].autorole_id = role.id;
+        if (!cfg.autorole_id) cfg.autorole_id = role.id;
         KIKI.saveConfig(cfg);
         stagedRoles.delete(guild.id);
 
@@ -248,7 +252,9 @@ module.exports = {
 
       if (customId === 'ar_btn_disable') {
         const cfg = KIKI.loadConfig();
-        cfg.autorole_id = null;
+        if (!cfg.guilds) cfg.guilds = {};
+        if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
+        cfg.guilds[guild.id].autorole_id = null;
         KIKI.saveConfig(cfg);
         stagedRoles.delete(guild.id);
 
@@ -262,7 +268,7 @@ module.exports = {
 
       if (customId === 'ar_btn_test') {
         const cfg = KIKI.loadConfig();
-        const roleId = cfg.autorole_id;
+        const roleId = cfg.guilds?.[guild.id]?.autorole_id || (guild.roles.cache.has(cfg.autorole_id) ? cfg.autorole_id : null);
         if (!roleId) {
           return interaction.reply({
             embeds: [KikiEmbed.warn('No Auto-Role Configured', 'Test karne ke liye pehle dropdown se role select karke **Save & Apply** karein!')],

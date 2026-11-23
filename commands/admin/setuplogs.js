@@ -140,15 +140,28 @@ async function executeSetup(guild, userMember, client) {
     false
   );
 
-  // 4. Save to config.json
+  // 4. Save to config.json (Multi-Server Isolated per Guild)
   const cfg = KIKI.loadConfig();
-  cfg.voice_log_channel_id = voiceChannel.id;
-  cfg.chat_log_channel_id = chatChannel.id;
-  cfg.welcome_channel_id = welcomeChannel.id;
-  cfg.leave_channel_id = leaveChannel.id;
-  cfg.log_channel_id = securityChannel.id;
-  cfg.security_log_channel_id = securityChannel.id;
-  cfg.logs_category_id = category.id;
+  if (!cfg.guilds) cfg.guilds = {};
+  if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
+  cfg.guilds[guild.id].voice_log_channel_id = voiceChannel.id;
+  cfg.guilds[guild.id].chat_log_channel_id = chatChannel.id;
+  cfg.guilds[guild.id].welcome_channel_id = welcomeChannel.id;
+  cfg.guilds[guild.id].leave_channel_id = leaveChannel.id;
+  cfg.guilds[guild.id].log_channel_id = securityChannel.id;
+  cfg.guilds[guild.id].security_log_channel_id = securityChannel.id;
+  cfg.guilds[guild.id].logs_category_id = category.id;
+
+  // Set top-level fallback only if unset
+  if (!cfg.security_log_channel_id) {
+    cfg.voice_log_channel_id = voiceChannel.id;
+    cfg.chat_log_channel_id = chatChannel.id;
+    cfg.welcome_channel_id = welcomeChannel.id;
+    cfg.leave_channel_id = leaveChannel.id;
+    cfg.log_channel_id = securityChannel.id;
+    cfg.security_log_channel_id = securityChannel.id;
+    cfg.logs_category_id = category.id;
+  }
   KIKI.saveConfig(cfg);
 
   // 5. Send initial banner messages to created channels (if empty or on setup)

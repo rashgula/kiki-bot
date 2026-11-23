@@ -38,13 +38,12 @@ async function ensureLevelRoles(guild) {
   if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
   if (!cfg.guilds[guild.id].level_roles) cfg.guilds[guild.id].level_roles = {};
 
-  const isPrimaryGuild = String(guild.id) === '1563548609960742942';
-  if (!cfg.level_roles) cfg.level_roles = {};
   let modified = false;
   let verifiedCount = 0;
 
   for (const def of LEVEL_DEFINITIONS) {
-    const existingId = cfg.guilds[guild.id].level_roles[String(def.level)] || (isPrimaryGuild ? cfg.level_roles[String(def.level)] : null);
+    const existingId = cfg.guilds[guild.id].level_roles[String(def.level)] ||
+      (guild.roles.cache.has(cfg.level_roles?.[String(def.level)]) ? cfg.level_roles[String(def.level)] : null);
     let role = existingId ? guild.roles.cache.get(existingId) : null;
 
     if (!role) {
@@ -64,10 +63,10 @@ async function ensureLevelRoles(guild) {
           name: def.name,
           color: def.color,
           hoist: true,
-          reason: `[KIKI Boot Restorer] Auto-ensure Level ${def.level} role on startup`
+          reason: `[KIKI Boot Restorer] Auto-ensure Level ${def.level} role in ${guild.name}`
         });
       } catch (err) {
-        console.error(`[BOOT RESTORER] Could not auto-create role Level ${def.level}:`, err.message);
+        console.error(`[BOOT RESTORER] Could not auto-create role Level ${def.level} in ${guild.name}:`, err.message);
       }
     }
 
@@ -77,11 +76,13 @@ async function ensureLevelRoles(guild) {
         cfg.guilds[guild.id].level_roles[String(def.level)] = role.id;
         modified = true;
       }
-      if (isPrimaryGuild && cfg.level_roles[String(def.level)] !== role.id) {
-        cfg.level_roles[String(def.level)] = role.id;
-        modified = true;
-      }
     }
+  }
+
+  // Preserve top-level if not set
+  if (!cfg.level_roles && cfg.guilds[guild.id].level_roles) {
+    cfg.level_roles = { ...cfg.guilds[guild.id].level_roles };
+    modified = true;
   }
 
   if (modified) {
@@ -99,12 +100,11 @@ async function ensureLogChannels(guild) {
   if (!cfg.guilds) cfg.guilds = {};
   if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
 
-  const isPrimaryGuild = String(guild.id) === '1563548609960742942';
   let modified = false;
   let verifiedCount = 0;
 
   // 1. Ensure Category
-  const savedCatId = cfg.guilds[guild.id].logs_category_id || (isPrimaryGuild ? cfg.logs_category_id : null);
+  const savedCatId = cfg.guilds[guild.id].logs_category_id || (guild.channels.cache.has(cfg.logs_category_id) ? cfg.logs_category_id : null);
   let category = savedCatId ? guild.channels.cache.get(savedCatId) : null;
   if (!category) {
     category = guild.channels.cache.find(
@@ -137,17 +137,15 @@ async function ensureLogChannels(guild) {
             ]
           }
         ],
-        reason: '[KIKI Boot Restorer] Auto-create logs category'
+        reason: `[KIKI Boot Restorer] Auto-create logs category in ${guild.name}`
       });
       cfg.guilds[guild.id].logs_category_id = category.id;
-      if (isPrimaryGuild) cfg.logs_category_id = category.id;
       modified = true;
     } catch (err) {
-      console.error('[BOOT RESTORER] Could not auto-create logs category:', err.message);
+      console.error(`[BOOT RESTORER] Could not auto-create logs category in ${guild.name}:`, err.message);
     }
   } else if (cfg.guilds[guild.id].logs_category_id !== category.id) {
     cfg.guilds[guild.id].logs_category_id = category.id;
-    if (isPrimaryGuild) cfg.logs_category_id = category.id;
     modified = true;
   }
 
@@ -155,7 +153,7 @@ async function ensureLogChannels(guild) {
 
   // 2. Ensure each Log Channel
   for (const def of LOG_CHANNEL_DEFINITIONS) {
-    const existingId = cfg.guilds[guild.id][def.key] || (isPrimaryGuild ? cfg[def.key] : null);
+    const existingId = cfg.guilds[guild.id][def.key] || (guild.channels.cache.has(cfg[def.key]) ? cfg[def.key] : null);
     let ch = existingId ? guild.channels.cache.get(existingId) : null;
 
     if (!ch) {
@@ -195,10 +193,10 @@ async function ensureLogChannels(guild) {
               ]
             }
           ],
-          reason: `[KIKI Boot Restorer] Auto-create ${def.name} on startup`
+          reason: `[KIKI Boot Restorer] Auto-create ${def.name} on startup in ${guild.name}`
         });
       } catch (err) {
-        console.error(`[BOOT RESTORER] Could not auto-create channel ${def.name}:`, err.message);
+        console.error(`[BOOT RESTORER] Could not auto-create channel ${def.name} in ${guild.name}:`, err.message);
       }
     }
 
@@ -208,17 +206,14 @@ async function ensureLogChannels(guild) {
         cfg.guilds[guild.id][def.key] = ch.id;
         modified = true;
       }
-      if (isPrimaryGuild) {
-        if (cfg[def.key] !== ch.id) {
-          cfg[def.key] = ch.id;
-          modified = true;
-        }
-        if (def.key === 'security_log_channel_id' && cfg.log_channel_id !== ch.id) {
-          cfg.log_channel_id = ch.id;
-          modified = true;
-        }
-      }
     }
+  }
+
+  // Preserve top-level if completely unset
+  if (!cfg.security_log_channel_id && cfg.guilds[guild.id].security_log_channel_id) {
+    cfg.security_log_channel_id = cfg.guilds[guild.id].security_log_channel_id;
+    cfg.log_channel_id = cfg.guilds[guild.id].security_log_channel_id;
+    modified = true;
   }
 
   if (modified) {
@@ -261,28 +256,22 @@ function ensureAntiNukeState() {
 }
 
 function ensureLevelAnnounceChannels(guild) {
-  const isPrimaryGuild = String(guild.id) === '1563548609960742942';
-  if (!isPrimaryGuild) return;
-
   const cfg = KIKI.loadConfig();
+  if (!cfg.guilds) cfg.guilds = {};
+  if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
+
   let modified = false;
 
-  // Voice level announcement channel fallback
-  if (cfg.level_channel_id) {
-    const ch = guild.channels.cache.get(cfg.level_channel_id);
-    if (!ch) {
-      cfg.level_channel_id = cfg.security_log_channel_id || guild.channels.cache.find(c => c.type === ChannelType.GuildText)?.id || null;
-      modified = true;
-    }
+  const levelChannel = KIKI.getGuildChannel(guild, 'level_channel_id');
+  if (levelChannel && cfg.guilds[guild.id].level_channel_id !== levelChannel.id) {
+    cfg.guilds[guild.id].level_channel_id = levelChannel.id;
+    modified = true;
   }
 
-  // Chat level announcement channel
-  if (cfg.chat_level_channel_id) {
-    const ch = guild.channels.cache.get(cfg.chat_level_channel_id);
-    if (!ch) {
-      cfg.chat_level_channel_id = null;
-      modified = true;
-    }
+  const chatLevelChannel = KIKI.getGuildChannel(guild, 'chat_level_channel_id');
+  if (chatLevelChannel && cfg.guilds[guild.id].chat_level_channel_id !== chatLevelChannel.id) {
+    cfg.guilds[guild.id].chat_level_channel_id = chatLevelChannel.id;
+    modified = true;
   }
 
   if (modified) {
@@ -319,29 +308,34 @@ async function autoSyncSlashCommands(client) {
 async function sendDiscordBootAlert(guild, stats) {
   try {
     const cfg = KIKI.loadConfig();
-    const targetChannelId = cfg.security_log_channel_id || cfg.log_channel_id;
-    if (!targetChannelId) return;
-
-    const channel = guild.channels.cache.get(targetChannelId);
+    const channel = KIKI.getGuildChannel(guild, 'security_log_channel_id') ||
+      KIKI.getGuildChannel(guild, 'log_channel_id');
     if (!channel || !channel.isTextBased()) return;
 
+    const gData = cfg.guilds?.[guild.id] || {};
     const isAntiNukeOn = cfg.antinuke !== false && cfg.master_antinuke !== false;
     const isChatXpOn = cfg.chat_xp_enabled !== false;
-    const autoRoleObj = cfg.autorole_id ? guild.roles.cache.get(cfg.autorole_id) : null;
-    const autoRoleDisplay = autoRoleObj ? `<@&${autoRoleObj.id}>` : (cfg.autorole_id ? `\`ID: ${cfg.autorole_id}\`` : '`Not Set`');
-    const deafMoverDisplay = cfg.deaf_mover_enabled ? (cfg.deaf_afk_channel_id ? `<#${cfg.deaf_afk_channel_id}> (10m)` : '`Active (No VC set)`') : '`Disabled`';
-    const inviteTrackerDisplay = cfg.invite_tracker_channel_id ? `<#${cfg.invite_tracker_channel_id}>` : '`Active (Real-time Logs)`';
+    const autoRoleId = gData.autorole_id || (guild.roles.cache.has(cfg.autorole_id) ? cfg.autorole_id : null);
+    const autoRoleObj = autoRoleId ? guild.roles.cache.get(autoRoleId) : null;
+    const autoRoleDisplay = autoRoleObj ? `<@&${autoRoleObj.id}>` : (autoRoleId ? `\`ID: ${autoRoleId}\`` : '`Not Set`');
+
+    const deafMoverActive = gData.deaf_mover_enabled ?? (cfg.deaf_mover_enabled !== false);
+    const deafAfkId = gData.deaf_afk_channel_id || (guild.channels.cache.has(cfg.deaf_afk_channel_id) ? cfg.deaf_afk_channel_id : guild.afkChannelId);
+    const deafMoverDisplay = deafMoverActive ? (deafAfkId ? `<#${deafAfkId}> (10m)` : '`Active (Auto-Detect AFK)`') : '`Disabled`';
+
+    const inviteTrackerId = gData.invite_tracker_channel_id || (guild.channels.cache.has(cfg.invite_tracker_channel_id) ? cfg.invite_tracker_channel_id : null);
+    const inviteTrackerDisplay = inviteTrackerId ? `<#${inviteTrackerId}>` : '`Active (Real-time Logs)`';
 
     const embed = KikiEmbed.build({
       title: '🔮 KIKI ONLINE • System Boot & State Auto-Restored',
       description:
         `**Bot band hoke chalu hone par saare systems automatically LIVE ho chuke hain!**\n` +
-        `Aapko koi bhi command dubara run karne ki zaroorat nahi hai. ✨\n\n` +
+        `Aapke server (**${guild.name}**) ke liye sabhi channels aur level roles safely restored hain. ✨\n\n` +
         `🛡️ **Master Anti-Nuke:** ${isAntiNukeOn ? '🟢 `ACTIVE (All 16+ defense shields live)`' : '🔴 `PAUSED`'}\n` +
         `👑 **Level Roles (5-50):** 🟢 \`${stats.roles}/10 Roles Verified & Bound\`\n` +
         `📜 **Server Log Channels:** 🟢 \`${stats.logs}/5 Channels Active & Linked\`\n` +
         `🏷️ **Auto-Role on Join:** ${autoRoleObj ? '🟢 ' + autoRoleDisplay : '⚪ `' + autoRoleDisplay + '`'}\n` +
-        `💤 **Deaf AFK Mover:** ${cfg.deaf_mover_enabled ? '🟢 ' + deafMoverDisplay : '⚪ `' + deafMoverDisplay + '`'}\n` +
+        `💤 **Deaf AFK Mover:** ${deafMoverActive ? '🟢 ' + deafMoverDisplay : '⚪ `' + deafMoverDisplay + '`'}\n` +
         `📩 **Invite Tracker:** 🟢 ${inviteTrackerDisplay}\n` +
         `🎙️ **Voice XP Engine:** 🟢 \`RUNNING (18-23 XP/min in VC)\`\n` +
         `💬 **Chat XP Engine:** ${isChatXpOn ? '🟢 `RUNNING (15-25 XP/msg • No Roles)`' : '🔴 `PAUSED`'}\n` +
@@ -349,17 +343,22 @@ async function sendDiscordBootAlert(guild, stats) {
         `🔒 **Security Whitelist:** 🟢 \`${(cfg.whitelist || []).length} Whitelisted Members\`\n` +
         `🎛️ **Command Permissions:** 🟢 \`${(cfg.public_commands || []).length} Public Commands Active\``,
       color: config.COLORS.PRIMARY || 0x9B59B6,
-      footer: { text: `Auto-Boot Self-Healing Engine • KIKI v${config.BOT_VERSION}` },
+      footer: { text: `Multi-Server Isolation Engine • KIKI v${config.BOT_VERSION}` },
       timestamp: true
     });
 
     await channel.send({ embeds: [embed] }).catch(() => {});
   } catch (err) {
-    console.error('[BOOT ALERT ERROR]', err.message);
+    console.error(`[BOOT ALERT ERROR] Guild ${guild.name}:`, err.message);
   }
 }
 
 module.exports = {
+  ensureLevelRoles,
+  ensureLogChannels,
+  ensureLevelAnnounceChannels,
+  autoSyncSlashCommands,
+  sendDiscordBootAlert,
   async restoreAndVerify(client) {
     console.log(chalk.magenta('  🔄 [AUTO-BOOT RESTORER] Restoring server configurations...'));
 

@@ -12,11 +12,12 @@ const KikiEmbed = require('../../utils/embed.js');
 const KIKI = require('../../utils/kiki.js');
 const config = require('../../config.js');
 
-function buildPanelEmbed(statusNotice = null) {
+function buildPanelEmbed(guild = null, statusNotice = null) {
   const cfg = KIKI.loadConfig();
-  const channelId = cfg.chat_level_channel_id;
-  const isAlertsOn = cfg.chat_level_alerts !== false;
-  const isXpOn = cfg.chat_xp_enabled !== false;
+  const gData = (guild ? cfg.guilds?.[guild.id] : null) || {};
+  const channelId = gData.chat_level_channel_id || (guild?.channels.cache.has(cfg.chat_level_channel_id) ? cfg.chat_level_channel_id : null);
+  const isAlertsOn = gData.chat_level_alerts !== undefined ? gData.chat_level_alerts : (cfg.chat_level_alerts !== false);
+  const isXpOn = gData.chat_xp_enabled !== undefined ? gData.chat_xp_enabled : (cfg.chat_xp_enabled !== false);
 
   const channelText = channelId ? `<#${channelId}> (\`${channelId}\`)` : '`🔴 Not Configured (No channel set)`';
 
@@ -124,8 +125,11 @@ module.exports = {
       if (!ch) return message.reply('Channel mention karein! Jaise: `&chatlevelpanel channel #chat-levels`');
 
       const cfg = KIKI.loadConfig();
-      cfg.chat_level_channel_id = ch.id;
-      cfg.chat_level_alerts = true;
+      if (!cfg.guilds) cfg.guilds = {};
+      if (!cfg.guilds[message.guild.id]) cfg.guilds[message.guild.id] = {};
+      cfg.guilds[message.guild.id].chat_level_channel_id = ch.id;
+      cfg.guilds[message.guild.id].chat_level_alerts = true;
+      if (!cfg.chat_level_channel_id) cfg.chat_level_channel_id = ch.id;
       KIKI.saveConfig(cfg);
 
       return message.reply({
@@ -135,26 +139,32 @@ module.exports = {
 
     if (sub === 'alerts' || sub === 'toggle') {
       const cfg = KIKI.loadConfig();
-      cfg.chat_level_alerts = cfg.chat_level_alerts === false ? true : false;
+      if (!cfg.guilds) cfg.guilds = {};
+      if (!cfg.guilds[message.guild.id]) cfg.guilds[message.guild.id] = {};
+      const current = cfg.guilds[message.guild.id].chat_level_alerts !== undefined ? cfg.guilds[message.guild.id].chat_level_alerts : (cfg.chat_level_alerts !== false);
+      cfg.guilds[message.guild.id].chat_level_alerts = !current;
       KIKI.saveConfig(cfg);
 
       return message.reply({
-        embeds: [KikiEmbed.success('Alerts Toggled', `🔔 Chat Level-up alerts ab **${cfg.chat_level_alerts ? 'ENABLED' : 'DISABLED'}** hain.`)]
+        embeds: [KikiEmbed.success('Alerts Toggled', `🔔 Chat Level-up alerts ab **${!current ? 'ENABLED' : 'DISABLED'}** hain.`)]
       });
     }
 
     if (sub === 'xp') {
       const cfg = KIKI.loadConfig();
-      cfg.chat_xp_enabled = cfg.chat_xp_enabled === false ? true : false;
+      if (!cfg.guilds) cfg.guilds = {};
+      if (!cfg.guilds[message.guild.id]) cfg.guilds[message.guild.id] = {};
+      const current = cfg.guilds[message.guild.id].chat_xp_enabled !== undefined ? cfg.guilds[message.guild.id].chat_xp_enabled : (cfg.chat_xp_enabled !== false);
+      cfg.guilds[message.guild.id].chat_xp_enabled = !current;
       KIKI.saveConfig(cfg);
 
       return message.reply({
-        embeds: [KikiEmbed.success('Chat XP Toggled', `⚡ Chat XP tracking ab **${cfg.chat_xp_enabled ? 'ACTIVE' : 'PAUSED'}** hai.`)]
+        embeds: [KikiEmbed.success('Chat XP Toggled', `⚡ Chat XP tracking ab **${!current ? 'ACTIVE' : 'PAUSED'}** hai.`)]
       });
     }
 
     // Default: Open Interactive UI Panel
-    const embed = buildPanelEmbed();
+    const embed = buildPanelEmbed(message.guild);
     const components = buildPanelComponents();
     await message.channel.send({ embeds: [embed], components });
   },
@@ -168,58 +178,63 @@ module.exports = {
       });
     }
 
-    const { customId } = interaction;
+    const { customId, guild } = interaction;
     const cfg = KIKI.loadConfig();
+    if (!cfg.guilds) cfg.guilds = {};
+    if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
 
     // 1. Channel Select Menu
     if (customId === 'cl_channel_select' && interaction.isChannelSelectMenu()) {
       const selectedChannelId = interaction.values[0];
-      cfg.chat_level_channel_id = selectedChannelId;
-      cfg.chat_level_alerts = true;
+      cfg.guilds[guild.id].chat_level_channel_id = selectedChannelId;
+      cfg.guilds[guild.id].chat_level_alerts = true;
+      if (!cfg.chat_level_channel_id) cfg.chat_level_channel_id = selectedChannelId;
       KIKI.saveConfig(cfg);
 
       const notice = `✅ **Channel Bound!** Chat level-up notifications ab <#${selectedChannelId}> me aayenge.`;
-      const embed = buildPanelEmbed(notice);
+      const embed = buildPanelEmbed(guild, notice);
       const components = buildPanelComponents();
       return interaction.update({ embeds: [embed], components });
     }
 
     // 2. Button: Toggle Alerts
     if (customId === 'cl_btn_alerts') {
-      cfg.chat_level_alerts = cfg.chat_level_alerts === false ? true : false;
+      const current = cfg.guilds[guild.id].chat_level_alerts !== undefined ? cfg.guilds[guild.id].chat_level_alerts : (cfg.chat_level_alerts !== false);
+      cfg.guilds[guild.id].chat_level_alerts = !current;
       KIKI.saveConfig(cfg);
 
-      const notice = `🔔 **Alerts:** Level-up celebration cards are now **${cfg.chat_level_alerts ? 'ENABLED' : 'DISABLED'}**.`;
-      const embed = buildPanelEmbed(notice);
+      const notice = `🔔 **Alerts:** Level-up celebration cards are now **${!current ? 'ENABLED' : 'DISABLED'}**.`;
+      const embed = buildPanelEmbed(guild, notice);
       const components = buildPanelComponents();
       return interaction.update({ embeds: [embed], components });
     }
 
     // 3. Button: Toggle Chat XP
     if (customId === 'cl_btn_xp') {
-      cfg.chat_xp_enabled = cfg.chat_xp_enabled === false ? true : false;
+      const current = cfg.guilds[guild.id].chat_xp_enabled !== undefined ? cfg.guilds[guild.id].chat_xp_enabled : (cfg.chat_xp_enabled !== false);
+      cfg.guilds[guild.id].chat_xp_enabled = !current;
       KIKI.saveConfig(cfg);
 
-      const notice = `⚡ **Chat XP:** Chat tracking is now **${cfg.chat_xp_enabled ? 'ACTIVE' : 'PAUSED'}**.`;
-      const embed = buildPanelEmbed(notice);
+      const notice = `⚡ **Chat XP:** Chat tracking is now **${!current ? 'ACTIVE' : 'PAUSED'}**.`;
+      const embed = buildPanelEmbed(guild, notice);
       const components = buildPanelComponents();
       return interaction.update({ embeds: [embed], components });
     }
 
     // 4. Button: Unset Channel
     if (customId === 'cl_btn_clear') {
-      cfg.chat_level_channel_id = null;
+      cfg.guilds[guild.id].chat_level_channel_id = null;
       KIKI.saveConfig(cfg);
 
       const notice = '🚫 Chat level-up announcement channel unset kar diya gaya hai.';
-      const embed = buildPanelEmbed(notice);
+      const embed = buildPanelEmbed(guild, notice);
       const components = buildPanelComponents();
       return interaction.update({ embeds: [embed], components });
     }
 
     // 5. Button: Refresh
     if (customId === 'cl_btn_refresh') {
-      const embed = buildPanelEmbed('🔃 Panel refreshed!');
+      const embed = buildPanelEmbed(guild, '🔃 Panel refreshed!');
       const components = buildPanelComponents();
       return interaction.update({ embeds: [embed], components });
     }

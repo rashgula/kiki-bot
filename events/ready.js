@@ -1,5 +1,5 @@
 // KIKI Bot - Ready Event
-const { ActivityType, REST, Routes } = require('discord.js');
+const { ActivityType, REST, Routes, PermissionsBitField } = require('discord.js');
 const chalk = require('chalk');
 const KIKI = require('../utils/kiki.js');
 const config = require('../config.js');
@@ -11,11 +11,31 @@ module.exports = {
     // Set KIKI presence
     client.user.setPresence({
       activities: [{
-        name: `🔮 &help | ${client.totalCommands || '1,114+'} cmds | KIKI v${config.BOT_VERSION}`,
+        name: `🔮 &help | &invite | ${client.totalCommands || '1,114+'} cmds | KIKI v${config.BOT_VERSION}`,
         type: ActivityType.Watching,
       }],
       status: 'dnd',
     });
+
+    // ── Configure Application Install Settings (Native Profile "Add App" Button) ──
+    try {
+      if (client.application) {
+        await client.application.fetch().catch(() => {});
+        const inviteUrl = KIKI.getBotInviteUrl(client.user.id);
+        await client.application.edit({
+          customInstallURL: inviteUrl,
+          installParams: {
+            scopes: ['bot', 'applications.commands'],
+            permissions: new PermissionsBitField(['Administrator'])
+          },
+          description: `🔮 KIKI — Gothic Purple Discord Bot | 1,114+ Commands\n🛡️ Master Anti-Nuke • 👑 Leveling System • 🔊 Voice Master\nClick the blue 'Add App' button above or type &invite to add KIKI to your server!`
+        }).catch(err => {
+          console.log(chalk.gray(`  ℹ️ [APPLICATION PROFILE] Install settings note: ${err.message}`));
+        });
+      }
+    } catch (e) {
+      console.log(chalk.gray(`  ℹ️ [APPLICATION PROFILE] ${e.message}`));
+    }
 
     // Print KIKI banner
     console.log('\n');

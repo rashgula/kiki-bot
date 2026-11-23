@@ -160,6 +160,16 @@ function buildButtons(currentCat = 'home') {
   return new ActionRowBuilder().addComponents(b1, b2, b3, b4, b5);
 }
 
+function buildInviteRow(clientId) {
+  const KIKI = require('../../utils/kiki.js');
+  const inviteUrl = KIKI.getBotInviteUrl(clientId);
+  const inviteBtn = new ButtonBuilder()
+    .setLabel('➕ Add KIKI to Server')
+    .setStyle(ButtonStyle.Link)
+    .setURL(inviteUrl);
+  return new ActionRowBuilder().addComponents(inviteBtn);
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('help')
@@ -208,7 +218,8 @@ module.exports = {
       const embed = buildMainMenuEmbed(totalCmds);
       const row = buildSelectMenu();
       const bRow = buildButtons('home');
-      await interaction.reply({ embeds: [embed], components: [row, bRow] });
+      const iRow = buildInviteRow(client.user?.id);
+      await interaction.reply({ embeds: [embed], components: [row, bRow, iRow] });
     } catch (err) {
       console.error('[HELP EXECUTE ERROR]', err);
       if (!interaction.replied && !interaction.deferred) {
@@ -345,6 +356,7 @@ module.exports = {
     const embed = buildMainMenuEmbed(totalCmds);
     const row = buildSelectMenu();
     const bRow = buildButtons('home');
-    message.reply({ embeds: [embed], components: [row, bRow] });
+    const iRow = buildInviteRow(client.user?.id);
+    message.reply({ embeds: [embed], components: [row, bRow, iRow] });
   }
 };

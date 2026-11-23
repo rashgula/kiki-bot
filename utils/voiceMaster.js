@@ -78,16 +78,18 @@ const VoiceMaster = {
   // ── Audit Logs Channel Helper ─────────────────────────────────
   async ensureLogChannel(guild) {
     const cfg = KIKI.loadConfig();
-    let logChannelId = cfg.voice_master_log_channel_id;
+    const gData = cfg.guilds?.[guild.id] || {};
+    let logChannelId = gData.voice_master_log_channel_id || (guild.channels.cache.has(cfg.voice_master_log_channel_id) ? cfg.voice_master_log_channel_id : null);
 
     let logChannel = logChannelId ? guild.channels.cache.get(logChannelId) : null;
     if (!logChannel && logChannelId) {
       logChannel = await guild.channels.fetch(logChannelId).catch(() => null);
     }
 
-    if (!logChannel && cfg.voice_master_category_id) {
-      const category = guild.channels.cache.get(cfg.voice_master_category_id) ||
-        await guild.channels.fetch(cfg.voice_master_category_id).catch(() => null);
+    const categoryId = gData.voice_master_category_id || (guild.channels.cache.has(cfg.voice_master_category_id) ? cfg.voice_master_category_id : null);
+    if (!logChannel && categoryId) {
+      const category = guild.channels.cache.get(categoryId) ||
+        await guild.channels.fetch(categoryId).catch(() => null);
 
       if (category) {
         logChannel = guild.channels.cache.find(c => c.parentId === category.id && (c.name.includes('vm-logs') || c.name.includes('voice-master-logs')));
@@ -266,8 +268,9 @@ const VoiceMaster = {
     if (!guild) return;
 
     const cfg = KIKI.loadConfig();
-    const joinChannelId = cfg.voice_master_channel_id;
-    const categoryId = cfg.voice_master_category_id;
+    const gData = cfg.guilds?.[guild.id] || {};
+    const joinChannelId = gData.voice_master_channel_id || (guild.channels.cache.has(cfg.voice_master_channel_id) ? cfg.voice_master_channel_id : null);
+    const categoryId = gData.voice_master_category_id || (guild.channels.cache.has(cfg.voice_master_category_id) ? cfg.voice_master_category_id : null);
 
     const member = newState.member || oldState.member;
     if (!member || member.user.bot) return;

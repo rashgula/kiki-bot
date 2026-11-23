@@ -48,17 +48,9 @@ const DeafMover = {
     }
   },
 
-  // Check all voice states and move members who exceeded threshold
+  // Check all voice states and move members who exceeded threshold (Multi-Server Isolated)
   async checkAndMove(client, guildFilter = null) {
     const cfg = KIKI.loadConfig();
-    if (cfg.deaf_mover_enabled === false) return { moved: 0, checked: 0 };
-
-    const targetChannelId = cfg.deaf_afk_channel_id;
-    if (!targetChannelId) return { moved: 0, checked: 0 };
-
-    const timeoutMinutes = Number(cfg.deaf_timeout_minutes) || 10;
-    const thresholdMs = timeoutMinutes * 60 * 1000;
-
     let movedCount = 0;
     let checkedCount = 0;
 
@@ -66,6 +58,16 @@ const DeafMover = {
 
     for (const guild of guilds) {
       if (!guild.available) continue;
+
+      const gData = cfg.guilds?.[guild.id] || {};
+      const isEnabled = gData.deaf_mover_enabled ?? (cfg.deaf_mover_enabled !== false);
+      if (!isEnabled) continue;
+
+      const targetChannelId = gData.deaf_afk_channel_id || (guild.channels.cache.has(cfg.deaf_afk_channel_id) ? cfg.deaf_afk_channel_id : guild.afkChannelId);
+      if (!targetChannelId) continue;
+
+      const timeoutMinutes = Number(gData.deaf_timeout_minutes || cfg.deaf_timeout_minutes) || 10;
+      const thresholdMs = timeoutMinutes * 60 * 1000;
 
       const botMember = guild.members.me;
       if (!botMember || !botMember.permissions.has(PermissionFlagsBits.MoveMembers)) {

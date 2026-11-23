@@ -150,13 +150,23 @@ module.exports = {
           components: VoiceMaster.buildPanelComponents()
         });
 
-        // 6. Save Configuration
-        cfg.voice_master_enabled = true;
-        cfg.voice_master_category_id = category.id;
-        cfg.voice_master_channel_id = joinChannel.id;
-        cfg.voice_master_interface_id = interfaceChannel.id;
-        cfg.voice_master_panel_message_id = panelMessage.id;
-        cfg.voice_master_log_channel_id = logChannel ? logChannel.id : null;
+        // 6. Save Configuration (Multi-Server Isolated per Guild)
+        if (!cfg.guilds) cfg.guilds = {};
+        if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
+        cfg.guilds[guild.id].voice_master_enabled = true;
+        cfg.guilds[guild.id].voice_master_category_id = category.id;
+        cfg.guilds[guild.id].voice_master_channel_id = joinChannel.id;
+        cfg.guilds[guild.id].voice_master_interface_id = interfaceChannel.id;
+        cfg.guilds[guild.id].voice_master_panel_message_id = panelMessage.id;
+        cfg.guilds[guild.id].voice_master_log_channel_id = logChannel ? logChannel.id : null;
+        if (!cfg.voice_master_channel_id) {
+          cfg.voice_master_enabled = true;
+          cfg.voice_master_category_id = category.id;
+          cfg.voice_master_channel_id = joinChannel.id;
+          cfg.voice_master_interface_id = interfaceChannel.id;
+          cfg.voice_master_panel_message_id = panelMessage.id;
+          cfg.voice_master_log_channel_id = logChannel ? logChannel.id : null;
+        }
         KIKI.saveConfig(cfg);
 
         const successEmbed = KikiEmbed.build({
@@ -189,7 +199,10 @@ module.exports = {
     if (subcommand === 'setlog') {
       const channel = interaction.options.getChannel('channel');
       const cfg = KIKI.loadConfig();
-      cfg.voice_master_log_channel_id = channel.id;
+      if (!cfg.guilds) cfg.guilds = {};
+      if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
+      cfg.guilds[guild.id].voice_master_log_channel_id = channel.id;
+      if (!cfg.voice_master_log_channel_id) cfg.voice_master_log_channel_id = channel.id;
       KIKI.saveConfig(cfg);
 
       return interaction.reply({
@@ -201,7 +214,8 @@ module.exports = {
     // ── 2. PANEL SUBCOMMAND ─────────────────────────────────────
     if (subcommand === 'panel') {
       const cfg = KIKI.loadConfig();
-      const interfaceId = cfg.voice_master_interface_id;
+      const gData = cfg.guilds?.[guild.id] || {};
+      const interfaceId = gData.voice_master_interface_id || (guild.channels.cache.has(cfg.voice_master_interface_id) ? cfg.voice_master_interface_id : null);
       const targetChannel = interfaceId ? guild.channels.cache.get(interfaceId) : interaction.channel;
 
       if (!targetChannel) {
@@ -225,10 +239,13 @@ module.exports = {
     // ── 3. RESET SUBCOMMAND ─────────────────────────────────────
     if (subcommand === 'reset') {
       const cfg = KIKI.loadConfig();
-      cfg.voice_master_enabled = false;
-      cfg.voice_master_channel_id = null;
-      cfg.voice_master_interface_id = null;
-      cfg.voice_master_category_id = null;
+      if (!cfg.guilds) cfg.guilds = {};
+      if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
+      cfg.guilds[guild.id].voice_master_enabled = false;
+      cfg.guilds[guild.id].voice_master_channel_id = null;
+      cfg.guilds[guild.id].voice_master_interface_id = null;
+      cfg.guilds[guild.id].voice_master_category_id = null;
+      cfg.guilds[guild.id].voice_master_log_channel_id = null;
       KIKI.saveConfig(cfg);
 
       return interaction.reply({
@@ -588,12 +605,22 @@ module.exports = {
         components: VoiceMaster.buildPanelComponents()
       });
 
-      cfg.voice_master_enabled = true;
-      cfg.voice_master_category_id = category.id;
-      cfg.voice_master_channel_id = joinChannel.id;
-      cfg.voice_master_interface_id = interfaceChannel.id;
-      cfg.voice_master_panel_message_id = panelMessage.id;
-      cfg.voice_master_log_channel_id = logChannel ? logChannel.id : null;
+      if (!cfg.guilds) cfg.guilds = {};
+      if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
+      cfg.guilds[guild.id].voice_master_enabled = true;
+      cfg.guilds[guild.id].voice_master_category_id = category.id;
+      cfg.guilds[guild.id].voice_master_channel_id = joinChannel.id;
+      cfg.guilds[guild.id].voice_master_interface_id = interfaceChannel.id;
+      cfg.guilds[guild.id].voice_master_panel_message_id = panelMessage.id;
+      cfg.guilds[guild.id].voice_master_log_channel_id = logChannel ? logChannel.id : null;
+      if (!cfg.voice_master_channel_id) {
+        cfg.voice_master_enabled = true;
+        cfg.voice_master_category_id = category.id;
+        cfg.voice_master_channel_id = joinChannel.id;
+        cfg.voice_master_interface_id = interfaceChannel.id;
+        cfg.voice_master_panel_message_id = panelMessage.id;
+        cfg.voice_master_log_channel_id = logChannel ? logChannel.id : null;
+      }
       KIKI.saveConfig(cfg);
 
       const successEmbed = KikiEmbed.build({
@@ -625,7 +652,10 @@ module.exports = {
       }
 
       const cfg = KIKI.loadConfig();
-      cfg.voice_master_log_channel_id = channel.id;
+      if (!cfg.guilds) cfg.guilds = {};
+      if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
+      cfg.guilds[guild.id].voice_master_log_channel_id = channel.id;
+      if (!cfg.voice_master_log_channel_id) cfg.voice_master_log_channel_id = channel.id;
       KIKI.saveConfig(cfg);
 
       return message.reply({
@@ -642,7 +672,9 @@ module.exports = {
 
     if (sub === 'panel') {
       const cfg = KIKI.loadConfig();
-      const target = (cfg.voice_master_interface_id ? guild.channels.cache.get(cfg.voice_master_interface_id) : null) || message.channel;
+      const gData = cfg.guilds?.[guild.id] || {};
+      const interfaceId = gData.voice_master_interface_id || (guild.channels.cache.has(cfg.voice_master_interface_id) ? cfg.voice_master_interface_id : null);
+      const target = (interfaceId ? guild.channels.cache.get(interfaceId) : null) || message.channel;
       await target.send({
         embeds: [VoiceMaster.buildPanelEmbed()],
         components: VoiceMaster.buildPanelComponents()
@@ -652,11 +684,13 @@ module.exports = {
 
     if (sub === 'reset') {
       const cfg = KIKI.loadConfig();
-      cfg.voice_master_enabled = false;
-      cfg.voice_master_channel_id = null;
-      cfg.voice_master_interface_id = null;
-      cfg.voice_master_category_id = null;
-      cfg.voice_master_log_channel_id = null;
+      if (!cfg.guilds) cfg.guilds = {};
+      if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
+      cfg.guilds[guild.id].voice_master_enabled = false;
+      cfg.guilds[guild.id].voice_master_channel_id = null;
+      cfg.guilds[guild.id].voice_master_interface_id = null;
+      cfg.guilds[guild.id].voice_master_category_id = null;
+      cfg.guilds[guild.id].voice_master_log_channel_id = null;
       KIKI.saveConfig(cfg);
       return message.reply({ embeds: [KikiEmbed.warn('Voice Master Reset', 'Configuration reset aur disable ho gaya.')] });
     }

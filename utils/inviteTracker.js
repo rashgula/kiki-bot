@@ -231,7 +231,7 @@ const InviteTracker = {
     }
 
     // Determine target log channel
-    const logChannelId = cfg.invite_tracker_channel_id || gData.settings?.channelId;
+    const logChannelId = cfg.guilds?.[guild.id]?.invite_tracker_channel_id || (guild.channels.cache.has(cfg.invite_tracker_channel_id) ? cfg.invite_tracker_channel_id : gData.settings?.channelId);
     let targetChannel = null;
     if (logChannelId) {
       targetChannel = guild.channels.cache.get(logChannelId) || await guild.channels.fetch(logChannelId).catch(() => null);
@@ -294,7 +294,7 @@ const InviteTracker = {
     }
 
     // Determine target log channel
-    const logChannelId = cfg.invite_tracker_channel_id || gData.settings?.channelId;
+    const logChannelId = cfg.guilds?.[guild.id]?.invite_tracker_channel_id || (guild.channels.cache.has(cfg.invite_tracker_channel_id) ? cfg.invite_tracker_channel_id : gData.settings?.channelId);
     let targetChannel = null;
     if (logChannelId) {
       targetChannel = guild.channels.cache.get(logChannelId) || await guild.channels.fetch(logChannelId).catch(() => null);
@@ -380,11 +380,18 @@ const InviteTracker = {
       await channel.setParent(category.id).catch(() => {});
     }
 
-    // 3. Save IDs in Config & Database
+    // 3. Save IDs in Config & Database (Multi-Server Isolated)
     const cfg = KIKI.loadConfig();
-    cfg.invite_tracker_category_id = category.id;
-    cfg.invite_tracker_channel_id = channel.id;
-    cfg.invite_tracker_enabled = true;
+    if (!cfg.guilds) cfg.guilds = {};
+    if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
+    cfg.guilds[guild.id].invite_tracker_category_id = category.id;
+    cfg.guilds[guild.id].invite_tracker_channel_id = channel.id;
+    cfg.guilds[guild.id].invite_tracker_enabled = true;
+    if (!cfg.invite_tracker_channel_id) {
+      cfg.invite_tracker_category_id = category.id;
+      cfg.invite_tracker_channel_id = channel.id;
+      cfg.invite_tracker_enabled = true;
+    }
     KIKI.saveConfig(cfg);
 
     const data = loadData();

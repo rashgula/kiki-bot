@@ -46,6 +46,33 @@ const KIKI = {
     fs.writeFileSync(p, JSON.stringify(data, null, 2), 'utf-8');
   },
 
+  getGuildConfig(guildId, key, fallback = null) {
+    if (!guildId) return fallback;
+    const cfg = this.loadConfig();
+    const gData = cfg.guilds?.[guildId];
+    if (gData && gData[key] !== undefined && gData[key] !== null) {
+      return gData[key];
+    }
+    if (cfg[key] !== undefined && cfg[key] !== null) {
+      return cfg[key];
+    }
+    return fallback;
+  },
+
+  setGuildConfig(guildId, key, value) {
+    if (!guildId) return;
+    const cfg = this.loadConfig();
+    if (!cfg.guilds) cfg.guilds = {};
+    if (!cfg.guilds[guildId]) cfg.guilds[guildId] = {};
+    cfg.guilds[guildId][key] = value;
+    this.saveConfig(cfg);
+  },
+
+  getBotInviteUrl(clientId) {
+    const id = clientId || '1339893994344775700';
+    return `https://discord.com/oauth2/authorize?client_id=${id}&permissions=8&integration_type=0&scope=bot+applications.commands`;
+  },
+
   isOwner(userId) {
     if (!userId) return false;
     const cfg = this.loadConfig();
@@ -176,7 +203,7 @@ const KIKI = {
     'ping', 'help', 'avatar', 'banner', 'userinfo', 'serverinfo',
     'afk', 'kikiquote', 'tarot', '8ball',
     'voicemaster', 'vm', 'tempvc',
-    'invites', 'invite', 'invs', 'myinvites', 'invitetop', 'invitelb', 'inviteleaderboard'
+    'invites', 'invite', 'botinvite', 'addbot', 'join', 'invs', 'myinvites', 'invitetop', 'invitelb', 'inviteleaderboard'
   ],
 
   // Check if a command is allowed for non-whitelisted members

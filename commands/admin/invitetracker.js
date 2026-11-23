@@ -64,8 +64,14 @@ module.exports = {
     if (sub === 'setchannel') {
       const channel = interaction.options.getChannel('channel');
       const cfg = KIKI.loadConfig();
-      cfg.invite_tracker_channel_id = channel.id;
-      cfg.invite_tracker_enabled = true;
+      if (!cfg.guilds) cfg.guilds = {};
+      if (!cfg.guilds[interaction.guildId]) cfg.guilds[interaction.guildId] = {};
+      cfg.guilds[interaction.guildId].invite_tracker_channel_id = channel.id;
+      cfg.guilds[interaction.guildId].invite_tracker_enabled = true;
+      if (!cfg.invite_tracker_channel_id) {
+        cfg.invite_tracker_channel_id = channel.id;
+        cfg.invite_tracker_enabled = true;
+      }
       KIKI.saveConfig(cfg);
 
       const embed = KikiEmbed.success(
@@ -148,8 +154,14 @@ module.exports = {
       }
 
       const cfg = KIKI.loadConfig();
-      cfg.invite_tracker_channel_id = channel.id;
-      cfg.invite_tracker_enabled = true;
+      if (!cfg.guilds) cfg.guilds = {};
+      if (!cfg.guilds[message.guild.id]) cfg.guilds[message.guild.id] = {};
+      cfg.guilds[message.guild.id].invite_tracker_channel_id = channel.id;
+      cfg.guilds[message.guild.id].invite_tracker_enabled = true;
+      if (!cfg.invite_tracker_channel_id) {
+        cfg.invite_tracker_channel_id = channel.id;
+        cfg.invite_tracker_enabled = true;
+      }
       KIKI.saveConfig(cfg);
 
       const embed = KikiEmbed.success(

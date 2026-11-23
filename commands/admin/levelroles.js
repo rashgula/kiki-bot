@@ -29,7 +29,9 @@ async function setupLevelRoles(guild, member, client) {
   }
 
   const cfg = KIKI.loadConfig();
-  if (!cfg.level_roles) cfg.level_roles = {};
+  if (!cfg.guilds) cfg.guilds = {};
+  if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
+  if (!cfg.guilds[guild.id].level_roles) cfg.guilds[guild.id].level_roles = {};
 
   const createdRoles = [];
 
@@ -49,15 +51,16 @@ async function setupLevelRoles(guild, member, client) {
         name: def.name,
         color: def.color,
         hoist: true,
-        reason: `[KIKI] Auto Level Roles Setup (Level ${def.level})`
+        reason: `[KIKI] Auto Level Roles Setup (Level ${def.level}) in ${guild.name}`
       });
     }
 
-    // Bind in config
-    cfg.level_roles[String(def.level)] = role.id;
+    // Bind in guild config
+    cfg.guilds[guild.id].level_roles[String(def.level)] = role.id;
     createdRoles.push({ level: def.level, role });
   }
 
+  if (!cfg.level_roles) cfg.level_roles = { ...cfg.guilds[guild.id].level_roles };
   cfg.level_stack_roles = true;
   KIKI.saveConfig(cfg);
 
@@ -112,7 +115,9 @@ module.exports = {
         return message.reply({ embeds: [KikiEmbed.error('Permission Denied', 'Aapke paas **Administrator** permission honi chahiye!')] });
       }
       const cfg = KIKI.loadConfig();
-      cfg.level_roles = {};
+      if (!cfg.guilds) cfg.guilds = {};
+      if (!cfg.guilds[message.guild.id]) cfg.guilds[message.guild.id] = {};
+      cfg.guilds[message.guild.id].level_roles = {};
       KIKI.saveConfig(cfg);
       return message.reply({
         embeds: [KikiEmbed.warn('Level Roles Cleared', '🧹 Sabhi configured level roles bot se unbind kar diye gaye hain.')]
@@ -121,8 +126,7 @@ module.exports = {
 
     // List option
     if (sub === 'list' || sub === 'view') {
-      const cfg = KIKI.loadConfig();
-      const levelRoles = cfg.level_roles || {};
+      const levelRoles = KIKI.getGuildLevelRoles(message.guild);
       const sorted = Object.keys(levelRoles).map(Number).sort((a, b) => a - b);
 
       if (sorted.length === 0) {

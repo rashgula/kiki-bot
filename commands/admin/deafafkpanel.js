@@ -18,8 +18,9 @@ const stagedChannels = new Map();
 
 function buildPanelEmbed(guild, stagedChannelId = null, notice = null) {
   const cfg = KIKI.loadConfig();
-  const isMoverOn = cfg.deaf_mover_enabled === true;
-  const targetChannelId = cfg.deaf_afk_channel_id;
+  const gData = cfg.guilds?.[guild.id] || {};
+  const isMoverOn = gData.deaf_mover_enabled ?? (cfg.deaf_mover_enabled === true);
+  const targetChannelId = gData.deaf_afk_channel_id || (guild.channels.cache.has(cfg.deaf_afk_channel_id) ? cfg.deaf_afk_channel_id : guild.afkChannelId);
   const targetChannel = targetChannelId ? guild.channels.cache.get(targetChannelId) : null;
   const stagedChannel = stagedChannelId ? guild.channels.cache.get(stagedChannelId) : null;
 
@@ -200,10 +201,17 @@ module.exports = {
           });
         }
 
-        // Save & Activate
-        cfg.deaf_mover_enabled = true;
-        cfg.deaf_afk_channel_id = targetChannel.id;
-        cfg.deaf_timeout_minutes = 10;
+        // Save & Activate (Isolated per Guild)
+        if (!cfg.guilds) cfg.guilds = {};
+        if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
+        cfg.guilds[guild.id].deaf_mover_enabled = true;
+        cfg.guilds[guild.id].deaf_afk_channel_id = targetChannel.id;
+        cfg.guilds[guild.id].deaf_timeout_minutes = 10;
+        if (!cfg.deaf_afk_channel_id) {
+          cfg.deaf_mover_enabled = true;
+          cfg.deaf_afk_channel_id = targetChannel.id;
+          cfg.deaf_timeout_minutes = 10;
+        }
         KIKI.saveConfig(cfg);
         stagedChannels.delete(guild.id);
 
@@ -224,7 +232,9 @@ module.exports = {
 
       if (customId === 'dm_btn_stop') {
         const cfg = KIKI.loadConfig();
-        cfg.deaf_mover_enabled = false;
+        if (!cfg.guilds) cfg.guilds = {};
+        if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
+        cfg.guilds[guild.id].deaf_mover_enabled = false;
         KIKI.saveConfig(cfg);
         stagedChannels.delete(guild.id);
 

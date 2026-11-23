@@ -38,13 +38,14 @@ module.exports = {
       return;
     }
 
-    // 2. Auto-Role for human members
-    if (cfg.autorole_id && !member.user.bot) {
+    // 2. Auto-Role for human members (Multi-Server Isolated)
+    const autoroleId = cfg.guilds?.[guild.id]?.autorole_id || (guild.roles.cache.has(cfg.autorole_id) ? cfg.autorole_id : null);
+    if (autoroleId && !member.user.bot) {
       try {
-        const role = guild.roles.cache.get(cfg.autorole_id);
+        const role = guild.roles.cache.get(autoroleId);
         if (role) {
           await member.roles.add(role, '[KIKI Auto-Role] New member join role');
-          console.log(`[AUTOROLE] Assigned @${role.name} to new member ${member.user.tag}`);
+          console.log(`[AUTOROLE] Assigned @${role.name} to new member ${member.user.tag} in ${guild.name}`);
         }
       } catch (e) {
         console.error('[AUTOROLE]', e.message);

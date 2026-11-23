@@ -12,7 +12,10 @@ module.exports = {
   async execute(interaction, client) {
     const ch = interaction.options.getChannel('channel') || interaction.channel;
     const cfg = KIKI.loadConfig();
-    cfg.chat_log_channel_id = ch.id;
+    if (!cfg.guilds) cfg.guilds = {};
+    if (!cfg.guilds[interaction.guildId]) cfg.guilds[interaction.guildId] = {};
+    cfg.guilds[interaction.guildId].chat_log_channel_id = ch.id;
+    if (!cfg.chat_log_channel_id) cfg.chat_log_channel_id = ch.id;
     KIKI.saveConfig(cfg);
 
     const embed = KikiEmbed.success(
@@ -31,7 +34,10 @@ module.exports = {
 
     const ch = message.mentions.channels.first() || (args[0] ? message.guild.channels.cache.get(args[0]) : null) || message.channel;
     const cfg = KIKI.loadConfig();
-    cfg.chat_log_channel_id = ch.id;
+    if (!cfg.guilds) cfg.guilds = {};
+    if (!cfg.guilds[message.guild.id]) cfg.guilds[message.guild.id] = {};
+    cfg.guilds[message.guild.id].chat_log_channel_id = ch.id;
+    if (!cfg.chat_log_channel_id) cfg.chat_log_channel_id = ch.id;
     KIKI.saveConfig(cfg);
 
     const embed = KikiEmbed.success(
