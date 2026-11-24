@@ -10,6 +10,7 @@ const {
 const KikiEmbed = require('../../utils/embed.js');
 const KIKI = require('../../utils/kiki.js');
 const config = require('../../config.js');
+const KikiEmojis = require('../../utils/emojis.js');
 
 // In-memory store for staged (pending) role selections
 const stagedRoles = new Map();
@@ -58,8 +59,8 @@ function buildPanelEmbed(guild, stagedRoleId = null, notice = null) {
   }
 
   const embed = KikiEmbed.build({
-    title: '🏷️ KIKI • Auto-Role Configuration Panel',
-    description,
+    title: `${KikiEmojis.SPARKLE} KIKI • Auto-Role Configuration Panel ${KikiEmojis.BUTTERFLY}`,
+    description: `${KikiEmojis.header()}\n\n` + description,
     color: config.COLORS.PRIMARY || 0x9B59B6,
     footer: { text: `Auto-Role Engine • KIKI v${config.BOT_VERSION}` }
   });
@@ -76,30 +77,30 @@ function buildPanelComponents(hasStagedRole = false) {
     .setMaxValues(1);
   const row1 = new ActionRowBuilder().addComponents(roleSelect);
 
-  // Row 2: Control Buttons
+  // Row 2: Control Buttons with Animated Custom Emojis
   const saveBtn = new ButtonBuilder()
     .setCustomId('ar_btn_save')
     .setLabel('Save & Apply Role')
     .setStyle(hasStagedRole ? ButtonStyle.Success : ButtonStyle.Primary)
-    .setEmoji('💾');
+    .setEmoji(KikiEmojis.btn('check'));
 
   const disableBtn = new ButtonBuilder()
     .setCustomId('ar_btn_disable')
     .setLabel('Disable Auto-Role')
     .setStyle(ButtonStyle.Danger)
-    .setEmoji('🚫');
+    .setEmoji(KikiEmojis.btn('cross'));
 
   const testBtn = new ButtonBuilder()
     .setCustomId('ar_btn_test')
     .setLabel('Test Role')
     .setStyle(ButtonStyle.Secondary)
-    .setEmoji('🧪');
+    .setEmoji(KikiEmojis.btn('sparkle'));
 
   const refreshBtn = new ButtonBuilder()
     .setCustomId('ar_btn_refresh')
     .setLabel('Refresh')
     .setStyle(ButtonStyle.Secondary)
-    .setEmoji('🔃');
+    .setEmoji(KikiEmojis.btn('loading'));
 
   const row2 = new ActionRowBuilder().addComponents(saveBtn, disableBtn, testBtn, refreshBtn);
 
@@ -107,6 +108,9 @@ function buildPanelComponents(hasStagedRole = false) {
 }
 
 module.exports = {
+  buildPanelEmbed,
+  buildPanelComponents,
+
   data: new SlashCommandBuilder()
     .setName('autorolepanel')
     .setDescription('🏷️ Open Auto-Role setup panel (Select role & save with 1-click button)')

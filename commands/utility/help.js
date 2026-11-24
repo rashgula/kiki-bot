@@ -4,6 +4,7 @@ const config = require('../../config.js');
 const fs = require('fs');
 const path = require('path');
 const KIKI = require('../../utils/kiki.js');
+const KikiEmojis = require('../../utils/emojis.js');
 
 // Category metadata and permission tiers
 const CATEGORY_META = {
@@ -227,10 +228,11 @@ function buildMainMenuEmbed(userLevel, totalCmds, prefix = '&') {
   }
 
   const embed = KikiEmbed.purple(
-    `🔮 「 KIKI 」• Command Center (${badge})`,
-    `**Gothic Discord Engine v${config.BOT_VERSION} | 1-Click Interactive Help Center**\n\n` +
-    `⚡ **Kissi bhi command ko chalane ke liye type karne ki zaroorat nahi hai!**\n` +
-    `Neeche diye **"⚡ Click To Run Command"** dropdown menu ya **Quick Buttons** par click karein aur command turant execute ho jayegi!\n\n` +
+    `${KikiEmojis.SPARKLE} 「 KIKI 」• Command Center (${badge})`,
+    `${KikiEmojis.header()}\n\n` +
+    `**Gothic Discord Engine v${config.BOT_VERSION} | 1-Click Interactive Dashboard**\n\n` +
+    `${KikiEmojis.ARROW} **Kissi bhi command ko chalane ke liye type karne ki zaroorat nahi hai!**\n` +
+    `Neeche diye **"Click To Run Command"** dropdown menu ya **Quick Buttons** par click karein aur command turant run ho jayegi!\n\n` +
     `• **Prefix:** \`${prefix}\` | **Slash:** \`/<cmd>\`\n` +
     `• **Your Access Level:** **${badge}**\n` +
     `• **Available Modules:** **${allowed.length} Categories**`
@@ -337,11 +339,11 @@ function buildInstantRunSelectMenu(category = 'home') {
 
 // Build 1-Click Quick Action Buttons Row
 function buildQuickActionButtons() {
-  const b1 = new ButtonBuilder().setCustomId('run_cmd_balance').setLabel('Balance').setStyle(ButtonStyle.Success).setEmoji('💰');
-  const b2 = new ButtonBuilder().setCustomId('run_cmd_daily').setLabel('Daily').setStyle(ButtonStyle.Primary).setEmoji('🎁');
-  const b3 = new ButtonBuilder().setCustomId('run_cmd_work').setLabel('Work').setStyle(ButtonStyle.Secondary).setEmoji('💼');
-  const b4 = new ButtonBuilder().setCustomId('run_cmd_cat').setLabel('Cat').setStyle(ButtonStyle.Secondary).setEmoji('🐱');
-  const b5 = new ButtonBuilder().setCustomId('run_cmd_blackjack').setLabel('Blackjack 21').setStyle(ButtonStyle.Danger).setEmoji('🃏');
+  const b1 = new ButtonBuilder().setCustomId('run_cmd_balance').setLabel('Balance').setStyle(ButtonStyle.Success).setEmoji(KikiEmojis.btn('coin'));
+  const b2 = new ButtonBuilder().setCustomId('run_cmd_daily').setLabel('Daily').setStyle(ButtonStyle.Primary).setEmoji(KikiEmojis.btn('sparkle'));
+  const b3 = new ButtonBuilder().setCustomId('run_cmd_work').setLabel('Work').setStyle(ButtonStyle.Secondary).setEmoji(KikiEmojis.btn('fire'));
+  const b4 = new ButtonBuilder().setCustomId('run_cmd_cat').setLabel('Cat').setStyle(ButtonStyle.Secondary).setEmoji(KikiEmojis.btn('catDance'));
+  const b5 = new ButtonBuilder().setCustomId('run_cmd_blackjack').setLabel('Blackjack 21').setStyle(ButtonStyle.Danger).setEmoji(KikiEmojis.btn('excited'));
 
   return new ActionRowBuilder().addComponents(b1, b2, b3, b4, b5);
 }

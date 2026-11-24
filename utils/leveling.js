@@ -4,6 +4,7 @@ const path = require('path');
 const chalk = require('chalk');
 const KIKI = require('./kiki.js');
 const KikiEmbed = require('./embed.js');
+const KikiEmojis = require('./emojis.js');
 const config = require('../config.js');
 
 const LEVELS_FILE = path.join(__dirname, '../data/levels.json');
@@ -294,22 +295,22 @@ const Leveling = {
       if (channel && channel.isTextBased()) {
           const userData = this.getUser(guild.id, member.id);
           const fields = [
-            { name: '⭐ New Level', value: `\`Level ${newLevel}\``, inline: true },
-            { name: '✨ Total XP', value: `\`${userData.xp.toLocaleString()} XP\``, inline: true },
-            { name: '🎙️ Voice Time', value: `\`${this.formatVoiceTime(userData.voiceTime)}\``, inline: true }
+            { name: `${KikiEmojis.SPARKLE} New Level`, value: `\`Level ${newLevel}\``, inline: true },
+            { name: `${KikiEmojis.COIN} Total XP`, value: `\`${userData.xp.toLocaleString()} XP\``, inline: true },
+            { name: `🎙️ Voice Time`, value: `\`${this.formatVoiceTime(userData.voiceTime)}\``, inline: true }
           ];
 
           if (newlyAwardedRole) {
             fields.push({
-              name: '👑 Role Unlocked',
+              name: `${KikiEmojis.get('personal')} Role Unlocked`,
               value: `${newlyAwardedRole.toString()} (\`${newlyAwardedRole.name}\`)`,
               inline: false
             });
           }
 
           const embed = KikiEmbed.build({
-            title: '🎉 LEVEL UP! Voice Master',
-            description: `Congratulations ${member.user.toString()}! Aap **Level ${newLevel}** par pahunch gaye hain! 💜`,
+            title: `${KikiEmojis.SPARKLE} LEVEL UP! Voice Master ${KikiEmojis.FIRE}`,
+            description: `${KikiEmojis.goodbyeBanner()}\n\nCongratulations ${member.user.toString()}! Aap **Level ${newLevel}** par pahunch gaye hain! ${KikiEmojis.HEART}`,
             color: config.COLORS.PRIMARY || 0x9B59B6,
             thumbnail: member.user.displayAvatarURL({ dynamic: true }),
             fields
@@ -440,14 +441,14 @@ const Leveling = {
       if (targetChannel && targetChannel.isTextBased()) {
         const userData = this.getUser(guild.id, member.id);
         const embed = KikiEmbed.build({
-          title: '💬 LEVEL UP! Chat Activity',
-          description: `Congratulations ${member.user.toString()}! Aapka **Chat Level ${newLevel}** ho gaya hai! 🎉\n\n> *Server me active rehne ke liye shukriya!*`,
+          title: `${KikiEmojis.SPARKLE} LEVEL UP! Chat Activity ${KikiEmojis.FIRE}`,
+          description: `${KikiEmojis.goodbyeBanner()}\n\nCongratulations ${member.user.toString()}! Aapka **Chat Level ${newLevel}** ho gaya hai! ${KikiEmojis.HEART}\n\n> *Server me active rehne ke liye shukriya!*`,
           color: config.COLORS.TEAL || 0x1ABC9C,
           thumbnail: member.user.displayAvatarURL({ dynamic: true }),
           fields: [
-            { name: '⭐ Chat Level', value: `\`Level ${newLevel}\``, inline: true },
-            { name: '✉️ Total Messages', value: `\`${userData.messages.toLocaleString()} msgs\``, inline: true },
-            { name: '✨ Chat XP', value: `\`${userData.chatXp.toLocaleString()} XP\``, inline: true }
+            { name: `${KikiEmojis.SPARKLE} Chat Level`, value: `\`Level ${newLevel}\``, inline: true },
+            { name: `✉️ Total Messages`, value: `\`${userData.messages.toLocaleString()} msgs\``, inline: true },
+            { name: `${KikiEmojis.COIN} Chat XP`, value: `\`${userData.chatXp.toLocaleString()} XP\``, inline: true }
           ],
           footer: { text: `Apna chat level check karne ke liye: &chatrank` }
         });

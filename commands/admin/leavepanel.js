@@ -11,6 +11,7 @@ const {
 const KikiEmbed = require('../../utils/embed.js');
 const KIKI = require('../../utils/kiki.js');
 const config = require('../../config.js');
+const KikiEmojis = require('../../utils/emojis.js');
 
 const GOODBYE_GIFS = [
   'https://media.giphy.com/media/l3vR4CdLInXOhr3rO/giphy.gif',
@@ -38,7 +39,7 @@ function buildLeaveCard(guild, user, memberDetails = {}) {
       `🖤 **${user.toString()}** ne server chhod diya... 🥀\n\n` +
       `> *“Tusi jaa rahe ho? Please tusi na jaao...! 🥺💔\n` +
       `> Aapke bina hamara gothic realm bilkul soona ho gaya hai... ✨”*\n\n` +
-      `☁️   ✨   🥀   🖤   🥺   💔   ✨   ☁️\n` +
+      `${KikiEmojis.goodbyeBanner()}\n` +
       `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
     color: 0x9B59B6,
     thumbnail: avatarUrl,
@@ -53,7 +54,7 @@ function buildLeaveCard(guild, user, memberDetails = {}) {
   });
 
   return {
-    content: `☁️ ✨ 🥀 **Tusi jaa rahe ho? Please tusi na jaao...!** ${user.toString()} 🥺💔`,
+    content: `${KikiEmojis.goodbyeBanner()}\n**Tusi jaa rahe ho? Please tusi na jaao...!** ${user.toString()} ${KikiEmojis.HEART}`,
     embeds: [embed]
   };
 }
@@ -67,6 +68,7 @@ function buildPanelEmbed(guild = null, statusNotice = null) {
   const channelText = channelId ? `<#${channelId}> (\`${channelId}\`)` : '`🔴 Not Configured (No channel set)`';
 
   let description =
+    `${KikiEmojis.header()}\n\n` +
     `**Member Leave & Animated Goodbye Configuration**\n\n` +
     `Jab koi member server chhodta hai, bot automatically Leave Channel me emotional animated card bhejega!\n\n` +
     `⚙️ **Current Settings:**\n` +
@@ -84,7 +86,7 @@ function buildPanelEmbed(guild = null, statusNotice = null) {
   }
 
   return KikiEmbed.build({
-    title: '🚪 KIKI • Member Leave Setup Panel',
+    title: `${KikiEmojis.BUTTERFLY} KIKI • Member Leave Setup Panel ${KikiEmojis.SPARKLE}`,
     description,
     color: 0x9B59B6,
     footer: { text: `Leave & Goodbye Engine • KIKI v${config.BOT_VERSION}` }
@@ -103,30 +105,30 @@ function buildPanelComponents(guild = null) {
     .setChannelTypes([ChannelType.GuildText]);
   const row1 = new ActionRowBuilder().addComponents(channelSelect);
 
-  // Row 2: Control Buttons
+  // Row 2: Control Buttons with Animated Custom Emojis
   const toggleBtn = new ButtonBuilder()
     .setCustomId('lp_btn_toggle')
     .setLabel(isEnabled ? 'Disable Cards' : 'Enable Cards')
     .setStyle(isEnabled ? ButtonStyle.Danger : ButtonStyle.Success)
-    .setEmoji(isEnabled ? '🔕' : '🔔');
+    .setEmoji(isEnabled ? KikiEmojis.btn('cross') : KikiEmojis.btn('check'));
 
   const testBtn = new ButtonBuilder()
     .setCustomId('lp_btn_test')
     .setLabel('Test Goodbye Card')
     .setStyle(ButtonStyle.Primary)
-    .setEmoji('🧪');
+    .setEmoji(KikiEmojis.btn('heart'));
 
   const clearBtn = new ButtonBuilder()
     .setCustomId('lp_btn_clear')
     .setLabel('Unset Channel')
     .setStyle(ButtonStyle.Danger)
-    .setEmoji('🚫');
+    .setEmoji(KikiEmojis.btn('cross'));
 
   const refreshBtn = new ButtonBuilder()
     .setCustomId('lp_btn_refresh')
     .setLabel('Refresh')
     .setStyle(ButtonStyle.Secondary)
-    .setEmoji('🔃');
+    .setEmoji(KikiEmojis.btn('loading'));
 
   const row2 = new ActionRowBuilder().addComponents(toggleBtn, testBtn, clearBtn, refreshBtn);
 
@@ -135,6 +137,8 @@ function buildPanelComponents(guild = null) {
 
 module.exports = {
   buildLeaveCard,
+  buildPanelEmbed,
+  buildPanelComponents,
 
   data: new SlashCommandBuilder()
     .setName('leavepanel')

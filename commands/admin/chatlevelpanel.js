@@ -11,6 +11,7 @@ const {
 const KikiEmbed = require('../../utils/embed.js');
 const KIKI = require('../../utils/kiki.js');
 const config = require('../../config.js');
+const KikiEmojis = require('../../utils/emojis.js');
 
 function buildPanelEmbed(guild = null, statusNotice = null) {
   const cfg = KIKI.loadConfig();
@@ -22,13 +23,14 @@ function buildPanelEmbed(guild = null, statusNotice = null) {
   const channelText = channelId ? `<#${channelId}> (\`${channelId}\`)` : '`🔴 Not Configured (No channel set)`';
 
   let description =
+    `${KikiEmojis.header()}\n\n` +
     `**Text Chat Activity & Leveling Configuration**\n\n` +
     `Members jab text channels me messages bhejte hain, bot unhe automatically Chat XP deta hai aur unka Chat Level badhta hai!\n\n` +
     `*(Note: Chat levels me koi role nahi milta — sirf members ki chat ranking aur level track hota hai).* \n\n` +
     `⚙️ **Current Settings:**\n` +
     `• 📢 **Level-Up Announce Channel:** ${channelText}\n` +
-    `• 🔔 **Level-Up Notification Cards:** ${isAlertsOn ? '🟢 `Enabled (Level up hone par card send hoga)`' : '🔴 `Disabled (Silent level-up)`'}\n` +
-    `• 💬 **Chat XP Engine Status:** ${isXpOn ? '🟢 `Active (15-25 XP per msg, 45s cooldown)`' : '🔴 `Paused`'}\n\n` +
+    `• 🔔 **Level-Up Notification Cards:** ${isAlertsOn ? `${KikiEmojis.CHECK} Enabled` : `${KikiEmojis.CROSS} Disabled`}\n` +
+    `• 💬 **Chat XP Engine Status:** ${isXpOn ? `${KikiEmojis.FIRE} Active (15-25 XP per msg)` : `${KikiEmojis.CROSS} Paused`}\n\n` +
     `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
     `**⚡ Setup Kaise Karein?**\n` +
     `1️⃣ Niche diye gaye **Channel Selector** se wo channel chunein jahan Chat Level-Up card aana chahiye.\n` +
@@ -40,7 +42,7 @@ function buildPanelEmbed(guild = null, statusNotice = null) {
   }
 
   const embed = KikiEmbed.build({
-    title: '💬 KIKI • Chat Leveling Setup Panel',
+    title: `${KikiEmojis.SPARKLE} KIKI • Chat Leveling Setup Panel ${KikiEmojis.FIRE}`,
     description,
     color: config.COLORS.TEAL || 0x1ABC9C,
     footer: { text: `Chat Leveling Engine • KIKI v${config.BOT_VERSION}` }
@@ -59,30 +61,30 @@ function buildPanelComponents() {
     .setChannelTypes([ChannelType.GuildText]);
   const row1 = new ActionRowBuilder().addComponents(channelSelect);
 
-  // Row 2: Control Buttons
+  // Row 2: Control Buttons with Animated Custom Emojis
   const alertBtn = new ButtonBuilder()
     .setCustomId('cl_btn_alerts')
     .setLabel(cfg.chat_level_alerts !== false ? 'Disable Alerts' : 'Enable Alerts')
     .setStyle(cfg.chat_level_alerts !== false ? ButtonStyle.Danger : ButtonStyle.Success)
-    .setEmoji('🔔');
+    .setEmoji(cfg.chat_level_alerts !== false ? KikiEmojis.btn('cross') : KikiEmojis.btn('sparkle'));
 
   const xpBtn = new ButtonBuilder()
     .setCustomId('cl_btn_xp')
     .setLabel(cfg.chat_xp_enabled !== false ? 'Pause Chat XP' : 'Resume Chat XP')
     .setStyle(cfg.chat_xp_enabled !== false ? ButtonStyle.Secondary : ButtonStyle.Success)
-    .setEmoji('⚡');
+    .setEmoji(KikiEmojis.btn('fire'));
 
   const clearBtn = new ButtonBuilder()
     .setCustomId('cl_btn_clear')
     .setLabel('Unset Channel')
     .setStyle(ButtonStyle.Danger)
-    .setEmoji('🚫');
+    .setEmoji(KikiEmojis.btn('cross'));
 
   const refreshBtn = new ButtonBuilder()
     .setCustomId('cl_btn_refresh')
     .setLabel('Refresh')
     .setStyle(ButtonStyle.Secondary)
-    .setEmoji('🔃');
+    .setEmoji(KikiEmojis.btn('loading'));
 
   const row2 = new ActionRowBuilder().addComponents(alertBtn, xpBtn, clearBtn, refreshBtn);
 
@@ -90,6 +92,9 @@ function buildPanelComponents() {
 }
 
 module.exports = {
+  buildPanelEmbed,
+  buildPanelComponents,
+
   data: new SlashCommandBuilder()
     .setName('chatlevelpanel')
     .setDescription('💬 Open Chat Leveling setup panel (Configure announce channel & alerts)')

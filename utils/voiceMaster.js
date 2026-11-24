@@ -16,6 +16,7 @@ const path = require('path');
 const chalk = require('chalk');
 const KikiEmbed = require('./embed.js');
 const KIKI = require('./kiki.js');
+const KikiEmojis = require('./emojis.js');
 const config = require('../config.js');
 
 const TEMP_DATA_FILE = path.join(__dirname, '..', 'data', 'temp_channels.json');
@@ -136,20 +137,21 @@ const VoiceMaster = {
   // ── Build Aesthetic Control Panel ─────────────────────────────
   buildPanelEmbed() {
     return KikiEmbed.build({
-      title: '🔊 KIKI • Voice Master Interface',
+      title: `${KikiEmojis.SPARKLE} KIKI • Voice Master Interface ${KikiEmojis.BUTTERFLY}`,
       description:
+        `${KikiEmojis.header()}\n\n` +
         `Welcome to the **Voice Master** control interface!\n` +
         `Use the buttons below to customize and control your temporary voice channel.\n\n` +
-        `🔒 **Lock** — Prevent other members from joining\n` +
-        `🔓 **Unlock** — Open channel for everyone to join\n` +
-        `👻 **Hide** — Make your channel invisible to others\n` +
-        `👁️ **Unhide** — Make your channel visible again\n` +
-        `👑 **Claim** — Claim ownership if the owner left the VC\n` +
-        `👥 **Limit** — Set member limit (0-99, 0 = unlimited)\n` +
-        `✏️ **Rename** — Change your voice channel name\n` +
-        `🚫 **Kick** — Disconnect a user from your channel\n` +
-        `🤝 **Permit** — Allow a specific user to join (even if locked)\n` +
-        `🗑️ **Delete** — Delete your voice channel immediately\n\n` +
+        `${KikiEmojis.CROSS} **Lock** — Prevent other members from joining\n` +
+        `${KikiEmojis.CHECK} **Unlock** — Open channel for everyone to join\n` +
+        `${KikiEmojis.BUTTERFLY} **Hide** — Make your channel invisible to others\n` +
+        `${KikiEmojis.SPARKLE} **Unhide** — Make your channel visible again\n` +
+        `${KikiEmojis.get('personal')} **Claim** — Claim ownership if the owner left the VC\n` +
+        `${KikiEmojis.ARROW} **Limit** — Set member limit (0-99, 0 = unlimited)\n` +
+        `${KikiEmojis.get('animated')} **Rename** — Change your voice channel name\n` +
+        `${KikiEmojis.FIRE} **Kick** — Disconnect a user from your channel\n` +
+        `${KikiEmojis.get('koibaatni')} **Permit** — Allow a specific user to join (even if locked)\n` +
+        `${KikiEmojis.CROSS} **Delete** — Delete your voice channel immediately\n\n` +
         `*💡 Note: You must be inside your temporary voice channel to use these controls!*`,
       color: config.COLORS.PRIMARY || 0x9B59B6,
       footer: { text: `Voice Master System • KIKI v${config.BOT_VERSION}` }
@@ -161,31 +163,31 @@ const VoiceMaster = {
     const lockBtn = new ButtonBuilder()
       .setCustomId('vm_lock')
       .setLabel('Lock')
-      .setEmoji('🔒')
+      .setEmoji(KikiEmojis.btn('cross'))
       .setStyle(ButtonStyle.Secondary);
 
     const unlockBtn = new ButtonBuilder()
       .setCustomId('vm_unlock')
       .setLabel('Unlock')
-      .setEmoji('🔓')
+      .setEmoji(KikiEmojis.btn('check'))
       .setStyle(ButtonStyle.Secondary);
 
     const hideBtn = new ButtonBuilder()
       .setCustomId('vm_hide')
       .setLabel('Hide')
-      .setEmoji('👻')
+      .setEmoji(KikiEmojis.btn('butterfly'))
       .setStyle(ButtonStyle.Secondary);
 
     const unhideBtn = new ButtonBuilder()
       .setCustomId('vm_unhide')
       .setLabel('Unhide')
-      .setEmoji('👁️')
+      .setEmoji(KikiEmojis.btn('sparkle'))
       .setStyle(ButtonStyle.Secondary);
 
     const claimBtn = new ButtonBuilder()
       .setCustomId('vm_claim')
       .setLabel('Claim')
-      .setEmoji('👑')
+      .setEmoji(KikiEmojis.btn('personal'))
       .setStyle(ButtonStyle.Primary);
 
     const row1 = new ActionRowBuilder().addComponents(lockBtn, unlockBtn, hideBtn, unhideBtn, claimBtn);
@@ -194,31 +196,31 @@ const VoiceMaster = {
     const limitBtn = new ButtonBuilder()
       .setCustomId('vm_limit')
       .setLabel('Limit')
-      .setEmoji('👥')
+      .setEmoji(KikiEmojis.btn('countdown'))
       .setStyle(ButtonStyle.Secondary);
 
     const renameBtn = new ButtonBuilder()
       .setCustomId('vm_rename')
       .setLabel('Rename')
-      .setEmoji('✏️')
+      .setEmoji(KikiEmojis.btn('animated'))
       .setStyle(ButtonStyle.Secondary);
 
     const kickBtn = new ButtonBuilder()
       .setCustomId('vm_kick')
       .setLabel('Kick')
-      .setEmoji('🚫')
+      .setEmoji(KikiEmojis.btn('cross'))
       .setStyle(ButtonStyle.Danger);
 
     const permitBtn = new ButtonBuilder()
       .setCustomId('vm_permit')
       .setLabel('Permit')
-      .setEmoji('🤝')
+      .setEmoji(KikiEmojis.btn('koibaatni'))
       .setStyle(ButtonStyle.Success);
 
     const deleteBtn = new ButtonBuilder()
       .setCustomId('vm_delete')
       .setLabel('Delete')
-      .setEmoji('🗑️')
+      .setEmoji(KikiEmojis.btn('fire'))
       .setStyle(ButtonStyle.Danger);
 
     const row2 = new ActionRowBuilder().addComponents(limitBtn, renameBtn, kickBtn, permitBtn, deleteBtn);

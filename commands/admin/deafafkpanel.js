@@ -12,6 +12,7 @@ const KikiEmbed = require('../../utils/embed.js');
 const KIKI = require('../../utils/kiki.js');
 const DeafMover = require('../../utils/deafMover.js');
 const config = require('../../config.js');
+const KikiEmojis = require('../../utils/emojis.js');
 
 // In-memory staged target channels
 const stagedChannels = new Map();
@@ -56,8 +57,8 @@ function buildPanelEmbed(guild, stagedChannelId = null, notice = null) {
   }
 
   const embed = KikiEmbed.build({
-    title: '💤 KIKI • Deaf AFK Voice Mover Panel',
-    description,
+    title: `${KikiEmojis.SPARKLE} KIKI • Deaf AFK Voice Mover Panel ${KikiEmojis.FIRE}`,
+    description: `${KikiEmojis.header()}\n\n` + description,
     color: config.COLORS.GOLD || 0xF1C40F,
     footer: { text: `Deaf AFK Mover Engine • KIKI v${config.BOT_VERSION}` }
   });
@@ -73,30 +74,30 @@ function buildPanelComponents(hasStaged = false) {
     .setChannelTypes([ChannelType.GuildVoice]);
   const row1 = new ActionRowBuilder().addComponents(channelSelect);
 
-  // Row 2: Control Buttons
+  // Row 2: Control Buttons with Animated Custom Emojis
   const runBtn = new ButtonBuilder()
     .setCustomId('dm_btn_run')
     .setLabel('Run & Save Engine')
     .setStyle(ButtonStyle.Success)
-    .setEmoji('🚀');
+    .setEmoji(KikiEmojis.btn('check'));
 
   const stopBtn = new ButtonBuilder()
     .setCustomId('dm_btn_stop')
     .setLabel('Stop Mover')
     .setStyle(ButtonStyle.Danger)
-    .setEmoji('🚫');
+    .setEmoji(KikiEmojis.btn('cross'));
 
   const scanBtn = new ButtonBuilder()
     .setCustomId('dm_btn_scan')
     .setLabel('Scan & Move Now')
     .setStyle(ButtonStyle.Primary)
-    .setEmoji('⚡');
+    .setEmoji(KikiEmojis.btn('fire'));
 
   const refreshBtn = new ButtonBuilder()
     .setCustomId('dm_btn_refresh')
     .setLabel('Refresh')
     .setStyle(ButtonStyle.Secondary)
-    .setEmoji('🔃');
+    .setEmoji(KikiEmojis.btn('loading'));
 
   const row2 = new ActionRowBuilder().addComponents(runBtn, stopBtn, scanBtn, refreshBtn);
 
@@ -104,6 +105,9 @@ function buildPanelComponents(hasStaged = false) {
 }
 
 module.exports = {
+  buildPanelEmbed,
+  buildPanelComponents,
+
   data: new SlashCommandBuilder()
     .setName('deafafkpanel')
     .setDescription('💤 Open Deaf AFK Voice Mover panel (Auto-move 10+ min deaf members)')

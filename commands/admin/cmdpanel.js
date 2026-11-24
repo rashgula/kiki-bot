@@ -13,6 +13,7 @@ const {
 const KikiEmbed = require('../../utils/embed.js');
 const KIKI = require('../../utils/kiki.js');
 const config = require('../../config.js');
+const KikiEmojis = require('../../utils/emojis.js');
 
 function getPublicCommands() {
   const cfg = KIKI.loadConfig();
@@ -143,36 +144,36 @@ function buildPanelComponents() {
     .addOptions(toggleOptions);
   const row2 = new ActionRowBuilder().addComponents(toggleSelect);
 
-  // Row 3: Action Buttons
+  // Row 3: Action Buttons with Animated Custom Emojis
   const addBtn = new ButtonBuilder()
     .setCustomId('cp_btn_add')
     .setLabel('Add Command')
     .setStyle(ButtonStyle.Success)
-    .setEmoji('➕');
+    .setEmoji(KikiEmojis.btn('check'));
 
   const delBtn = new ButtonBuilder()
     .setCustomId('cp_btn_del')
     .setLabel('Remove Command')
     .setStyle(ButtonStyle.Danger)
-    .setEmoji('➖');
+    .setEmoji(KikiEmojis.btn('cross'));
 
   const lockdownBtn = new ButtonBuilder()
     .setCustomId('cp_btn_lockdown')
     .setLabel('Lockdown All')
     .setStyle(ButtonStyle.Danger)
-    .setEmoji('🔒');
+    .setEmoji(KikiEmojis.btn('fire'));
 
   const defaultBtn = new ButtonBuilder()
     .setCustomId('cp_btn_defaults')
     .setLabel('Default Presets')
     .setStyle(ButtonStyle.Primary)
-    .setEmoji('⚡');
+    .setEmoji(KikiEmojis.btn('sparkle'));
 
   const refreshBtn = new ButtonBuilder()
     .setCustomId('cp_btn_refresh')
     .setLabel('Refresh')
     .setStyle(ButtonStyle.Secondary)
-    .setEmoji('🔃');
+    .setEmoji(KikiEmojis.btn('loading'));
 
   const row3 = new ActionRowBuilder().addComponents(addBtn, delBtn, lockdownBtn, defaultBtn, refreshBtn);
 
@@ -180,6 +181,9 @@ function buildPanelComponents() {
 }
 
 module.exports = {
+  buildPanelEmbed,
+  buildPanelComponents,
+
   data: new SlashCommandBuilder()
     .setName('cmdpanel')
     .setDescription('🎛️ Configure which commands members can use without being whitelisted')

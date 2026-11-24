@@ -1,14 +1,16 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
 const KIKI = require('../../utils/kiki.js');
+const KikiEmojis = require('../../utils/emojis.js');
 
 function buildStatusEmbed(cfg, guild) {
   const isMasterOn = cfg.master_antinuke !== false && cfg.antinuke !== false;
   const wlCount = (cfg.whitelist || []).length;
-  const statusBadge = isMasterOn ? '🟢 **ALL SHIELDS ACTIVE**' : '🔴 **DEACTIVATED**';
+  const statusBadge = isMasterOn ? `${KikiEmojis.FIRE} **ALL SHIELDS ACTIVE**` : `${KikiEmojis.CROSS} **DEACTIVATED**`;
 
   const embed = KikiEmbed.purple(
-    '🛡️ KIKI Master Anti-Nuke Fortress v2.2',
+    `${KikiEmojis.SPARKLE} KIKI Master Anti-Nuke Fortress v2.2 ${KikiEmojis.FIRE}`,
+    `${KikiEmojis.header()}\n\n` +
     `**Overall Protection Status:** ${statusBadge}\n` +
     `**Server Protected:** **${guild.name}**\n` +
     `**Whitelisted Safe Users:** **${wlCount}** members\n` +
@@ -17,18 +19,18 @@ function buildStatusEmbed(cfg, guild) {
   );
 
   embed.addFields(
-    { name: '🤖 Anti-Bot Join', value: isMasterOn ? '🟢 Active `(Kick Bot + Ban Inviter)`' : '🔴 Inactive', inline: true },
-    { name: '💬 Anti-Channel Delete', value: isMasterOn ? '🟢 Active `(Auto-Restore + Ban)`' : '🔴 Inactive', inline: true },
-    { name: '➕ Anti-Channel Create', value: isMasterOn ? '🟢 Active `(Delete Rogue + Ban)`' : '🔴 Inactive', inline: true },
-    { name: '🏷️ Anti-Role Delete', value: isMasterOn ? '🟢 Active `(Auto-Restore + Ban)`' : '🔴 Inactive', inline: true },
-    { name: '👑 Anti-Role Create', value: isMasterOn ? '🟢 Active `(Delete Rogue + Ban)`' : '🔴 Inactive', inline: true },
-    { name: '🔨 Anti-Mass Ban', value: isMasterOn ? '🟢 Active `(Auto-Unban Victim + Ban)`' : '🔴 Inactive', inline: true },
-    { name: '👢 Anti-Mass Kick', value: isMasterOn ? '🟢 Active `(Ban Rogue Admin)`' : '🔴 Inactive', inline: true },
-    { name: '🪝 Anti-Webhook Tamper', value: isMasterOn ? '🟢 Active `(Delete Webhook + Ban)`' : '🔴 Inactive', inline: true },
-    { name: '🏰 Anti-Server Tamper', value: isMasterOn ? '🟢 Active `(Revert Name/Icon + Ban)`' : '🔴 Inactive', inline: true },
-    { name: '✂️ Anti-Member Prune', value: isMasterOn ? '🟢 Active `(Ban Executor)`' : '🔴 Inactive', inline: true },
-    { name: '📢 Anti-Everyone Ping', value: isMasterOn ? '🟢 Active `(Delete + 1hr Timeout)`' : '🔴 Inactive', inline: true },
-    { name: '🔗 Anti-Invite Links', value: isMasterOn ? '🟢 Active `(Auto-Delete Link)`' : '🔴 Inactive', inline: true }
+    { name: '🤖 Anti-Bot Join', value: isMasterOn ? `${KikiEmojis.CHECK} Active \`(Kick Bot + Ban Inviter)\`` : `${KikiEmojis.CROSS} Inactive`, inline: true },
+    { name: '💬 Anti-Channel Delete', value: isMasterOn ? `${KikiEmojis.CHECK} Active \`(Auto-Restore + Ban)\`` : `${KikiEmojis.CROSS} Inactive`, inline: true },
+    { name: '➕ Anti-Channel Create', value: isMasterOn ? `${KikiEmojis.CHECK} Active \`(Delete Rogue + Ban)\`` : `${KikiEmojis.CROSS} Inactive`, inline: true },
+    { name: '🏷️ Anti-Role Delete', value: isMasterOn ? `${KikiEmojis.CHECK} Active \`(Auto-Restore + Ban)\`` : `${KikiEmojis.CROSS} Inactive`, inline: true },
+    { name: '👑 Anti-Role Create', value: isMasterOn ? `${KikiEmojis.CHECK} Active \`(Delete Rogue + Ban)\`` : `${KikiEmojis.CROSS} Inactive`, inline: true },
+    { name: '🔨 Anti-Mass Ban', value: isMasterOn ? `${KikiEmojis.CHECK} Active \`(Auto-Unban Victim + Ban)\`` : `${KikiEmojis.CROSS} Inactive`, inline: true },
+    { name: '👢 Anti-Mass Kick', value: isMasterOn ? `${KikiEmojis.CHECK} Active \`(Ban Rogue Admin)\`` : `${KikiEmojis.CROSS} Inactive`, inline: true },
+    { name: '🪝 Anti-Webhook Tamper', value: isMasterOn ? `${KikiEmojis.CHECK} Active \`(Delete Webhook + Ban)\`` : `${KikiEmojis.CROSS} Inactive`, inline: true },
+    { name: '🏰 Anti-Server Tamper', value: isMasterOn ? `${KikiEmojis.CHECK} Active \`(Revert Name/Icon + Ban)\`` : `${KikiEmojis.CROSS} Inactive`, inline: true },
+    { name: '✂️ Anti-Member Prune', value: isMasterOn ? `${KikiEmojis.CHECK} Active \`(Ban Executor)\`` : `${KikiEmojis.CROSS} Inactive`, inline: true },
+    { name: '📢 Anti-Everyone Ping', value: isMasterOn ? `${KikiEmojis.CHECK} Active \`(Delete + 1hr Timeout)\`` : `${KikiEmojis.CROSS} Inactive`, inline: true },
+    { name: '🔗 Anti-Invite Links', value: isMasterOn ? `${KikiEmojis.CHECK} Active \`(Auto-Delete Link)\`` : `${KikiEmojis.CROSS} Inactive`, inline: true }
   );
 
   return embed;
@@ -37,24 +39,29 @@ function buildStatusEmbed(cfg, guild) {
 function buildControlButtons(isMasterOn) {
   const b1 = new ButtonBuilder()
     .setCustomId(isMasterOn ? 'man_disable' : 'man_enable')
-    .setLabel(isMasterOn ? '🔴 Deactivate Shield' : '🟢 Activate All Shields')
+    .setLabel(isMasterOn ? 'Deactivate Shield' : 'Activate All Shields')
     .setStyle(isMasterOn ? ButtonStyle.Danger : ButtonStyle.Success)
-    .setEmoji(isMasterOn ? '🔒' : '🛡️');
+    .setEmoji(isMasterOn ? KikiEmojis.btn('cross') : KikiEmojis.btn('check'));
 
   const b2 = new ButtonBuilder()
     .setCustomId('man_whitelist')
-    .setLabel('🛡️ View Whitelist')
-    .setStyle(ButtonStyle.Secondary);
+    .setLabel('View Whitelist')
+    .setStyle(ButtonStyle.Secondary)
+    .setEmoji(KikiEmojis.btn('personal'));
 
   const b3 = new ButtonBuilder()
     .setCustomId('man_recovery')
-    .setLabel('⚡ Security Audit Scan')
-    .setStyle(ButtonStyle.Primary);
+    .setLabel('Security Audit Scan')
+    .setStyle(ButtonStyle.Primary)
+    .setEmoji(KikiEmojis.btn('fire'));
 
   return new ActionRowBuilder().addComponents(b1, b2, b3);
 }
 
 module.exports = {
+  buildStatusEmbed,
+  buildControlButtons,
+
   data: new SlashCommandBuilder()
     .setName('master-antinuke')
     .setDescription('🛡️ KIKI Master Anti-Nuke: Turn ON all defense shields at once')
