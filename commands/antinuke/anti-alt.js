@@ -9,10 +9,10 @@ module.exports = {
   async execute(interaction, client) {
     const q = interaction.options.getString('query') || 'None';
     const embed = KikiEmbed.purple('🛡️ ANTI-ALT',
-      '**Action:** Detect newly created alt accounts\\n' +
-      '**Status:** Successfully processed\\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
+      '**Action:** Detect newly created alt accounts\n' +
+      '**Status:** Successfully processed\n' +
+      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
+      '\n*「 KIKI 」• Gothic Utility v2.2*'
     );
     await interaction.reply({ embeds: [embed] });
   },
@@ -21,10 +21,10 @@ module.exports = {
   async run(message, args, client) {
     const input = args.join(' ') || 'None';
     const embed = KikiEmbed.purple('🛡️ ANTI-ALT',
-      '**Command:** `anti-alt`\\n' +
-      '**Description:** Detect newly created alt accounts\\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
+      '**Command:** `anti-alt`\n' +
+      '**Description:** Detect newly created alt accounts\n' +
+      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
+      '\n*「 KIKI 」• Gothic Utility v2.2*'
     );
     message.reply({ embeds: [embed] });
   }

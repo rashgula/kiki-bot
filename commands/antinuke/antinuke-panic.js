@@ -9,10 +9,10 @@ module.exports = {
   async execute(interaction, client) {
     const q = interaction.options.getString('query') || 'None';
     const embed = KikiEmbed.purple('🛡️ ANTINUKE-PANIC',
-      '**Action:** Emergency panic button to freeze server\\n' +
-      '**Status:** Successfully processed\\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
+      '**Action:** Emergency panic button to freeze server\n' +
+      '**Status:** Successfully processed\n' +
+      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
+      '\n*「 KIKI 」• Gothic Utility v2.2*'
     );
     await interaction.reply({ embeds: [embed] });
   },
@@ -21,10 +21,10 @@ module.exports = {
   async run(message, args, client) {
     const input = args.join(' ') || 'None';
     const embed = KikiEmbed.purple('🛡️ ANTINUKE-PANIC',
-      '**Command:** `antinuke-panic`\\n' +
-      '**Description:** Emergency panic button to freeze server\\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
+      '**Command:** `antinuke-panic`\n' +
+      '**Description:** Emergency panic button to freeze server\n' +
+      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
+      '\n*「 KIKI 」• Gothic Utility v2.2*'
     );
     message.reply({ embeds: [embed] });
   }

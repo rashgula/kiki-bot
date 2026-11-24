@@ -1,30 +1,37 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+const Economy = require('../../utils/economy.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('shop-browse-items')
-    .setDescription('🛍️ Browse catalog of gothic cosmetics and roles')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('🛒 Browse gothic artifact shop items'),
+
+  aliases: ['shop', 'store'],
+  name: 'shop-browse-items',
 
   async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('🛍️ SHOP-BROWSE-ITEMS',
-      '**Action:** Browse catalog of gothic cosmetics and roles\\n' +
-      '**Status:** Successfully processed\\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
+    let list = Economy.SHOP_ITEMS.map((item, idx) =>
+      `**${idx + 1}. ${item.name}** (\`${item.id}\`)\n` +
+      `Price: \`${item.price.toLocaleString()} Coins\`\n` +
+      `*${item.desc}*`
+    ).join('\n\n');
+
+    const embed = KikiEmbed.purple('Gothic Coven Shop 🛒',
+      list + '\n\n*Buy an item with \`&buy <item_id>\`*'
     );
     await interaction.reply({ embeds: [embed] });
   },
-  name: 'shop-browse-items',
-  aliases: ['k-shop-browse-items', 'shopbrowseitems'],
+
   async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('🛍️ SHOP-BROWSE-ITEMS',
-      '**Command:** `shop-browse-items`\\n' +
-      '**Description:** Browse catalog of gothic cosmetics and roles\\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
+    let list = Economy.SHOP_ITEMS.map((item, idx) =>
+      `**${idx + 1}. ${item.name}** (\`${item.id}\`)\n` +
+      `Price: \`${item.price.toLocaleString()} Coins\`\n` +
+      `*${item.desc}*`
+    ).join('\n\n');
+
+    const embed = KikiEmbed.purple('Gothic Coven Shop 🛒',
+      list + '\n\n*Buy an item with `&buy <item_id>`*'
     );
     message.reply({ embeds: [embed] });
   }

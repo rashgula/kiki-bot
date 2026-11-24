@@ -9,10 +9,10 @@ module.exports = {
   async execute(interaction, client) {
     const q = interaction.options.getString('query') || 'None';
     const embed = KikiEmbed.purple('🔨 AUDIT-RECENT-BANS',
-      '**Action:** List recent ban events from audit log\\n' +
-      '**Status:** Successfully processed\\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
+      '**Action:** List recent ban events from audit log\n' +
+      '**Status:** Successfully processed\n' +
+      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
+      '\n*「 KIKI 」• Gothic Utility v2.2*'
     );
     await interaction.reply({ embeds: [embed] });
   },
@@ -21,10 +21,10 @@ module.exports = {
   async run(message, args, client) {
     const input = args.join(' ') || 'None';
     const embed = KikiEmbed.purple('🔨 AUDIT-RECENT-BANS',
-      '**Command:** `audit-recent-bans`\\n' +
-      '**Description:** List recent ban events from audit log\\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
+      '**Command:** `audit-recent-bans`\n' +
+      '**Description:** List recent ban events from audit log\n' +
+      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
+      '\n*「 KIKI 」• Gothic Utility v2.2*'
     );
     message.reply({ embeds: [embed] });
   }

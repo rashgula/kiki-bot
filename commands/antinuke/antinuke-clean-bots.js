@@ -9,10 +9,10 @@ module.exports = {
   async execute(interaction, client) {
     const q = interaction.options.getString('query') || 'None';
     const embed = KikiEmbed.purple('🛡️ ANTINUKE-CLEAN-BOTS',
-      '**Action:** Scan for unverified third-party bots\\n' +
-      '**Status:** Successfully processed\\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
+      '**Action:** Scan for unverified third-party bots\n' +
+      '**Status:** Successfully processed\n' +
+      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
+      '\n*「 KIKI 」• Gothic Utility v2.2*'
     );
     await interaction.reply({ embeds: [embed] });
   },
@@ -21,10 +21,10 @@ module.exports = {
   async run(message, args, client) {
     const input = args.join(' ') || 'None';
     const embed = KikiEmbed.purple('🛡️ ANTINUKE-CLEAN-BOTS',
-      '**Command:** `antinuke-clean-bots`\\n' +
-      '**Description:** Scan for unverified third-party bots\\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
+      '**Command:** `antinuke-clean-bots`\n' +
+      '**Description:** Scan for unverified third-party bots\n' +
+      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
+      '\n*「 KIKI 」• Gothic Utility v2.2*'
     );
     message.reply({ embeds: [embed] });
   }

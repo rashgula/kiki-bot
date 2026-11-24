@@ -1,31 +1,37 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+const Economy = require('../../utils/economy.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('gamble-slots-bet')
-    .setDescription('🎰 Wager coins on gothic slot machine')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('🎰 Spin the gothic cursed slot machine')
+    .addIntegerOption(o => o.setName('amount').setDescription('Coins to spin').setRequired(true)),
+
+  aliases: ['slots', 'slot'],
+  name: 'gamble-slots-bet',
 
   async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('🎰 GAMBLE-SLOTS-BET',
-      '**Action:** Wager coins on gothic slot machine\\n' +
-      '**Status:** Successfully processed\\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
+    const amt = interaction.options.getInteger('amount');
+    const res = Economy.slots(interaction.guildId, interaction.user.id, amt);
+    if (!res.success && (res.message.includes('Invalid') || res.message.includes('paas itne'))) {
+      return interaction.reply({ embeds: [KikiEmbed.error('Slot Error ⚠️', res.message)] });
+    }
+    const embed = res.win ?
+      KikiEmbed.success('JACKPOT! 🎰', `${res.display}\n\n${res.message}\n**New Wallet:** \`${res.balance.toLocaleString()} Coins\``) :
+      KikiEmbed.purple('Gothic Slots 🎰', `${res.display}\n\n${res.message}\n**Remaining Wallet:** \`${res.balance.toLocaleString()} Coins\``);
     await interaction.reply({ embeds: [embed] });
   },
-  name: 'gamble-slots-bet',
-  aliases: ['k-gamble-slots-bet', 'gambleslotsbet'],
+
   async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('🎰 GAMBLE-SLOTS-BET',
-      '**Command:** `gamble-slots-bet`\\n' +
-      '**Description:** Wager coins on gothic slot machine\\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
+    const amt = parseInt(args[0]) || 50;
+    const res = Economy.slots(message.guild.id, message.author.id, amt);
+    if (!res.success && (res.message.includes('Invalid') || res.message.includes('paas itne'))) {
+      return message.reply({ embeds: [KikiEmbed.error('Slot Error ⚠️', res.message)] });
+    }
+    const embed = res.win ?
+      KikiEmbed.success('JACKPOT! 🎰', `${res.display}\n\n${res.message}\n**New Wallet:** \`${res.balance.toLocaleString()} Coins\``) :
+      KikiEmbed.purple('Gothic Slots 🎰', `${res.display}\n\n${res.message}\n**Remaining Wallet:** \`${res.balance.toLocaleString()} Coins\``);
     message.reply({ embeds: [embed] });
   }
 };

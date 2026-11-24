@@ -1,30 +1,36 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+const Economy = require('../../utils/economy.js');
+const KIKI = require('../../utils/kiki.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('daily-reward-claim')
-    .setDescription('🎁 Claim daily gothic purple coin bonus')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('🎁 Claim daily gothic coins gift'),
+
+  aliases: ['daily', 'claimdaily'],
+  name: 'daily-reward-claim',
 
   async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('🎁 DAILY-REWARD-CLAIM',
-      '**Action:** Claim daily gothic purple coin bonus\\n' +
-      '**Status:** Successfully processed\\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
+    const res = Economy.claimDaily(interaction.guildId, interaction.user.id);
+    if (res.cooldown) {
+      const wait = KIKI.formatDuration(res.remainingMs);
+      return interaction.reply({ embeds: [KikiEmbed.error('Daily Cooldown ⏳', `Aap pehle hi daily reward le chuke hain!\nAgla reward claim karne ke liye **${wait}** intezar karein.`)] });
+    }
+    const embed = KikiEmbed.success('Daily Reward Claimed! 🎁',
+      `Aapko **+${res.amount.toLocaleString()} Gothic Coins** mile!\n🔥 **Daily Streak:** \`${res.streak} days\`\n💰 **New Wallet:** \`${res.wallet.toLocaleString()} Coins\\`
     );
     await interaction.reply({ embeds: [embed] });
   },
-  name: 'daily-reward-claim',
-  aliases: ['k-daily-reward-claim', 'dailyrewardclaim'],
+
   async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('🎁 DAILY-REWARD-CLAIM',
-      '**Command:** `daily-reward-claim`\\n' +
-      '**Description:** Claim daily gothic purple coin bonus\\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
+    const res = Economy.claimDaily(message.guild.id, message.author.id);
+    if (res.cooldown) {
+      const wait = KIKI.formatDuration(res.remainingMs);
+      return message.reply({ embeds: [KikiEmbed.error('Daily Cooldown ⏳', `Aap pehle hi daily reward le chuke hain!\nAgla reward claim karne ke liye **${wait}** intezar karein.`)] });
+    }
+    const embed = KikiEmbed.success('Daily Reward Claimed! 🎁',
+      `Aapko **+${res.amount.toLocaleString()} Gothic Coins** mile!\n🔥 **Daily Streak:** \`${res.streak} days\`\n💰 **New Wallet:** \`${res.wallet.toLocaleString()} Coins\\`
     );
     message.reply({ embeds: [embed] });
   }

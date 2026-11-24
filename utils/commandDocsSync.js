@@ -318,7 +318,5 @@ const CommandDocsSync = {
   }
 };
 
-// Auto-run sync on require
-CommandDocsSync.syncAll(true);
-
 module.exports = CommandDocsSync;
+

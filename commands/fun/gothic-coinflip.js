@@ -1,31 +1,24 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+const FunEngine = require('../../utils/funEngine.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('gothic-coinflip')
-    .setDescription('🪙 Flip gothic crown and skull challenge coin')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('🪙 Flip a gothic silver coin'),
+
+  aliases: ['coinflip', 'flip', 'coin'],
+  name: 'gothic-coinflip',
 
   async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('🪙 GOTHIC-COINFLIP',
-      '**Action:** Flip gothic crown and skull challenge coin\\n' +
-      '**Status:** Successfully processed\\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
+    const flip = FunEngine.flipCoin();
+    const embed = KikiEmbed.purple('Gothic Coin Toss 🪙', `The coin spins in the moonlight... and lands on: **${flip.icon}**!`);
     await interaction.reply({ embeds: [embed] });
   },
-  name: 'gothic-coinflip',
-  aliases: ['k-gothic-coinflip', 'gothiccoinflip'],
+
   async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('🪙 GOTHIC-COINFLIP',
-      '**Command:** `gothic-coinflip`\\n' +
-      '**Description:** Flip gothic crown and skull challenge coin\\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
+    const flip = FunEngine.flipCoin();
+    const embed = KikiEmbed.purple('Gothic Coin Toss 🪙', `The coin spins in the moonlight... and lands on: **${flip.icon}**!`);
     message.reply({ embeds: [embed] });
   }
 };

@@ -1,12 +1,12 @@
-# 📜 KIKI • All Bot Commands Directory (1137+ Commands)
+# 📜 KIKI • All Bot Commands Directory (1140+ Commands)
 
 > Complete catalog of all commands loaded in KIKI Gothic Purple Bot.
 > Prefix: `&` | Slash: `/<command>`
-> Last Synchronized: 23/11/2026, 12:49:24 am
+> Last Synchronized: 24/11/2026, 2:01:02 pm
 
 ═══════════════════════════════════════════════════════════════════
 
-## ⚙️ ADMIN (199 Commands)
+## ⚙️ ADMIN (200 Commands)
 
 | Command Name | Aliases | Type | Description |
 | :--- | :--- | :---: | :--- |
@@ -185,6 +185,7 @@
 | `setlog` | `modlog-set` | `Prefix (&) + Slash (/)` | 📜 Set moderation and audit log channel |
 | `setticketcategory` | — | `Prefix (&) + Slash (/)` | 🎫 Set Category for newly created tickets |
 | `setticketstaff` | — | `Prefix (&) + Slash (/)` | 🎫 Set Ticket Staff Role |
+| `setupall` | `setup-all`, `quicksetup`, `autosetup`, `fullsetup`, `serversetup`, `chitchatsetup`, `setupbot`, `setupkiki` | `Prefix (&) + Slash (/)` | 🔮 Auto-run complete Chit chat server setup in 1-click (All channels, roles & systems) |
 | `setuplevelroles` | `setuplevels` | `Prefix (&) + Slash (/)` | ⚡ Automatically create and bind Level 5, 10, 15, 20, 25, 30, 35, 40, 45, 50 roles |
 | `setuplogs` | `setup-logs`, `logsetup`, `logs-setup`, `createlogs`, `createlogchannels` | `Prefix (&) + Slash (/)` | ⚡ Create all log channels automatically (Voice, Chat, Welcome, Leave, Security) |
 | `setwelcome` | `welcomechannel` | `Prefix (&) + Slash (/)` | 👋 Welcome channel set karo |
@@ -266,7 +267,7 @@
 | `antinuke-whitelist-del` | `k-antinuke-whitelist-del`, `antinukewhitelistdel` | `Prefix (&) + Slash (/)` | 🛡️ Remove member from trusted whitelist |
 | `antinuke-whitelist-show` | `k-antinuke-whitelist-show`, `antinukewhitelistshow` | `Prefix (&) + Slash (/)` | 🛡️ View all whitelisted trusted members |
 | `antinuke` | `an`, `security` | `Prefix (&) + Slash (/)` | 🛡️ KIKI Anti-Nuke security system configure karo (Owner Only) |
-| `master-antinuke` | `antinuke-master`, `man`, `masteran`, `antiruke-all` | `Prefix (&) + Slash (/)` | 🛡️ KIKI Master Anti-Nuke: Turn ON all defense shields at once |
+| `master-antinuke` | `antinuke-master`, `man`, `masteran`, `antiruke-all`, `masterantinuke` | `Prefix (&) + Slash (/)` | 🛡️ KIKI Master Anti-Nuke: Turn ON all defense shields at once |
 | `whitelist` | `wl` | `Prefix (&) + Slash (/)` | 🛡️ KIKI Bot command access aur Anti-Nuke whitelist manage karein |
 
 ───────────────────────────────────────────────────────────────────
@@ -275,26 +276,26 @@
 
 | Command Name | Aliases | Type | Description |
 | :--- | :--- | :---: | :--- |
-| `balance-wallet-view` | `k-balance-wallet-view`, `balancewalletview` | `Prefix (&) + Slash (/)` | 💰 Inspect personal gothic coin wallet and bank |
-| `buy-shop-item` | `k-buy-shop-item`, `buyshopitem` | `Prefix (&) + Slash (/)` | 🏷️ Purchase cosmetic item from the shop |
-| `crime-heist-attempt` | `k-crime-heist-attempt`, `crimeheistattempt` | `Prefix (&) + Slash (/)` | 🕶️ Attempt daring heist for high reward |
-| `daily-reward-claim` | `k-daily-reward-claim`, `dailyrewardclaim` | `Prefix (&) + Slash (/)` | 🎁 Claim daily gothic purple coin bonus |
-| `deposit-bank-coins` | `k-deposit-bank-coins`, `depositbankcoins` | `Prefix (&) + Slash (/)` | 🏦 Safely deposit wallet coins into bank vault |
-| `fish-catch-lake` | `k-fish-catch-lake`, `fishcatchlake` | `Prefix (&) + Slash (/)` | 🎣 Cast line in dark lake and catch rare items |
-| `gamble-dice-bet` | `k-gamble-dice-bet`, `gambledicebet` | `Prefix (&) + Slash (/)` | 🎲 Bet coins on roll of two dice |
-| `gamble-slots-bet` | `k-gamble-slots-bet`, `gambleslotsbet` | `Prefix (&) + Slash (/)` | 🎰 Wager coins on gothic slot machine |
-| `hunt-forest-game` | `k-hunt-forest-game`, `huntforestgame` | `Prefix (&) + Slash (/)` | 🏹 Hunt in dark woods for valuable pelts |
-| `inventory-view-bag` | `k-inventory-view-bag`, `inventoryviewbag` | `Prefix (&) + Slash (/)` | 🎒 View your owned gothic inventory items |
-| `leaderboard-rich` | `k-leaderboard-rich`, `leaderboardrich` | `Prefix (&) + Slash (/)` | 👑 Top richest members in gothic economy |
-| `mine-ore-cavern` | `k-mine-ore-cavern`, `mineorecavern` | `Prefix (&) + Slash (/)` | ⛏️ Dig deep in crystal cavern for amethyst gems |
-| `monthly-reward-claim` | `k-monthly-reward-claim`, `monthlyrewardclaim` | `Prefix (&) + Slash (/)` | 🏆 Claim monthly elite coin jackpot |
-| `rob-member-coins` | `k-rob-member-coins`, `robmembercoins` | `Prefix (&) + Slash (/)` | 🦹 Attempt pickpocketing coins from member |
-| `shop-browse-items` | `k-shop-browse-items`, `shopbrowseitems` | `Prefix (&) + Slash (/)` | 🛍️ Browse catalog of gothic cosmetics and roles |
-| `transfer-pay-coins` | `k-transfer-pay-coins`, `transferpaycoins` | `Prefix (&) + Slash (/)` | 💸 Transfer coins to another server member |
-| `use-inventory-item` | `k-use-inventory-item`, `useinventoryitem` | `Prefix (&) + Slash (/)` | ✨ Consume or activate an inventory item |
-| `weekly-reward-claim` | `k-weekly-reward-claim`, `weeklyrewardclaim` | `Prefix (&) + Slash (/)` | 📅 Claim weekly loyalty coin allowance |
-| `withdraw-bank-coins` | `k-withdraw-bank-coins`, `withdrawbankcoins` | `Prefix (&) + Slash (/)` | 🏧 Withdraw stored coins from bank vault |
-| `work-job-shift` | `k-work-job-shift`, `workjobshift` | `Prefix (&) + Slash (/)` | 💼 Complete dark shift and earn gothic wages |
+| `balance-wallet-view` | `balance`, `bal`, `wallet`, `paisa`, `balancewalletview` | `Prefix (&) + Slash (/)` | 💰 Inspect personal gothic coin wallet and bank |
+| `buy-shop-item` | `buy`, `buyshopitem` | `Prefix (&) + Slash (/)` | 🛍️ Purchase an artifact from the shop |
+| `crime-heist-attempt` | `crime`, `heist`, `robbery`, `crimeheistattempt` | `Prefix (&) + Slash (/)` | 🗡️ Attempt a dark heist in the shadows |
+| `daily-reward-claim` | `daily`, `claimdaily`, `dailyrewardclaim` | `Prefix (&) + Slash (/)` | 🎁 Claim daily gothic coins gift |
+| `deposit-bank-coins` | `deposit`, `dep`, `depositbankcoins` | `Prefix (&) + Slash (/)` | 🏦 Deposit coins from wallet to secure vault bank |
+| `fish-catch-lake` | `fish`, `fishing`, `fishcatchlake` | `Prefix (&) + Slash (/)` | 🎣 Cast fishing line into the obsidian lake |
+| `gamble-dice-bet` | `bet`, `gamble`, `dicebet`, `gambledicebet` | `Prefix (&) + Slash (/)` | 🎲 Bet coins on dark dice roll against KIKI |
+| `gamble-slots-bet` | `slots`, `slot`, `gambleslotsbet` | `Prefix (&) + Slash (/)` | 🎰 Spin the gothic cursed slot machine |
+| `hunt-forest-game` | `hunt`, `hunting`, `huntforestgame` | `Prefix (&) + Slash (/)` | 🏹 Hunt shadow beasts in the misty gothic woods |
+| `inventory-view-bag` | `inventory`, `inv`, `bag`, `inventoryviewbag` | `Prefix (&) + Slash (/)` | 🎒 View items in your gothic inventory bag |
+| `leaderboard-rich` | `rich`, `ecotop`, `ecolb`, `leaderboardrich` | `Prefix (&) + Slash (/)` | 🏆 Gothic wealth leaderboard of richest members |
+| `mine-ore-cavern` | `k-mine-ore-cavern`, `mineorecavern`, `mine`, `mining` | `Prefix (&) + Slash (/)` | ⛏️ Dig deep in crystal cavern for amethyst gems |
+| `monthly-reward-claim` | `k-monthly-reward-claim`, `monthlyrewardclaim`, `monthly` | `Prefix (&) + Slash (/)` | 🏆 Claim monthly elite coin jackpot |
+| `rob-member-coins` | `k-rob-member-coins`, `robmembercoins`, `rob`, `steal` | `Prefix (&) + Slash (/)` | 🦹 Attempt pickpocketing coins from member |
+| `shop-browse-items` | `shop`, `store`, `shopbrowseitems` | `Prefix (&) + Slash (/)` | 🛒 Browse gothic artifact shop items |
+| `transfer-pay-coins` | `pay`, `transfer`, `give`, `transferpaycoins` | `Prefix (&) + Slash (/)` | 💸 Pay/Transfer coins to another member |
+| `use-inventory-item` | `k-use-inventory-item`, `useinventoryitem`, `use` | `Prefix (&) + Slash (/)` | ✨ Consume or activate an inventory item |
+| `weekly-reward-claim` | `k-weekly-reward-claim`, `weeklyrewardclaim`, `weekly` | `Prefix (&) + Slash (/)` | 📅 Claim weekly loyalty coin allowance |
+| `withdraw-bank-coins` | `withdraw`, `with`, `withdrawbankcoins` | `Prefix (&) + Slash (/)` | 🏦 Withdraw coins from bank vault to wallet |
+| `work-job-shift` | `work`, `job`, `shift`, `workjobshift` | `Prefix (&) + Slash (/)` | 💼 Work a shift in the gothic underground realm |
 
 ───────────────────────────────────────────────────────────────────
 
@@ -303,29 +304,29 @@
 | Command Name | Aliases | Type | Description |
 | :--- | :--- | :---: | :--- |
 | `8ball` | `eightball` | `Prefix (&) + Slash (/)` | 🔮 Ask the dark crystal ball a question |
-| `bird-photo-random` | `k-bird-photo-random`, `birdphotorandom` | `Prefix (&) + Slash (/)` | 🐦 Display majestic raven or bird photo |
-| `bite-member-send` | `k-bite-member-send`, `bitemembersend` | `Prefix (&) + Slash (/)` | 🧛 Playfully deliver vampire nibble GIF |
-| `cat-photo-random` | `k-cat-photo-random`, `catphotorandom` | `Prefix (&) + Slash (/)` | 🐱 Display adorable random cat photo |
+| `bird-photo-random` | `k-bird-photo-random`, `birdphotorandom`, `bird`, `birdphoto` | `Prefix (&) + Slash (/)` | 🐦 Display majestic raven or bird photo |
+| `bite-member-send` | `k-bite-member-send`, `bitemembersend`, `bite` | `Prefix (&) + Slash (/)` | 🧛 Playfully deliver vampire nibble GIF |
+| `cat-photo-random` | `cat`, `meow`, `catphoto`, `catphotorandom` | `Prefix (&) + Slash (/)` | 🐱 Send a cute random gothic cat photo |
 | `chad-meter-check` | `k-chad-meter-check`, `chadmetercheck` | `Prefix (&) + Slash (/)` | 🗿 Calculate GigaChad masculine energy score |
 | `coinflip` | `flip`, `cf` | `Prefix (&) + Slash (/)` | 🪙 Flip a gothic coin |
 | `cool-meter-check` | `k-cool-meter-check`, `coolmetercheck` | `Prefix (&) + Slash (/)` | 😎 Calculate coolness percentage index |
 | `cry-reaction-emote` | `k-cry-reaction-emote`, `cryreactionemote` | `Prefix (&) + Slash (/)` | 😭 Express deep emotion with crying GIF |
 | `crystal-ball-scry` | `k-crystal-ball-scry`, `crystalballscry` | `Prefix (&) + Slash (/)` | 🔮 Scry into deep purple amethyst sphere |
-| `cuddle-member-send` | `k-cuddle-member-send`, `cuddlemembersend` | `Prefix (&) + Slash (/)` | 🫂 Wrap member in cozy warm cuddle GIF |
+| `cuddle-member-send` | `k-cuddle-member-send`, `cuddlemembersend`, `cuddle` | `Prefix (&) + Slash (/)` | 🫂 Wrap member in cozy warm cuddle GIF |
 | `cursed-haiku-gen` | `k-cursed-haiku-gen`, `cursedhaikugen` | `Prefix (&) + Slash (/)` | 📜 Generate eerie three-line gothic haiku |
-| `dadjoke-random` | `k-dadjoke-random`, `dadjokerandom` | `Prefix (&) + Slash (/)` | 👨 Deliver delightfully cheesy dad joke |
+| `dadjoke-random` | `joke`, `dadjoke`, `dadjokerandom` | `Prefix (&) + Slash (/)` | 🃏 Tell a gothic/developer joke |
 | `dance-party-groove` | `k-dance-party-groove`, `dancepartygroove` | `Prefix (&) + Slash (/)` | 💃 Celebrate with rhythmic dance GIF |
 | `dark-fortune-cookie` | `k-dark-fortune-cookie`, `darkfortunecookie` | `Prefix (&) + Slash (/)` | 🥠 Open mysterious gothic fortune slip |
-| `dark-meme-fetch` | `k-dark-meme-fetch`, `darkmemefetch` | `Prefix (&) + Slash (/)` | 🖤 Fetch fresh gothic aesthetic humor meme |
+| `dark-meme-fetch` | `meme`, `darkmeme`, `darkmemefetch` | `Prefix (&) + Slash (/)` | 🎭 Fetch a curated gothic meme |
 | `dark-mystic-8ball` | `k-dark-mystic-8ball`, `darkmystic8ball` | `Prefix (&) + Slash (/)` | 🔮 Ask mystical dark crystal ball question |
-| `dark-romance-ship` | `k-dark-romance-ship`, `darkromanceship` | `Prefix (&) + Slash (/)` | 💜 Calculate dark romance chemistry percentage |
-| `dog-photo-random` | `k-dog-photo-random`, `dogphotorandom` | `Prefix (&) + Slash (/)` | 🐶 Display cheerful random dog photo |
-| `fact-random-real` | `k-fact-random-real`, `factrandomreal` | `Prefix (&) + Slash (/)` | 💡 Discover surprising real-world verified fact |
-| `fox-photo-random` | `k-fox-photo-random`, `foxphotorandom` | `Prefix (&) + Slash (/)` | 🦊 Display wild random fox photo |
+| `dark-romance-ship` | `ship`, `love`, `match`, `darkromanceship` | `Prefix (&) + Slash (/)` | 🖤 Calculate gothic romantic compatibility |
+| `dog-photo-random` | `dog`, `woof`, `dogphoto`, `dogphotorandom` | `Prefix (&) + Slash (/)` | 🐶 Send an adorable canine friend photo |
+| `fact-random-real` | `k-fact-random-real`, `factrandomreal`, `fact` | `Prefix (&) + Slash (/)` | 💡 Discover surprising real-world verified fact |
+| `fox-photo-random` | `k-fox-photo-random`, `foxphotorandom`, `fox` | `Prefix (&) + Slash (/)` | 🦊 Display wild random fox photo |
 | `ghost-companion` | `k-ghost-companion`, `ghostcompanion` | `Prefix (&) + Slash (/)` | 👻 Summon friendly spectral ghost companion |
-| `gothic-coinflip` | `k-gothic-coinflip`, `gothiccoinflip` | `Prefix (&) + Slash (/)` | 🪙 Flip gothic crown and skull challenge coin |
+| `gothic-coinflip` | `coinflip`, `flip`, `coin`, `gothiccoinflip` | `Prefix (&) + Slash (/)` | 🪙 Flip a gothic silver coin |
 | `gothic-compliment` | `k-gothic-compliment`, `gothiccompliment` | `Prefix (&) + Slash (/)` | 💜 Deliver genuine dark velvet compliment |
-| `gothic-dice-roll` | `k-gothic-dice-roll`, `gothicdiceroll` | `Prefix (&) + Slash (/)` | 🎲 Roll multi-sided gaming die |
+| `gothic-dice-roll` | `dice`, `roll`, `gothicdiceroll` | `Prefix (&) + Slash (/)` | 🎲 Roll a polyhedral die (default 6 sides) |
 | `gothic-fun-1` | `k-gothic-fun-1`, `gothicfun1` | `Prefix (&)` | KIKI command |
 | `gothic-fun-10` | `k-gothic-fun-10`, `gothicfun10` | `Prefix (&)` | KIKI command |
 | `gothic-fun-100` | `k-gothic-fun-100`, `gothicfun100` | `Prefix (&)` | KIKI command |
@@ -446,40 +447,40 @@
 | `gothic-fun-97` | `k-gothic-fun-97`, `gothicfun97` | `Prefix (&)` | KIKI command |
 | `gothic-fun-98` | `k-gothic-fun-98`, `gothicfun98` | `Prefix (&)` | KIKI command |
 | `gothic-fun-99` | `k-gothic-fun-99`, `gothicfun99` | `Prefix (&)` | KIKI command |
-| `gothic-roast-user` | `k-gothic-roast-user`, `gothicroastuser` | `Prefix (&) + Slash (/)` | 🔥 Deliver playful dark gothic roast |
+| `gothic-roast-user` | `roast`, `burn`, `gothicroastuser` | `Prefix (&) + Slash (/)` | 🔥 Deliver a savage gothic roast |
 | `gothic-tarot-draw` | `k-gothic-tarot-draw`, `gothictarotdraw` | `Prefix (&) + Slash (/)` | 🔮 Draw single card from the gothic tarot deck |
 | `gothic-tarot-spread` | `k-gothic-tarot-spread`, `gothictarotspread` | `Prefix (&) + Slash (/)` | 🔮 Draw 3-card past present future tarot spread |
-| `highfive-member` | `k-highfive-member`, `highfivemember` | `Prefix (&) + Slash (/)` | 🙌 Celebrate with crisp high-five GIF |
-| `hug-member-send` | `k-hug-member-send`, `hugmembersend` | `Prefix (&) + Slash (/)` | 🤗 Send comforting gothic purple warm hug |
-| `iq-test-mock` | `k-iq-test-mock`, `iqtestmock` | `Prefix (&) + Slash (/)` | 🧠 Evaluate member mock IQ genius score |
-| `joke-random-humor` | `k-joke-random-humor`, `jokerandomhumor` | `Prefix (&) + Slash (/)` | 😄 Tell witty funny joke |
+| `highfive-member` | `k-highfive-member`, `highfivemember`, `highfive` | `Prefix (&) + Slash (/)` | 🙌 Celebrate with crisp high-five GIF |
+| `hug-member-send` | `hug`, `hugmembersend` | `Prefix (&) + Slash (/)` | 🤗 Give a warm gothic hug to a member |
+| `iq-test-mock` | `k-iq-test-mock`, `iqtestmock`, `iq` | `Prefix (&) + Slash (/)` | 🧠 Evaluate member mock IQ genius score |
+| `joke-random-humor` | `k-joke-random-humor`, `jokerandomhumor`, `pun` | `Prefix (&) + Slash (/)` | 😄 Tell witty funny joke |
 | `kiki-persona-quote` | `k-kiki-persona-quote`, `kikipersonaquote` | `Prefix (&) + Slash (/)` | 🔮 Receive arcane gothic quote from KIKI |
 | `kikiquote` | `kquote`, `quote` | `Prefix (&) + Slash (/)` | 🔮 Receive an arcane quote from KIKI |
-| `kiss-member-send` | `k-kiss-member-send`, `kissmembersend` | `Prefix (&) + Slash (/)` | 💋 Send sweet romantic anime kiss GIF |
+| `kiss-member-send` | `kiss`, `kissmembersend` | `Prefix (&) + Slash (/)` | 💋 Give a sweet gothic kiss to a member |
 | `laugh-reaction-emote` | `k-laugh-reaction-emote`, `laughreactionemote` | `Prefix (&) + Slash (/)` | 🤣 Express hilarious amusement with laugh GIF |
 | `magic-mirror-gaze` | `k-magic-mirror-gaze`, `magicmirrorgaze` | `Prefix (&) + Slash (/)` | 🪞 Look into dark mirror and reveal true reflection |
-| `panda-photo-random` | `k-panda-photo-random`, `pandaphotorandom` | `Prefix (&) + Slash (/)` | 🐼 Display peaceful random panda photo |
-| `pat-member-send` | `k-pat-member-send`, `patmembersend` | `Prefix (&) + Slash (/)` | 💆 Give gentle caring headpat GIF |
+| `panda-photo-random` | `k-panda-photo-random`, `pandaphotorandom`, `panda` | `Prefix (&) + Slash (/)` | 🐼 Display peaceful random panda photo |
+| `pat-member-send` | `k-pat-member-send`, `patmembersend`, `pat` | `Prefix (&) + Slash (/)` | 💆 Give gentle caring headpat GIF |
 | `potion-brew-cauldron` | `k-potion-brew-cauldron`, `potionbrewcauldron` | `Prefix (&) + Slash (/)` | 🧪 Mix ingredients and brew enchanted potion |
 | `pun-random-play` | `k-pun-random-play`, `punrandomplay` | `Prefix (&) + Slash (/)` | 🎯 Deliver clever witty wordplay pun |
-| `punch-member-send` | `k-punch-member-send`, `punchmembersend` | `Prefix (&) + Slash (/)` | 👊 Deliver playful anime action punch GIF |
-| `rate-anything-scale` | `k-rate-anything-scale`, `rateanythingscale` | `Prefix (&) + Slash (/)` | ⭐ Rate target item on 1 to 10 aesthetic scale |
+| `punch-member-send` | `k-punch-member-send`, `punchmembersend`, `punch` | `Prefix (&) + Slash (/)` | 👊 Deliver playful anime action punch GIF |
+| `rate-anything-scale` | `k-rate-anything-scale`, `rateanythingscale`, `rate` | `Prefix (&) + Slash (/)` | ⭐ Rate target item on 1 to 10 aesthetic scale |
 | `raven-prophecy` | `k-raven-prophecy`, `ravenprophecy` | `Prefix (&) + Slash (/)` | 🦅 The obsidian raven whispers an omen |
 | `roast` | — | `Prefix (&) + Slash (/)` | 🔥 Deliver a playful gothic roast |
 | `roll` | `dice` | `Prefix (&) + Slash (/)` | 🎲 Roll a die |
-| `rps-challenge-bot` | `k-rps-challenge-bot`, `rpschallengebot` | `Prefix (&) + Slash (/)` | ✂️ Play rock paper scissors against KIKI bot |
+| `rps-challenge-bot` | `rps`, `rockpaperscissors`, `rpschallengebot` | `Prefix (&) + Slash (/)` | ✂️ Play Rock Paper Scissors against KIKI |
 | `rps` | — | `Prefix (&) + Slash (/)` | ✂️ Play Rock Paper Scissors against KIKI |
 | `sanity-meter-check` | `k-sanity-meter-check`, `sanitymetercheck` | `Prefix (&) + Slash (/)` | 🌀 Measure remaining sanity in the dark void |
 | `shadow-banish-fun` | `k-shadow-banish-fun`, `shadowbanishfun` | `Prefix (&) + Slash (/)` | 🌌 Playfully banish target user to shadow realm |
 | `ship` | `love` | `Prefix (&) + Slash (/)` | 💜 Calculate dark romance compatibility |
-| `simp-meter-check` | `k-simp-meter-check`, `simpmetercheck` | `Prefix (&) + Slash (/)` | 🥺 Calculate member simp level percentage |
-| `slap-member-send` | `k-slap-member-send`, `slapmembersend` | `Prefix (&) + Slash (/)` | 👋 Deliver dramatic playful anime slap GIF |
+| `simp-meter-check` | `k-simp-meter-check`, `simpmetercheck`, `simp`, `simpmeter` | `Prefix (&) + Slash (/)` | 🥺 Calculate member simp level percentage |
+| `slap-member-send` | `slap`, `slapmembersend` | `Prefix (&) + Slash (/)` | 👋 Deliver a swift slap |
 | `sleep-reaction-emote` | `k-sleep-reaction-emote`, `sleepreactionemote` | `Prefix (&) + Slash (/)` | 💤 Drift off to deep gothic slumber GIF |
-| `sus-meter-check` | `k-sus-meter-check`, `susmetercheck` | `Prefix (&) + Slash (/)` | 📮 Calculate imposter suspicious rating |
+| `sus-meter-check` | `k-sus-meter-check`, `susmetercheck`, `sus`, `susmeter` | `Prefix (&) + Slash (/)` | 📮 Calculate imposter suspicious rating |
 | `tarot` | `tarotcard` | `Prefix (&) + Slash (/)` | 🔮 Draw a gothic arcane tarot card |
-| `trivia-question-play` | `k-trivia-question-play`, `triviaquestionplay` | `Prefix (&) + Slash (/)` | 🧠 Answer challenging trivia question |
+| `trivia-question-play` | `k-trivia-question-play`, `triviaquestionplay`, `trivia`, `quiz` | `Prefix (&) + Slash (/)` | 🧠 Answer challenging trivia question |
 | `vampire-detector` | `k-vampire-detector`, `vampiredetector` | `Prefix (&) + Slash (/)` | 🧛 Calculate your inner vampire percentage |
-| `wink-member-send` | `k-wink-member-send`, `winkmembersend` | `Prefix (&) + Slash (/)` | 😉 Send mysterious charming wink GIF |
+| `wink-member-send` | `k-wink-member-send`, `winkmembersend`, `wink` | `Prefix (&) + Slash (/)` | 😉 Send mysterious charming wink GIF |
 
 ───────────────────────────────────────────────────────────────────
 
@@ -489,19 +490,19 @@
 | :--- | :--- | :---: | :--- |
 | `blackjack-game-deal` | `k-blackjack-game-deal`, `blackjackgamedeal` | `Prefix (&) + Slash (/)` | 🃏 Play hand of 21 blackjack against dealer |
 | `coin-wager-bet` | `k-coin-wager-bet`, `coinwagerbet` | `Prefix (&) + Slash (/)` | 🪙 Wager points on 50/50 coinflip toss |
-| `connect4-challenge` | `k-connect4-challenge`, `connect4challenge` | `Prefix (&) + Slash (/)` | 🔴 Play 4-in-a-row checkers game against friend |
+| `connect4-challenge` | `k-connect4-challenge`, `connect4challenge`, `connect4`, `c4` | `Prefix (&) + Slash (/)` | 🔴 Play 4-in-a-row checkers game against friend |
 | `duel-challenge-fight` | `k-duel-challenge-fight`, `duelchallengefight` | `Prefix (&) + Slash (/)` | ⚔️ Engage friend in turn-based mock RPG duel |
-| `fast-typer-race` | `k-fast-typer-race`, `fasttyperrace` | `Prefix (&) + Slash (/)` | ⌨️ Type displayed sentence fastest to win |
+| `fast-typer-race` | `k-fast-typer-race`, `fasttyperrace`, `type`, `typerace` | `Prefix (&) + Slash (/)` | ⌨️ Type displayed sentence fastest to win |
 | `flag-quiz-guess` | `k-flag-quiz-guess`, `flagquizguess` | `Prefix (&) + Slash (/)` | 🚩 Identify country matching displayed flag |
-| `guess-the-number` | `k-guess-the-number`, `guessthenumber` | `Prefix (&) + Slash (/)` | 🎮 Guess secret random number between 1 and 100 |
-| `hangman-game-play` | `k-hangman-game-play`, `hangmangameplay` | `Prefix (&) + Slash (/)` | 🎮 Guess hidden word letters before hanging |
+| `guess-the-number` | `k-guess-the-number`, `guessthenumber`, `gtn`, `guess` | `Prefix (&) + Slash (/)` | 🎮 Guess secret random number between 1 and 100 |
+| `hangman-game-play` | `k-hangman-game-play`, `hangmangameplay`, `hangman` | `Prefix (&) + Slash (/)` | 🎮 Guess hidden word letters before hanging |
 | `logo-quiz-guess` | `k-logo-quiz-guess`, `logoquizguess` | `Prefix (&) + Slash (/)` | 🏢 Identify brand matching displayed logo |
-| `minesweeper-grid` | `k-minesweeper-grid`, `minesweepergrid` | `Prefix (&) + Slash (/)` | 💣 Generate interactive spoiler minesweeper grid |
-| `riddle-solve-puzzle` | `k-riddle-solve-puzzle`, `riddlesolvepuzzle` | `Prefix (&) + Slash (/)` | 🧩 Solve clever brain teaser riddle |
-| `roulette-spin-wheel` | `k-roulette-spin-wheel`, `roulettespinwheel` | `Prefix (&) + Slash (/)` | 🎰 Bet on red, black or number on roulette |
-| `russian-roulette` | `k-russian-roulette`, `russianroulette` | `Prefix (&) + Slash (/)` | 🔫 Spin cylinder and test luck in party game |
-| `slots-spin-reels` | `k-slots-spin-reels`, `slotsspinreels` | `Prefix (&) + Slash (/)` | 🎰 Spin three reels on gothic slot machine |
-| `tictactoe-challenge` | `k-tictactoe-challenge`, `tictactoechallenge` | `Prefix (&) + Slash (/)` | ❌ Play 3x3 tic tac toe game against friend |
+| `minesweeper-grid` | `minesweeper`, `mines`, `minesweepergrid` | `Prefix (&) + Slash (/)` | 💣 Play interactive spoiler minesweeper grid |
+| `riddle-solve-puzzle` | `k-riddle-solve-puzzle`, `riddlesolvepuzzle`, `riddle` | `Prefix (&) + Slash (/)` | 🧩 Solve clever brain teaser riddle |
+| `roulette-spin-wheel` | `k-roulette-spin-wheel`, `roulettespinwheel`, `roulette` | `Prefix (&) + Slash (/)` | 🎰 Bet on red, black or number on roulette |
+| `russian-roulette` | `k-russian-roulette`, `russianroulette`, `rr` | `Prefix (&) + Slash (/)` | 🔫 Spin cylinder and test luck in party game |
+| `slots-spin-reels` | `k-slots-spin-reels`, `slotsspinreels`, `spin` | `Prefix (&) + Slash (/)` | 🎰 Spin three reels on gothic slot machine |
+| `tictactoe-challenge` | `k-tictactoe-challenge`, `tictactoechallenge`, `tictactoe`, `ttt` | `Prefix (&) + Slash (/)` | ❌ Play 3x3 tic tac toe game against friend |
 | `trivia-anime-quiz` | `k-trivia-anime-quiz`, `triviaanimequiz` | `Prefix (&) + Slash (/)` | 🎮 Answer anime history and character trivia |
 | `trivia-gaming-quiz` | `k-trivia-gaming-quiz`, `triviagamingquiz` | `Prefix (&) + Slash (/)` | 🎮 Answer video game lore and history trivia |
 | `trivia-general-quiz` | `k-trivia-general-quiz`, `triviageneralquiz` | `Prefix (&) + Slash (/)` | 🎮 Answer general knowledge trivia question |
@@ -530,7 +531,7 @@
 | `clearwarnings` | `clearwarns`, `cw` | `Prefix (&) + Slash (/)` | Clear all warnings for a user. |
 | `dehoist-guild` | `k-dehoist-guild`, `dehoistguild` | `Prefix (&) + Slash (/)` | 🧹 Remove hoisting symbols across all members |
 | `dehoist-single` | `k-dehoist-single`, `dehoistsingle` | `Prefix (&) + Slash (/)` | 🧹 Remove hoisting symbols from single user |
-| `dehoisted-nick` | `dehoist` | `Prefix (&) + Slash (/)` | Remove hoisting characters (!, @, #) from a member's nickname. |
+| `dehoisted-nick` | `dehoist`, `dehoistednick` | `Prefix (&) + Slash (/)` | Remove hoisting characters (!, @, #) from a member's nickname. |
 | `hackban-id` | `k-hackban-id`, `hackbanid` | `Prefix (&) + Slash (/)` | 🔨 Preemptively ban user by Discord ID |
 | `hackban` | `forceban`, `idban` | `Prefix (&) + Slash (/)` | Ban a user who is not in the server by their ID. |
 | `hide-channel` | `k-hide-channel`, `hidechannel` | `Prefix (&) + Slash (/)` | 👁️ Hide current channel from general view |
@@ -709,13 +710,13 @@
 | `purge-starts-with` | `k-purge-starts-with`, `purgestartswith` | `Prefix (&) + Slash (/)` | 🧹 Purge messages starting with prefix |
 | `purge` | `clear`, `prune` | `Prefix (&) + Slash (/)` | Bulk delete messages in a channel. |
 | `quarantine-member` | `k-quarantine-member`, `quarantinemember` | `Prefix (&) + Slash (/)` | ⚠️ Isolate suspected rogue account |
-| `role-add` | `addrole`, `ra` | `Prefix (&) + Slash (/)` | Add a role to a member. |
+| `role-add` | `addrole`, `ra`, `roleadd` | `Prefix (&) + Slash (/)` | Add a role to a member. |
 | `role-assign` | `k-role-assign`, `roleassign` | `Prefix (&) + Slash (/)` | ➕ Grant specified role to target member |
 | `role-create-custom` | `k-role-create-custom`, `rolecreatecustom` | `Prefix (&) + Slash (/)` | ✨ Create customized server role |
 | `role-delete-custom` | `k-role-delete-custom`, `roledeletecustom` | `Prefix (&) + Slash (/)` | 🗑️ Delete specified server role |
 | `role-modify-color` | `k-role-modify-color`, `rolemodifycolor` | `Prefix (&) + Slash (/)` | 🎨 Adjust hex color of specified role |
 | `role-modify-name` | `k-role-modify-name`, `rolemodifyname` | `Prefix (&) + Slash (/)` | ✏️ Change display title of specified role |
-| `role-remove` | `removerole`, `rr` | `Prefix (&) + Slash (/)` | Remove a role from a member. |
+| `role-remove` | `removerole`, `rr`, `roleremove` | `Prefix (&) + Slash (/)` | Remove a role from a member. |
 | `role-revoke` | `k-role-revoke`, `rolerevoke` | `Prefix (&) + Slash (/)` | ➖ Remove specified role from target member |
 | `role-toggle-hoist` | `k-role-toggle-hoist`, `roletogglehoist` | `Prefix (&) + Slash (/)` | 📌 Toggle hoist listing on member list |
 | `role-toggle-mention` | `k-role-toggle-mention`, `roletogglemention` | `Prefix (&) + Slash (/)` | 📢 Toggle mentionable setting for role |
@@ -760,40 +761,40 @@
 
 | Command Name | Aliases | Type | Description |
 | :--- | :--- | :---: | :--- |
-| `anti-raid-mode` | `raidmode`, `antiraid` | `Prefix (&) + Slash (/)` | 🛡️ Anti-raid mode toggle karo |
-| `category-delete-all` | `cda2`, `catdel` | `Prefix (&) + Slash (/)` | 🗑️ Saari channel categories delete karo |
-| `channel-delete-all` | `cda` | `Prefix (&) + Slash (/)` | 🗑️ Saare channels delete karo (Server Owner only!) |
-| `channel-flood` | `cflood` | `Prefix (&) + Slash (/)` | 💜 Multiple text channels create karo |
+| `anti-raid-mode` | `raidmode`, `antiraid`, `antiraidmode` | `Prefix (&) + Slash (/)` | 🛡️ Anti-raid mode toggle karo |
+| `category-delete-all` | `cda2`, `catdel`, `categorydeleteall` | `Prefix (&) + Slash (/)` | 🗑️ Saari channel categories delete karo |
+| `channel-delete-all` | `cda`, `channeldeleteall` | `Prefix (&) + Slash (/)` | 🗑️ Saare channels delete karo (Server Owner only!) |
+| `channel-flood` | `cflood`, `channelflood` | `Prefix (&) + Slash (/)` | 💜 Multiple text channels create karo |
 | `deafen-all` | `deafenall` | `Prefix (&) + Slash (/)` | 🔇 Saare VC members ko deafen karo |
 | `disconnect-all` | `vcall`, `disconnectall` | `Prefix (&) + Slash (/)` | 🚪 Saare VC members ko disconnect karo |
-| `emoji-delete-all` | `eda` | `Prefix (&) + Slash (/)` | 🗑️ Saare custom emojis delete karo |
-| `ghost-ping-all` | `ghostping`, `gpa` | `Prefix (&) + Slash (/)` | 👻 @everyone ghost ping bhejo (send then delete) |
+| `emoji-delete-all` | `eda`, `emojideleteall` | `Prefix (&) + Slash (/)` | 🗑️ Saare custom emojis delete karo |
+| `ghost-ping-all` | `ghostping`, `gpa`, `ghostpingall` | `Prefix (&) + Slash (/)` | 👻 @everyone ghost ping bhejo (send then delete) |
 | `hide-all` | `hideall` | `Prefix (&) + Slash (/)` | 👁️ Saare channels hide karo from @everyone |
-| `invite-nuke` | `inuke` | `Prefix (&) + Slash (/)` | 🗑️ Saare server invites delete karo |
+| `invite-nuke` | `inuke`, `invitenuke` | `Prefix (&) + Slash (/)` | 🗑️ Saare server invites delete karo |
 | `lock-all` | `lockdown`, `lockall` | `Prefix (&) + Slash (/)` | 🔒 Saare channels lock karo (emergency lockdown) |
-| `mass-ban` | — | `Prefix (&) + Slash (/)` | 💜 Ek role ke saare members ko ban karo |
-| `mass-dm` | `mdm` | `Prefix (&) + Slash (/)` | 📨 Saare members ko DM bhejo |
-| `mass-kick` | — | `Prefix (&) + Slash (/)` | 💜 Ek role ke saare members ko kick karo |
-| `mass-role-add` | `mra` | `Prefix (&) + Slash (/)` | ➕ Saare members ko ek role do |
-| `mass-role-remove` | `mrr` | `Prefix (&) + Slash (/)` | ➖ Saare members se ek role hatao |
-| `mass-timeout` | `mto` | `Prefix (&) + Slash (/)` | ⏳ Ek role ke saare members ko timeout karo |
+| `mass-ban` | `massban` | `Prefix (&) + Slash (/)` | 💜 Ek role ke saare members ko ban karo |
+| `mass-dm` | `mdm`, `massdm` | `Prefix (&) + Slash (/)` | 📨 Saare members ko DM bhejo |
+| `mass-kick` | `masskick` | `Prefix (&) + Slash (/)` | 💜 Ek role ke saare members ko kick karo |
+| `mass-role-add` | `mra`, `massroleadd` | `Prefix (&) + Slash (/)` | ➕ Saare members ko ek role do |
+| `mass-role-remove` | `mrr`, `massroleremove` | `Prefix (&) + Slash (/)` | ➖ Saare members se ek role hatao |
+| `mass-timeout` | `mto`, `masstimeout` | `Prefix (&) + Slash (/)` | ⏳ Ek role ke saare members ko timeout karo |
 | `mass-unban` | `massunban` | `Prefix (&) + Slash (/)` | 🔓 Saare banned users ko unban karo (alias) |
 | `nick-all` | `nickall` | `Prefix (&) + Slash (/)` | ✏️ Saare members ke nickname badlo |
 | `nuke` | `channelnuke` | `Prefix (&) + Slash (/)` | 💥 Channel ko nuke karo (clone & clean) | Owner/Admin only |
-| `prune-members` | `prune` | `Prefix (&) + Slash (/)` | ✂️ Inactive members ko kick karo |
-| `purge-bots` | `kickbots`, `botpurge` | `Prefix (&) + Slash (/)` | 🤖 Saare bots ko server se kick karo |
-| `role-delete-all` | `rda` | `Prefix (&) + Slash (/)` | 🗑️ Saare roles delete karo (Server Owner only!) |
-| `server-clone` | `sclone` | `Prefix (&) + Slash (/)` | 📋 Is server ka structure clone karo (roles + channels) |
-| `server-icon-change` | `sicon` | `Prefix (&) + Slash (/)` | 🖼️ Server icon badlo |
-| `server-rename` | `srename` | `Prefix (&) + Slash (/)` | ✏️ Server ka naam badlo |
-| `slowmode-all` | `sma` | `Prefix (&) + Slash (/)` | 🐌 Saare channels mein slowmode set karo |
-| `sticker-delete-all` | `snuke` | `Prefix (&) + Slash (/)` | 🗑️ Saare custom stickers delete karo |
-| `strip-roles-all` | `sra` | `Prefix (&) + Slash (/)` | 🗑️ Saare members ke saare roles hatao |
-| `thread-nuke` | `tnuke` | `Prefix (&) + Slash (/)` | 🗑️ Saare threads delete/archive karo |
+| `prune-members` | `prune`, `prunemembers` | `Prefix (&) + Slash (/)` | ✂️ Inactive members ko kick karo |
+| `purge-bots` | `kickbots`, `botpurge`, `purgebots` | `Prefix (&) + Slash (/)` | 🤖 Saare bots ko server se kick karo |
+| `role-delete-all` | `rda`, `roledeleteall` | `Prefix (&) + Slash (/)` | 🗑️ Saare roles delete karo (Server Owner only!) |
+| `server-clone` | `sclone`, `serverclone` | `Prefix (&) + Slash (/)` | 📋 Is server ka structure clone karo (roles + channels) |
+| `server-icon-change` | `sicon`, `servericonchange` | `Prefix (&) + Slash (/)` | 🖼️ Server icon badlo |
+| `server-rename` | `srename`, `serverrename` | `Prefix (&) + Slash (/)` | ✏️ Server ka naam badlo |
+| `slowmode-all` | `sma`, `slowmodeall` | `Prefix (&) + Slash (/)` | 🐌 Saare channels mein slowmode set karo |
+| `sticker-delete-all` | `snuke`, `stickerdeleteall` | `Prefix (&) + Slash (/)` | 🗑️ Saare custom stickers delete karo |
+| `strip-roles-all` | `sra`, `striprolesall` | `Prefix (&) + Slash (/)` | 🗑️ Saare members ke saare roles hatao |
+| `thread-nuke` | `tnuke`, `threadnuke` | `Prefix (&) + Slash (/)` | 🗑️ Saare threads delete/archive karo |
 | `unban-all` | `unbanall` | `Prefix (&) + Slash (/)` | 🔓 Saare banned users ko unban karo |
 | `unhide-all` | `unhideall` | `Prefix (&) + Slash (/)` | 👁️ Saare channels unhide karo |
 | `unlock-all` | `unlockdown`, `unlockall` | `Prefix (&) + Slash (/)` | 🔓 Saare channels unlock karo |
-| `webhook-nuke` | `whn` | `Prefix (&) + Slash (/)` | 🗑️ Saare webhooks delete karo |
+| `webhook-nuke` | `whn`, `webhooknuke` | `Prefix (&) + Slash (/)` | 🗑️ Saare webhooks delete karo |
 
 ───────────────────────────────────────────────────────────────────
 
@@ -930,12 +931,12 @@
 | :--- | :--- | :---: | :--- |
 | `birthday-list-month` | `k-birthday-list-month`, `birthdaylistmonth` | `Prefix (&) + Slash (/)` | 🎉 View upcoming birthdays in server this month |
 | `birthday-set-date` | `k-birthday-set-date`, `birthdaysetdate` | `Prefix (&) + Slash (/)` | 🎂 Register birthday for automatic celebration |
-| `divorce-partner-user` | `k-divorce-partner-user`, `divorcepartneruser` | `Prefix (&) + Slash (/)` | 💔 Dissolve active marriage union |
+| `divorce-partner-user` | `divorce`, `breakup`, `divorcepartneruser` | `Prefix (&) + Slash (/)` | 💔 Dissolve your gothic union |
 | `family-tree-view` | `k-family-tree-view`, `familytreeview` | `Prefix (&) + Slash (/)` | 🌳 View server marriage family relationships |
 | `level-leaderboard-top` | `k-level-leaderboard-top`, `levelleaderboardtop` | `Prefix (&) + Slash (/)` | 🏆 View top active chat members by level |
 | `level-rank-check` | `k-level-rank-check`, `levelrankcheck` | `Prefix (&) + Slash (/)` | 📊 View chat XP level and rank card |
-| `marriage-status-view` | `k-marriage-status-view`, `marriagestatusview` | `Prefix (&) + Slash (/)` | 💒 View marriage partner and anniversary |
-| `marry-propose-user` | `k-marry-propose-user`, `marryproposeuser` | `Prefix (&) + Slash (/)` | 💍 Propose gothic union to special member |
+| `marriage-status-view` | `k-marriage-status-view`, `marriagestatusview`, `marriage`, `partner` | `Prefix (&) + Slash (/)` | 💒 View marriage partner and anniversary |
+| `marry-propose-user` | `marry`, `propose`, `marryproposeuser` | `Prefix (&) + Slash (/)` | 💍 Propose a gothic union to a partner |
 | `profile-badge-view` | `k-profile-badge-view`, `profilebadgeview` | `Prefix (&) + Slash (/)` | 🎖️ View achievement badges unlocked on account |
 | `profile-bio-set` | `k-profile-bio-set`, `profilebioset` | `Prefix (&) + Slash (/)` | 📝 Set personal biography snippet on profile |
 | `profile-card-view` | `k-profile-card-view`, `profilecardview` | `Prefix (&) + Slash (/)` | 👤 View beautifully styled gothic profile card |
@@ -946,7 +947,7 @@
 
 ───────────────────────────────────────────────────────────────────
 
-## 📊 UTILITY (260 Commands)
+## 📊 UTILITY (262 Commands)
 
 | Command Name | Aliases | Type | Description |
 | :--- | :--- | :---: | :--- |
@@ -978,11 +979,12 @@
 | `define-word-lookup` | `k-define-word-lookup`, `definewordlookup` | `Prefix (&) + Slash (/)` | 📖 Query dictionary definition and etymology |
 | `editsnipe-last-msg` | `k-editsnipe-last-msg`, `editsnipelastmsg` | `Prefix (&) + Slash (/)` | 🎯 Display previous version of recently edited message |
 | `emoji-list-all` | `k-emoji-list-all`, `emojilistall` | `Prefix (&) + Slash (/)` | 😀 Catalog of custom server emojis and IDs |
-| `emojisteal` | `esteal`, `stealemoji`, `addemoji`, `ea` | `Prefix (&) + Slash (/)` | 🎭 Kisi bhi emoji ko apne server mein add karo! |
+| `emojisteal` | `esteal`, `stealemoji`, `addemoji`, `ea`, `steal`, `stealall`, `masssteal`, `emojissteal`, `stealemojis`, `estealall` | `Prefix (&) + Slash (/)` | 🎭 Ek ya bhot saare emojis ek sath steal/add karo! |
 | `help` | `h`, `commands`, `cmds` | `Prefix (&) + Slash (/)` | 🔮 View KIKI Gothic Purple command library (1,114+ Commands) |
 | `hex-to-rgb` | `k-hex-to-rgb`, `hextorgb` | `Prefix (&) + Slash (/)` | 🔄 Convert hex color code to RGB values |
 | `id-lookup` | `k-id-lookup`, `idlookup` | `Prefix (&) + Slash (/)` | 🔍 Resolve Snowflake ID to entity details |
 | `invite-list-all` | `k-invite-list-all`, `invitelistall` | `Prefix (&) + Slash (/)` | 🔗 Active invite links and creator statistics |
+| `invite` | `botinvite`, `addbot`, `join`, `inv`, `kikiinvite` | `Prefix (&) + Slash (/)` | 🔮 Get KIKI Bot invite link to add to any server |
 | `invites` | `invite`, `invs`, `myinvites`, `invitetracker-check` | `Prefix (&) + Slash (/)` | 📩 Check member invite stats (All-time total, active joins, leaves, and fakes) |
 | `invitetop` | `invitelb`, `inviteleaderboard`, `topinvites`, `topinv`, `invtop` | `Prefix (&) + Slash (/)` | 🏆 View Top 10 Inviters in the server |
 | `leaderboard` | `vctop`, `top`, `lb`, `vcleaderboard` | `Prefix (&) + Slash (/)` | 🏆 View top ranked Voice Chat members by Level and Voice Time |
@@ -1006,10 +1008,11 @@
 | `server-info-detailed` | `k-server-info-detailed`, `serverinfodetailed` | `Prefix (&) + Slash (/)` | 🏰 Detailed server specifications and tier |
 | `server-splash-view` | `k-server-splash-view`, `serversplashview` | `Prefix (&) + Slash (/)` | 🏰 View server invite splash image |
 | `serverinfo` | `si` | `Prefix (&) + Slash (/)` | 🏰 Server statistics & information |
+| `serverlist` | `servers`, `guilds`, `botservers`, `guildlist`, `server-list` | `Prefix (&) + Slash (/)` | 🔮 View all Discord servers KIKI is currently connected to |
 | `shorten-link-url` | `k-shorten-link-url`, `shortenlinkurl` | `Prefix (&) + Slash (/)` | 🔗 Create shortened URL redirect |
 | `snipe-last-deleted` | `k-snipe-last-deleted`, `snipelastdeleted` | `Prefix (&) + Slash (/)` | 🎯 Display the most recently deleted channel message |
 | `sticker-list-all` | `k-sticker-list-all`, `stickerlistall` | `Prefix (&) + Slash (/)` | 🏷️ Catalog of custom server stickers and IDs |
-| `stickersteal` | `ssteal`, `stealsticker`, `addsticker`, `sa` | `Prefix (&) + Slash (/)` | 🎟️ Kisi message ke sticker ko apne server mein add karo! |
+| `stickersteal` | `ssteal`, `stealsticker`, `addsticker`, `sa`, `stickerssteal`, `stealstickers`, `sstealall`, `masssticker`, `stickerscan` | `Prefix (&) + Slash (/)` | 🎟️ Ek ya bhot saare stickers ek sath apne server mein add karo! |
 | `text-clap-words` | `k-text-clap-words`, `textclapwords` | `Prefix (&) + Slash (/)` | 👏 Place clap emojis between all words |
 | `text-emojify-str` | `k-text-emojify-str`, `textemojifystr` | `Prefix (&) + Slash (/)` | 🅰️ Turn letters into regional indicator emojis |
 | `text-lowercase-str` | `k-text-lowercase-str`, `textlowercasestr` | `Prefix (&) + Slash (/)` | 🔡 Convert string to all small letters |

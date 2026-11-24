@@ -6,10 +6,10 @@ module.exports = {
   async run(message, args, client) {
     const input = args.join(' ') || 'None';
     const embed = KikiEmbed.purple('🔧 UTIL-TOOL-147',
-      '**Command:** `util-tool-147`\\n' +
-      '**Description:** Utility diagnostics tool #147 for server management and automation\\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
+      '**Command:** `util-tool-147`\n' +
+      '**Description:** Utility diagnostics tool #147 for server management and automation\n' +
+      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
+      '\n*「 KIKI 」• Gothic Utility v2.2*'
     );
     message.reply({ embeds: [embed] });
   }

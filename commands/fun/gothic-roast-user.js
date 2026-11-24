@@ -1,31 +1,27 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+const FunEngine = require('../../utils/funEngine.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('gothic-roast-user')
-    .setDescription('🔥 Deliver playful dark gothic roast')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('🔥 Deliver a savage gothic roast')
+    .addUserOption(o => o.setName('user').setDescription('Target to roast')),
+
+  aliases: ['roast', 'burn'],
+  name: 'gothic-roast-user',
 
   async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('🔥 GOTHIC-ROAST-USER',
-      '**Action:** Deliver playful dark gothic roast\\n' +
-      '**Status:** Successfully processed\\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
+    const target = interaction.options.getUser('user') || interaction.user;
+    const r = FunEngine.getRoast(target.username);
+    const embed = KikiEmbed.error(`🔥 Roast for ${target.username}`, r);
     await interaction.reply({ embeds: [embed] });
   },
-  name: 'gothic-roast-user',
-  aliases: ['k-gothic-roast-user', 'gothicroastuser'],
+
   async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('🔥 GOTHIC-ROAST-USER',
-      '**Command:** `gothic-roast-user`\\n' +
-      '**Description:** Deliver playful dark gothic roast\\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
+    const target = message.mentions.users.first() || message.author;
+    const r = FunEngine.getRoast(target.username);
+    const embed = KikiEmbed.error(`🔥 Roast for ${target.username}`, r);
     message.reply({ embeds: [embed] });
   }
 };

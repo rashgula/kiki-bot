@@ -1,30 +1,33 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+const Economy = require('../../utils/economy.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('fish-catch-lake')
-    .setDescription('🎣 Cast line in dark lake and catch rare items')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('🎣 Cast fishing line into the obsidian lake'),
+
+  aliases: ['fish', 'fishing'],
+  name: 'fish-catch-lake',
 
   async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('🎣 FISH-CATCH-LAKE',
-      '**Action:** Cast line in dark lake and catch rare items\\n' +
-      '**Status:** Successfully processed\\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
+    const res = Economy.fish(interaction.guildId, interaction.user.id);
+    if (!res.success) {
+      return interaction.reply({ embeds: [KikiEmbed.error('Cooldown ⏳', res.message)] });
+    }
+    const embed = KikiEmbed.purple('Obsidian Lake Fishing 🎣',
+      `${res.message}\n\n**Reward:** \`+${res.payout} Coins\`\n**New Wallet:** \`${res.balance.toLocaleString()} Coins\``
     );
     await interaction.reply({ embeds: [embed] });
   },
-  name: 'fish-catch-lake',
-  aliases: ['k-fish-catch-lake', 'fishcatchlake'],
+
   async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('🎣 FISH-CATCH-LAKE',
-      '**Command:** `fish-catch-lake`\\n' +
-      '**Description:** Cast line in dark lake and catch rare items\\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
+    const res = Economy.fish(message.guild.id, message.author.id);
+    if (!res.success) {
+      return message.reply({ embeds: [KikiEmbed.error('Cooldown ⏳', res.message)] });
+    }
+    const embed = KikiEmbed.purple('Obsidian Lake Fishing 🎣',
+      `${res.message}\n\n**Reward:** \`+${res.payout} Coins\`\n**New Wallet:** \`${res.balance.toLocaleString()} Coins\``
     );
     message.reply({ embeds: [embed] });
   }

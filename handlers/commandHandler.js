@@ -4,6 +4,81 @@ const fs = require('fs');
 const path = require('path');
 const chalk = require('chalk');
 
+// Popular intuitive aliases mapping
+const POPULAR_SHORT_ALIASES = {
+  // Economy
+  'balance-wallet-view': ['balance', 'bal', 'wallet', 'paisa'],
+  'daily-reward-claim': ['daily'],
+  'weekly-reward-claim': ['weekly'],
+  'monthly-reward-claim': ['monthly'],
+  'work-job-shift': ['work', 'job'],
+  'crime-heist-attempt': ['crime', 'heist'],
+  'fish-catch-lake': ['fish', 'fishing'],
+  'hunt-forest-game': ['hunt', 'hunting'],
+  'mine-ore-cavern': ['mine', 'mining'],
+  'deposit-bank-coins': ['deposit', 'dep'],
+  'withdraw-bank-coins': ['withdraw', 'with'],
+  'transfer-pay-coins': ['pay', 'transfer', 'give'],
+  'shop-browse-items': ['shop', 'store'],
+  'buy-shop-item': ['buy'],
+  'inventory-view-bag': ['inventory', 'inv', 'bag'],
+  'leaderboard-rich': ['rich', 'ecotop', 'ecolb'],
+  'gamble-dice-bet': ['bet', 'gamble'],
+  'gamble-slots-bet': ['slots', 'slot'],
+  'rob-member-coins': ['rob', 'steal'],
+  'use-inventory-item': ['use'],
+
+  // Fun & Animals
+  'cat-photo-random': ['cat', 'meow', 'catphoto'],
+  'dog-photo-random': ['dog', 'woof', 'dogphoto'],
+  'bird-photo-random': ['bird', 'birdphoto'],
+  'fox-photo-random': ['fox'],
+  'panda-photo-random': ['panda'],
+  'dark-meme-fetch': ['meme', 'darkmeme'],
+  'dadjoke-random': ['joke', 'dadjoke'],
+  'joke-random-humor': ['pun'],
+  'fact-random-real': ['fact'],
+  'punch-member-send': ['punch'],
+  'highfive-member': ['highfive'],
+  'wink-member-send': ['wink'],
+  'rate-anything-scale': ['rate'],
+  'iq-test-mock': ['iq'],
+  'simp-meter-check': ['simp', 'simpmeter'],
+  'sus-meter-check': ['sus', 'susmeter'],
+  'trivia-question-play': ['trivia', 'quiz'],
+  'rps-challenge-bot': ['rps', 'rockpaperscissors'],
+  'gothic-coinflip': ['coinflip', 'flip', 'coin'],
+  'gothic-dice-roll': ['dice', 'roll'],
+  'gothic-roast-user': ['roast'],
+  'dark-romance-ship': ['ship', 'love'],
+
+  // Actions
+  'hug-member-send': ['hug'],
+  'kiss-member-send': ['kiss'],
+  'slap-member-send': ['slap'],
+  'bite-member-send': ['bite'],
+  'cuddle-member-send': ['cuddle'],
+  'pat-member-send': ['pat'],
+  'kill-member-send': ['kill'],
+
+  // Social & Marriage
+  'marry-propose-user': ['marry', 'propose'],
+  'divorce-partner-user': ['divorce'],
+  'marriage-status-view': ['marriage', 'partner'],
+
+  // Games
+  'minesweeper-grid': ['minesweeper', 'mines'],
+  'riddle-solve-puzzle': ['riddle'],
+  'connect4-challenge': ['connect4', 'c4'],
+  'tictactoe-challenge': ['tictactoe', 'ttt'],
+  'hangman-game-play': ['hangman'],
+  'guess-the-number': ['gtn', 'guess'],
+  'fast-typer-race': ['type', 'typerace'],
+  'slots-spin-reels': ['spin'],
+  'roulette-spin-wheel': ['roulette'],
+  'russian-roulette': ['rr']
+};
+
 module.exports = (client) => {
   client.commands = new Collection();
   client.prefixCommands = new Collection();
@@ -28,12 +103,32 @@ module.exports = (client) => {
         const command = require(filePath);
         totalFiles++;
 
+        // Attach category to command
+        command.category = category;
+
         const cmdName = command.data?.name || command.name || file.replace('.js', '');
         const cmdDesc = command.data?.description || command.description || 'Gothic command';
+        const fileBase = file.replace('.js', '');
+
+        // Gather all aliases
+        const aliases = new Set(command.aliases || []);
+        if (POPULAR_SHORT_ALIASES[fileBase]) {
+          POPULAR_SHORT_ALIASES[fileBase].forEach(a => aliases.add(a));
+        }
+        if (POPULAR_SHORT_ALIASES[cmdName]) {
+          POPULAR_SHORT_ALIASES[cmdName].forEach(a => aliases.add(a));
+        }
+        // Add dash-free alias if distinct
+        const noDash = cmdName.replace(/-/g, '');
+        if (noDash !== cmdName) aliases.add(noDash);
+
+        command.aliases = Array.from(aliases);
+
         categoryCmdList.push({
           name: cmdName,
           description: cmdDesc,
-          aliases: command.aliases || [],
+          aliases: command.aliases,
+          category: category,
           isSlash: !!(command.data && command.execute)
         });
 
@@ -44,11 +139,17 @@ module.exports = (client) => {
         }
 
         // Prefix command
-        if (command.name && command.run) {
-          client.prefixCommands.set(command.name, command);
-          if (command.aliases) {
-            command.aliases.forEach(alias => client.prefixCommands.set(alias, command));
-          }
+        if (command.run || (command.data && command.execute)) {
+          // Main name registration
+          client.prefixCommands.set(cmdName, command);
+          client.prefixCommands.set(fileBase, command);
+
+          // Register all aliases
+          command.aliases.forEach(alias => {
+            if (!client.prefixCommands.has(alias)) {
+              client.prefixCommands.set(alias, command);
+            }
+          });
         }
 
       } catch (err) {

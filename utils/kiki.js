@@ -98,7 +98,7 @@ const KIKI = {
   isSafe(guild, userId, client) {
     if (!userId) return false;
     const idStr = String(userId);
-    if (client && idStr === String(client.user.id)) return true;
+    if (client?.user?.id && idStr === String(client.user.id)) return true;
     if (guild && idStr === String(guild.ownerId)) return true;
     if (this.isOwner(idStr)) return true;
     const cfg = this.loadConfig();
@@ -191,8 +191,11 @@ const KIKI = {
     return `${s}s`;
   },
 
-  // Protected categories that can NEVER be made public for non-whitelisted members
+  // Protected categories that can NEVER be made public for non-whitelisted members without staff permissions
   PROTECTED_CATEGORIES: ['admin', 'moderation', 'antinuke', 'nuke', 'security'],
+
+  // Default allowed public categories for all users
+  DEFAULT_PUBLIC_CATEGORIES: ['economy', 'fun', 'games', 'social', 'utility'],
 
   // Default allowed public commands for standard servers
   DEFAULT_PUBLIC_COMMANDS: [
@@ -203,7 +206,10 @@ const KIKI = {
     'ping', 'help', 'avatar', 'banner', 'userinfo', 'serverinfo',
     'afk', 'kikiquote', 'tarot', '8ball',
     'voicemaster', 'vm', 'tempvc',
-    'invites', 'invite', 'botinvite', 'addbot', 'join', 'invs', 'myinvites', 'invitetop', 'invitelb', 'inviteleaderboard'
+    'invites', 'invite', 'botinvite', 'addbot', 'join', 'invs', 'myinvites', 'invitetop', 'invitelb', 'inviteleaderboard',
+    'balance', 'bal', 'wallet', 'daily', 'weekly', 'monthly', 'work', 'crime', 'fish', 'hunt', 'gamble', 'slots', 'pay', 'transfer', 'shop', 'buy', 'inventory', 'inv', 'rich',
+    'cat', 'dog', 'bird', 'fox', 'panda', 'meme', 'joke', 'fact', 'roast', 'ship', 'rps', 'flip', 'dice', 'minesweeper', 'mines',
+    'hug', 'kiss', 'slap', 'bite', 'cuddle', 'pat', 'kill', 'marry', 'divorce'
   ],
 
   // Check if a command is allowed for non-whitelisted members
@@ -221,14 +227,22 @@ const KIKI = {
     ];
     if (blockedCommands.includes(cleanCmd)) return false;
 
+    // Check command category: public categories are freely allowed
+    if (commandObj && commandObj.category) {
+      const cat = commandObj.category.toLowerCase();
+      if (this.DEFAULT_PUBLIC_CATEGORIES.includes(cat)) {
+        return true;
+      }
+    }
+
     const cfg = this.loadConfig();
     const publicCommands = (cfg.public_commands || this.DEFAULT_PUBLIC_COMMANDS).map(c => c.toLowerCase());
 
     // Check direct command list
     if (publicCommands.includes(cleanCmd)) return true;
 
-    // Check allowed categories if any (e.g. 'utility', 'fun', 'games', 'social')
-    const publicCategories = (cfg.public_categories || []).map(c => c.toLowerCase());
+    // Check allowed categories configured in guild config
+    const publicCategories = (cfg.public_categories || this.DEFAULT_PUBLIC_CATEGORIES).map(c => c.toLowerCase());
     if (commandObj && commandObj.category) {
       const cat = commandObj.category.toLowerCase();
       if (!this.PROTECTED_CATEGORIES.includes(cat) && publicCategories.includes(cat)) {

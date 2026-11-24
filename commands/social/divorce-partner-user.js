@@ -1,31 +1,30 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+const FunEngine = require('../../utils/funEngine.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('divorce-partner-user')
-    .setDescription('💔 Dissolve active marriage union')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('💔 Dissolve your gothic union'),
+
+  aliases: ['divorce', 'breakup'],
+  name: 'divorce-partner-user',
 
   async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('💔 DIVORCE-PARTNER-USER',
-      '**Action:** Dissolve active marriage union\\n' +
-      '**Status:** Successfully processed\\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
+    const res = FunEngine.divorce(interaction.guildId, interaction.user.id);
+    if (!res.success) {
+      return interaction.reply({ embeds: [KikiEmbed.error('Divorce Notice', res.message)] });
+    }
+    const embed = KikiEmbed.purple('Gothic Covenant Dissolved 💔', res.message);
     await interaction.reply({ embeds: [embed] });
   },
-  name: 'divorce-partner-user',
-  aliases: ['k-divorce-partner-user', 'divorcepartneruser'],
+
   async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('💔 DIVORCE-PARTNER-USER',
-      '**Command:** `divorce-partner-user`\\n' +
-      '**Description:** Dissolve active marriage union\\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
+    const res = FunEngine.divorce(message.guild.id, message.author.id);
+    if (!res.success) {
+      return message.reply({ embeds: [KikiEmbed.error('Divorce Notice', res.message)] });
+    }
+    const embed = KikiEmbed.purple('Gothic Covenant Dissolved 💔', res.message);
     message.reply({ embeds: [embed] });
   }
 };

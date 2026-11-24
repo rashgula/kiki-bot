@@ -6,10 +6,10 @@ module.exports = {
   async run(message, args, client) {
     const input = args.join(' ') || 'None';
     const embed = KikiEmbed.purple('🔨 MOD-ACTION-36',
-      '**Command:** `mod-action-36`\\n' +
-      '**Description:** Moderation utility routine #36 for server management and automation\\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
+      '**Command:** `mod-action-36`\n' +
+      '**Description:** Moderation utility routine #36 for server management and automation\n' +
+      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
+      '\n*「 KIKI 」• Gothic Utility v2.2*'
     );
     message.reply({ embeds: [embed] });
   }

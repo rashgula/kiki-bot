@@ -1,31 +1,35 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+const FunEngine = require('../../utils/funEngine.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('rps-challenge-bot')
-    .setDescription('✂️ Play rock paper scissors against KIKI bot')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('✂️ Play Rock Paper Scissors against KIKI')
+    .addStringOption(o => o.setName('choice').setDescription('rock, paper, or scissors').setRequired(true)),
+
+  aliases: ['rps', 'rockpaperscissors'],
+  name: 'rps-challenge-bot',
 
   async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('✂️ RPS-CHALLENGE-BOT',
-      '**Action:** Play rock paper scissors against KIKI bot\\n' +
-      '**Status:** Successfully processed\\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
+    const choice = interaction.options.getString('choice');
+    const res = FunEngine.playRPS(choice);
+    const embed = res.result === 'win' ?
+      KikiEmbed.success('You Won! 🎉', `You chose **${res.user}** | KIKI chose **${res.bot}**\n\`${res.message}\``) :
+      res.result === 'lose' ?
+      KikiEmbed.error('KIKI Won! 💀', `You chose **${res.user}** | KIKI chose **${res.bot}**\n\`${res.message}\``) :
+      KikiEmbed.purple('It\'s a Tie! 🤝', `Both chose **${res.user}**\n\`${res.message}\``);
     await interaction.reply({ embeds: [embed] });
   },
-  name: 'rps-challenge-bot',
-  aliases: ['k-rps-challenge-bot', 'rpschallengebot'],
+
   async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('✂️ RPS-CHALLENGE-BOT',
-      '**Command:** `rps-challenge-bot`\\n' +
-      '**Description:** Play rock paper scissors against KIKI bot\\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
+    const choice = args[0] || 'rock';
+    const res = FunEngine.playRPS(choice);
+    const embed = res.result === 'win' ?
+      KikiEmbed.success('You Won! 🎉', `You chose **${res.user}** | KIKI chose **${res.bot}**\n\`${res.message}\``) :
+      res.result === 'lose' ?
+      KikiEmbed.error('KIKI Won! 💀', `You chose **${res.user}** | KIKI chose **${res.bot}**\n\`${res.message}\``) :
+      KikiEmbed.purple('It\'s a Tie! 🤝', `Both chose **${res.user}**\n\`${res.message}\``);
     message.reply({ embeds: [embed] });
   }
 };

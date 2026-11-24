@@ -1,8 +1,8 @@
 {
   "name": "kiki-commands-registry",
   "version": "2.2",
-  "updatedAt": 1795375164801,
-  "totalCommands": 1137,
+  "updatedAt": 1795509062849,
+  "totalCommands": 1140,
   "builtTogetherModules": [
     {
       "module": "Automated Level Roles System (5 - 50)",
@@ -2556,6 +2556,24 @@
         "isPrefix": true
       },
       {
+        "name": "setupall",
+        "file": "setupall.js",
+        "category": "admin",
+        "description": "🔮 Auto-run complete Chit chat server setup in 1-click (All channels, roles & systems)",
+        "aliases": [
+          "setup-all",
+          "quicksetup",
+          "autosetup",
+          "fullsetup",
+          "serversetup",
+          "chitchatsetup",
+          "setupbot",
+          "setupkiki"
+        ],
+        "isSlash": true,
+        "isPrefix": true
+      },
+      {
         "name": "setuplevelroles",
         "file": "setuplevelroles.js",
         "category": "admin",
@@ -3458,7 +3476,8 @@
           "antinuke-master",
           "man",
           "masteran",
-          "antiruke-all"
+          "antiruke-all",
+          "masterantinuke"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -3482,7 +3501,10 @@
         "category": "economy",
         "description": "💰 Inspect personal gothic coin wallet and bank",
         "aliases": [
-          "k-balance-wallet-view",
+          "balance",
+          "bal",
+          "wallet",
+          "paisa",
           "balancewalletview"
         ],
         "isSlash": true,
@@ -3492,9 +3514,9 @@
         "name": "buy-shop-item",
         "file": "buy-shop-item.js",
         "category": "economy",
-        "description": "🏷️ Purchase cosmetic item from the shop",
+        "description": "🛍️ Purchase an artifact from the shop",
         "aliases": [
-          "k-buy-shop-item",
+          "buy",
           "buyshopitem"
         ],
         "isSlash": true,
@@ -3504,9 +3526,11 @@
         "name": "crime-heist-attempt",
         "file": "crime-heist-attempt.js",
         "category": "economy",
-        "description": "🕶️ Attempt daring heist for high reward",
+        "description": "🗡️ Attempt a dark heist in the shadows",
         "aliases": [
-          "k-crime-heist-attempt",
+          "crime",
+          "heist",
+          "robbery",
           "crimeheistattempt"
         ],
         "isSlash": true,
@@ -3516,9 +3540,10 @@
         "name": "daily-reward-claim",
         "file": "daily-reward-claim.js",
         "category": "economy",
-        "description": "🎁 Claim daily gothic purple coin bonus",
+        "description": "🎁 Claim daily gothic coins gift",
         "aliases": [
-          "k-daily-reward-claim",
+          "daily",
+          "claimdaily",
           "dailyrewardclaim"
         ],
         "isSlash": true,
@@ -3528,9 +3553,10 @@
         "name": "deposit-bank-coins",
         "file": "deposit-bank-coins.js",
         "category": "economy",
-        "description": "🏦 Safely deposit wallet coins into bank vault",
+        "description": "🏦 Deposit coins from wallet to secure vault bank",
         "aliases": [
-          "k-deposit-bank-coins",
+          "deposit",
+          "dep",
           "depositbankcoins"
         ],
         "isSlash": true,
@@ -3540,9 +3566,10 @@
         "name": "fish-catch-lake",
         "file": "fish-catch-lake.js",
         "category": "economy",
-        "description": "🎣 Cast line in dark lake and catch rare items",
+        "description": "🎣 Cast fishing line into the obsidian lake",
         "aliases": [
-          "k-fish-catch-lake",
+          "fish",
+          "fishing",
           "fishcatchlake"
         ],
         "isSlash": true,
@@ -3552,9 +3579,11 @@
         "name": "gamble-dice-bet",
         "file": "gamble-dice-bet.js",
         "category": "economy",
-        "description": "🎲 Bet coins on roll of two dice",
+        "description": "🎲 Bet coins on dark dice roll against KIKI",
         "aliases": [
-          "k-gamble-dice-bet",
+          "bet",
+          "gamble",
+          "dicebet",
           "gambledicebet"
         ],
         "isSlash": true,
@@ -3564,9 +3593,10 @@
         "name": "gamble-slots-bet",
         "file": "gamble-slots-bet.js",
         "category": "economy",
-        "description": "🎰 Wager coins on gothic slot machine",
+        "description": "🎰 Spin the gothic cursed slot machine",
         "aliases": [
-          "k-gamble-slots-bet",
+          "slots",
+          "slot",
           "gambleslotsbet"
         ],
         "isSlash": true,
@@ -3576,9 +3606,10 @@
         "name": "hunt-forest-game",
         "file": "hunt-forest-game.js",
         "category": "economy",
-        "description": "🏹 Hunt in dark woods for valuable pelts",
+        "description": "🏹 Hunt shadow beasts in the misty gothic woods",
         "aliases": [
-          "k-hunt-forest-game",
+          "hunt",
+          "hunting",
           "huntforestgame"
         ],
         "isSlash": true,
@@ -3588,9 +3619,11 @@
         "name": "inventory-view-bag",
         "file": "inventory-view-bag.js",
         "category": "economy",
-        "description": "🎒 View your owned gothic inventory items",
+        "description": "🎒 View items in your gothic inventory bag",
         "aliases": [
-          "k-inventory-view-bag",
+          "inventory",
+          "inv",
+          "bag",
           "inventoryviewbag"
         ],
         "isSlash": true,
@@ -3600,9 +3633,11 @@
         "name": "leaderboard-rich",
         "file": "leaderboard-rich.js",
         "category": "economy",
-        "description": "👑 Top richest members in gothic economy",
+        "description": "🏆 Gothic wealth leaderboard of richest members",
         "aliases": [
-          "k-leaderboard-rich",
+          "rich",
+          "ecotop",
+          "ecolb",
           "leaderboardrich"
         ],
         "isSlash": true,
@@ -3615,7 +3650,9 @@
         "description": "⛏️ Dig deep in crystal cavern for amethyst gems",
         "aliases": [
           "k-mine-ore-cavern",
-          "mineorecavern"
+          "mineorecavern",
+          "mine",
+          "mining"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -3627,7 +3664,8 @@
         "description": "🏆 Claim monthly elite coin jackpot",
         "aliases": [
           "k-monthly-reward-claim",
-          "monthlyrewardclaim"
+          "monthlyrewardclaim",
+          "monthly"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -3639,7 +3677,9 @@
         "description": "🦹 Attempt pickpocketing coins from member",
         "aliases": [
           "k-rob-member-coins",
-          "robmembercoins"
+          "robmembercoins",
+          "rob",
+          "steal"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -3648,9 +3688,10 @@
         "name": "shop-browse-items",
         "file": "shop-browse-items.js",
         "category": "economy",
-        "description": "🛍️ Browse catalog of gothic cosmetics and roles",
+        "description": "🛒 Browse gothic artifact shop items",
         "aliases": [
-          "k-shop-browse-items",
+          "shop",
+          "store",
           "shopbrowseitems"
         ],
         "isSlash": true,
@@ -3660,9 +3701,11 @@
         "name": "transfer-pay-coins",
         "file": "transfer-pay-coins.js",
         "category": "economy",
-        "description": "💸 Transfer coins to another server member",
+        "description": "💸 Pay/Transfer coins to another member",
         "aliases": [
-          "k-transfer-pay-coins",
+          "pay",
+          "transfer",
+          "give",
           "transferpaycoins"
         ],
         "isSlash": true,
@@ -3675,7 +3718,8 @@
         "description": "✨ Consume or activate an inventory item",
         "aliases": [
           "k-use-inventory-item",
-          "useinventoryitem"
+          "useinventoryitem",
+          "use"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -3687,7 +3731,8 @@
         "description": "📅 Claim weekly loyalty coin allowance",
         "aliases": [
           "k-weekly-reward-claim",
-          "weeklyrewardclaim"
+          "weeklyrewardclaim",
+          "weekly"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -3696,9 +3741,10 @@
         "name": "withdraw-bank-coins",
         "file": "withdraw-bank-coins.js",
         "category": "economy",
-        "description": "🏧 Withdraw stored coins from bank vault",
+        "description": "🏦 Withdraw coins from bank vault to wallet",
         "aliases": [
-          "k-withdraw-bank-coins",
+          "withdraw",
+          "with",
           "withdrawbankcoins"
         ],
         "isSlash": true,
@@ -3708,9 +3754,11 @@
         "name": "work-job-shift",
         "file": "work-job-shift.js",
         "category": "economy",
-        "description": "💼 Complete dark shift and earn gothic wages",
+        "description": "💼 Work a shift in the gothic underground realm",
         "aliases": [
-          "k-work-job-shift",
+          "work",
+          "job",
+          "shift",
           "workjobshift"
         ],
         "isSlash": true,
@@ -3736,7 +3784,9 @@
         "description": "🐦 Display majestic raven or bird photo",
         "aliases": [
           "k-bird-photo-random",
-          "birdphotorandom"
+          "birdphotorandom",
+          "bird",
+          "birdphoto"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -3748,7 +3798,8 @@
         "description": "🧛 Playfully deliver vampire nibble GIF",
         "aliases": [
           "k-bite-member-send",
-          "bitemembersend"
+          "bitemembersend",
+          "bite"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -3757,9 +3808,11 @@
         "name": "cat-photo-random",
         "file": "cat-photo-random.js",
         "category": "fun",
-        "description": "🐱 Display adorable random cat photo",
+        "description": "🐱 Send a cute random gothic cat photo",
         "aliases": [
-          "k-cat-photo-random",
+          "cat",
+          "meow",
+          "catphoto",
           "catphotorandom"
         ],
         "isSlash": true,
@@ -3832,7 +3885,8 @@
         "description": "🫂 Wrap member in cozy warm cuddle GIF",
         "aliases": [
           "k-cuddle-member-send",
-          "cuddlemembersend"
+          "cuddlemembersend",
+          "cuddle"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -3853,9 +3907,10 @@
         "name": "dadjoke-random",
         "file": "dadjoke-random.js",
         "category": "fun",
-        "description": "👨 Deliver delightfully cheesy dad joke",
+        "description": "🃏 Tell a gothic/developer joke",
         "aliases": [
-          "k-dadjoke-random",
+          "joke",
+          "dadjoke",
           "dadjokerandom"
         ],
         "isSlash": true,
@@ -3889,9 +3944,10 @@
         "name": "dark-meme-fetch",
         "file": "dark-meme-fetch.js",
         "category": "fun",
-        "description": "🖤 Fetch fresh gothic aesthetic humor meme",
+        "description": "🎭 Fetch a curated gothic meme",
         "aliases": [
-          "k-dark-meme-fetch",
+          "meme",
+          "darkmeme",
           "darkmemefetch"
         ],
         "isSlash": true,
@@ -3913,9 +3969,11 @@
         "name": "dark-romance-ship",
         "file": "dark-romance-ship.js",
         "category": "fun",
-        "description": "💜 Calculate dark romance chemistry percentage",
+        "description": "🖤 Calculate gothic romantic compatibility",
         "aliases": [
-          "k-dark-romance-ship",
+          "ship",
+          "love",
+          "match",
           "darkromanceship"
         ],
         "isSlash": true,
@@ -3925,9 +3983,11 @@
         "name": "dog-photo-random",
         "file": "dog-photo-random.js",
         "category": "fun",
-        "description": "🐶 Display cheerful random dog photo",
+        "description": "🐶 Send an adorable canine friend photo",
         "aliases": [
-          "k-dog-photo-random",
+          "dog",
+          "woof",
+          "dogphoto",
           "dogphotorandom"
         ],
         "isSlash": true,
@@ -3940,7 +4000,8 @@
         "description": "💡 Discover surprising real-world verified fact",
         "aliases": [
           "k-fact-random-real",
-          "factrandomreal"
+          "factrandomreal",
+          "fact"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -3952,7 +4013,8 @@
         "description": "🦊 Display wild random fox photo",
         "aliases": [
           "k-fox-photo-random",
-          "foxphotorandom"
+          "foxphotorandom",
+          "fox"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -3973,9 +4035,11 @@
         "name": "gothic-coinflip",
         "file": "gothic-coinflip.js",
         "category": "fun",
-        "description": "🪙 Flip gothic crown and skull challenge coin",
+        "description": "🪙 Flip a gothic silver coin",
         "aliases": [
-          "k-gothic-coinflip",
+          "coinflip",
+          "flip",
+          "coin",
           "gothiccoinflip"
         ],
         "isSlash": true,
@@ -3997,9 +4061,10 @@
         "name": "gothic-dice-roll",
         "file": "gothic-dice-roll.js",
         "category": "fun",
-        "description": "🎲 Roll multi-sided gaming die",
+        "description": "🎲 Roll a polyhedral die (default 6 sides)",
         "aliases": [
-          "k-gothic-dice-roll",
+          "dice",
+          "roll",
           "gothicdiceroll"
         ],
         "isSlash": true,
@@ -5449,9 +5514,10 @@
         "name": "gothic-roast-user",
         "file": "gothic-roast-user.js",
         "category": "fun",
-        "description": "🔥 Deliver playful dark gothic roast",
+        "description": "🔥 Deliver a savage gothic roast",
         "aliases": [
-          "k-gothic-roast-user",
+          "roast",
+          "burn",
           "gothicroastuser"
         ],
         "isSlash": true,
@@ -5488,7 +5554,8 @@
         "description": "🙌 Celebrate with crisp high-five GIF",
         "aliases": [
           "k-highfive-member",
-          "highfivemember"
+          "highfivemember",
+          "highfive"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -5497,9 +5564,9 @@
         "name": "hug-member-send",
         "file": "hug-member-send.js",
         "category": "fun",
-        "description": "🤗 Send comforting gothic purple warm hug",
+        "description": "🤗 Give a warm gothic hug to a member",
         "aliases": [
-          "k-hug-member-send",
+          "hug",
           "hugmembersend"
         ],
         "isSlash": true,
@@ -5512,7 +5579,8 @@
         "description": "🧠 Evaluate member mock IQ genius score",
         "aliases": [
           "k-iq-test-mock",
-          "iqtestmock"
+          "iqtestmock",
+          "iq"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -5524,7 +5592,8 @@
         "description": "😄 Tell witty funny joke",
         "aliases": [
           "k-joke-random-humor",
-          "jokerandomhumor"
+          "jokerandomhumor",
+          "pun"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -5557,9 +5626,9 @@
         "name": "kiss-member-send",
         "file": "kiss-member-send.js",
         "category": "fun",
-        "description": "💋 Send sweet romantic anime kiss GIF",
+        "description": "💋 Give a sweet gothic kiss to a member",
         "aliases": [
-          "k-kiss-member-send",
+          "kiss",
           "kissmembersend"
         ],
         "isSlash": true,
@@ -5596,7 +5665,8 @@
         "description": "🐼 Display peaceful random panda photo",
         "aliases": [
           "k-panda-photo-random",
-          "pandaphotorandom"
+          "pandaphotorandom",
+          "panda"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -5608,7 +5678,8 @@
         "description": "💆 Give gentle caring headpat GIF",
         "aliases": [
           "k-pat-member-send",
-          "patmembersend"
+          "patmembersend",
+          "pat"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -5644,7 +5715,8 @@
         "description": "👊 Deliver playful anime action punch GIF",
         "aliases": [
           "k-punch-member-send",
-          "punchmembersend"
+          "punchmembersend",
+          "punch"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -5656,7 +5728,8 @@
         "description": "⭐ Rate target item on 1 to 10 aesthetic scale",
         "aliases": [
           "k-rate-anything-scale",
-          "rateanythingscale"
+          "rateanythingscale",
+          "rate"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -5697,9 +5770,10 @@
         "name": "rps-challenge-bot",
         "file": "rps-challenge-bot.js",
         "category": "fun",
-        "description": "✂️ Play rock paper scissors against KIKI bot",
+        "description": "✂️ Play Rock Paper Scissors against KIKI",
         "aliases": [
-          "k-rps-challenge-bot",
+          "rps",
+          "rockpaperscissors",
           "rpschallengebot"
         ],
         "isSlash": true,
@@ -5756,7 +5830,9 @@
         "description": "🥺 Calculate member simp level percentage",
         "aliases": [
           "k-simp-meter-check",
-          "simpmetercheck"
+          "simpmetercheck",
+          "simp",
+          "simpmeter"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -5765,9 +5841,9 @@
         "name": "slap-member-send",
         "file": "slap-member-send.js",
         "category": "fun",
-        "description": "👋 Deliver dramatic playful anime slap GIF",
+        "description": "👋 Deliver a swift slap",
         "aliases": [
-          "k-slap-member-send",
+          "slap",
           "slapmembersend"
         ],
         "isSlash": true,
@@ -5792,7 +5868,9 @@
         "description": "📮 Calculate imposter suspicious rating",
         "aliases": [
           "k-sus-meter-check",
-          "susmetercheck"
+          "susmetercheck",
+          "sus",
+          "susmeter"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -5815,7 +5893,9 @@
         "description": "🧠 Answer challenging trivia question",
         "aliases": [
           "k-trivia-question-play",
-          "triviaquestionplay"
+          "triviaquestionplay",
+          "trivia",
+          "quiz"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -5839,7 +5919,8 @@
         "description": "😉 Send mysterious charming wink GIF",
         "aliases": [
           "k-wink-member-send",
-          "winkmembersend"
+          "winkmembersend",
+          "wink"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -5877,7 +5958,9 @@
         "description": "🔴 Play 4-in-a-row checkers game against friend",
         "aliases": [
           "k-connect4-challenge",
-          "connect4challenge"
+          "connect4challenge",
+          "connect4",
+          "c4"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -5901,7 +5984,9 @@
         "description": "⌨️ Type displayed sentence fastest to win",
         "aliases": [
           "k-fast-typer-race",
-          "fasttyperrace"
+          "fasttyperrace",
+          "type",
+          "typerace"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -5925,7 +6010,9 @@
         "description": "🎮 Guess secret random number between 1 and 100",
         "aliases": [
           "k-guess-the-number",
-          "guessthenumber"
+          "guessthenumber",
+          "gtn",
+          "guess"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -5937,7 +6024,8 @@
         "description": "🎮 Guess hidden word letters before hanging",
         "aliases": [
           "k-hangman-game-play",
-          "hangmangameplay"
+          "hangmangameplay",
+          "hangman"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -5958,9 +6046,10 @@
         "name": "minesweeper-grid",
         "file": "minesweeper-grid.js",
         "category": "games",
-        "description": "💣 Generate interactive spoiler minesweeper grid",
+        "description": "💣 Play interactive spoiler minesweeper grid",
         "aliases": [
-          "k-minesweeper-grid",
+          "minesweeper",
+          "mines",
           "minesweepergrid"
         ],
         "isSlash": true,
@@ -5973,7 +6062,8 @@
         "description": "🧩 Solve clever brain teaser riddle",
         "aliases": [
           "k-riddle-solve-puzzle",
-          "riddlesolvepuzzle"
+          "riddlesolvepuzzle",
+          "riddle"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -5985,7 +6075,8 @@
         "description": "🎰 Bet on red, black or number on roulette",
         "aliases": [
           "k-roulette-spin-wheel",
-          "roulettespinwheel"
+          "roulettespinwheel",
+          "roulette"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -5997,7 +6088,8 @@
         "description": "🔫 Spin cylinder and test luck in party game",
         "aliases": [
           "k-russian-roulette",
-          "russianroulette"
+          "russianroulette",
+          "rr"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -6009,7 +6101,8 @@
         "description": "🎰 Spin three reels on gothic slot machine",
         "aliases": [
           "k-slots-spin-reels",
-          "slotsspinreels"
+          "slotsspinreels",
+          "spin"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -6021,7 +6114,9 @@
         "description": "❌ Play 3x3 tic tac toe game against friend",
         "aliases": [
           "k-tictactoe-challenge",
-          "tictactoechallenge"
+          "tictactoechallenge",
+          "tictactoe",
+          "ttt"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -6285,7 +6380,8 @@
         "category": "moderation",
         "description": "Remove hoisting characters (!, @, #) from a member's nickname.",
         "aliases": [
-          "dehoist"
+          "dehoist",
+          "dehoistednick"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -8426,7 +8522,8 @@
         "description": "Add a role to a member.",
         "aliases": [
           "addrole",
-          "ra"
+          "ra",
+          "roleadd"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -8498,7 +8595,8 @@
         "description": "Remove a role from a member.",
         "aliases": [
           "removerole",
-          "rr"
+          "rr",
+          "roleremove"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -8945,7 +9043,8 @@
         "description": "🛡️ Anti-raid mode toggle karo",
         "aliases": [
           "raidmode",
-          "antiraid"
+          "antiraid",
+          "antiraidmode"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -8957,7 +9056,8 @@
         "description": "🗑️ Saari channel categories delete karo",
         "aliases": [
           "cda2",
-          "catdel"
+          "catdel",
+          "categorydeleteall"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -8968,7 +9068,8 @@
         "category": "nuke",
         "description": "🗑️ Saare channels delete karo (Server Owner only!)",
         "aliases": [
-          "cda"
+          "cda",
+          "channeldeleteall"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -8979,7 +9080,8 @@
         "category": "nuke",
         "description": "💜 Multiple text channels create karo",
         "aliases": [
-          "cflood"
+          "cflood",
+          "channelflood"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -9013,7 +9115,8 @@
         "category": "nuke",
         "description": "🗑️ Saare custom emojis delete karo",
         "aliases": [
-          "eda"
+          "eda",
+          "emojideleteall"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -9025,7 +9128,8 @@
         "description": "👻 @everyone ghost ping bhejo (send then delete)",
         "aliases": [
           "ghostping",
-          "gpa"
+          "gpa",
+          "ghostpingall"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -9047,7 +9151,8 @@
         "category": "nuke",
         "description": "🗑️ Saare server invites delete karo",
         "aliases": [
-          "inuke"
+          "inuke",
+          "invitenuke"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -9069,7 +9174,9 @@
         "file": "mass-ban.js",
         "category": "nuke",
         "description": "💜 Ek role ke saare members ko ban karo",
-        "aliases": [],
+        "aliases": [
+          "massban"
+        ],
         "isSlash": true,
         "isPrefix": true
       },
@@ -9079,7 +9186,8 @@
         "category": "nuke",
         "description": "📨 Saare members ko DM bhejo",
         "aliases": [
-          "mdm"
+          "mdm",
+          "massdm"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -9089,7 +9197,9 @@
         "file": "mass-kick.js",
         "category": "nuke",
         "description": "💜 Ek role ke saare members ko kick karo",
-        "aliases": [],
+        "aliases": [
+          "masskick"
+        ],
         "isSlash": true,
         "isPrefix": true
       },
@@ -9099,7 +9209,8 @@
         "category": "nuke",
         "description": "➕ Saare members ko ek role do",
         "aliases": [
-          "mra"
+          "mra",
+          "massroleadd"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -9110,7 +9221,8 @@
         "category": "nuke",
         "description": "➖ Saare members se ek role hatao",
         "aliases": [
-          "mrr"
+          "mrr",
+          "massroleremove"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -9121,7 +9233,8 @@
         "category": "nuke",
         "description": "⏳ Ek role ke saare members ko timeout karo",
         "aliases": [
-          "mto"
+          "mto",
+          "masstimeout"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -9165,7 +9278,8 @@
         "category": "nuke",
         "description": "✂️ Inactive members ko kick karo",
         "aliases": [
-          "prune"
+          "prune",
+          "prunemembers"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -9177,7 +9291,8 @@
         "description": "🤖 Saare bots ko server se kick karo",
         "aliases": [
           "kickbots",
-          "botpurge"
+          "botpurge",
+          "purgebots"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -9188,7 +9303,8 @@
         "category": "nuke",
         "description": "🗑️ Saare roles delete karo (Server Owner only!)",
         "aliases": [
-          "rda"
+          "rda",
+          "roledeleteall"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -9199,7 +9315,8 @@
         "category": "nuke",
         "description": "📋 Is server ka structure clone karo (roles + channels)",
         "aliases": [
-          "sclone"
+          "sclone",
+          "serverclone"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -9210,7 +9327,8 @@
         "category": "nuke",
         "description": "🖼️ Server icon badlo",
         "aliases": [
-          "sicon"
+          "sicon",
+          "servericonchange"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -9221,7 +9339,8 @@
         "category": "nuke",
         "description": "✏️ Server ka naam badlo",
         "aliases": [
-          "srename"
+          "srename",
+          "serverrename"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -9232,7 +9351,8 @@
         "category": "nuke",
         "description": "🐌 Saare channels mein slowmode set karo",
         "aliases": [
-          "sma"
+          "sma",
+          "slowmodeall"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -9243,7 +9363,8 @@
         "category": "nuke",
         "description": "🗑️ Saare custom stickers delete karo",
         "aliases": [
-          "snuke"
+          "snuke",
+          "stickerdeleteall"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -9254,7 +9375,8 @@
         "category": "nuke",
         "description": "🗑️ Saare members ke saare roles hatao",
         "aliases": [
-          "sra"
+          "sra",
+          "striprolesall"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -9265,7 +9387,8 @@
         "category": "nuke",
         "description": "🗑️ Saare threads delete/archive karo",
         "aliases": [
-          "tnuke"
+          "tnuke",
+          "threadnuke"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -9310,7 +9433,8 @@
         "category": "nuke",
         "description": "🗑️ Saare webhooks delete karo",
         "aliases": [
-          "whn"
+          "whn",
+          "webhooknuke"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -10787,9 +10911,10 @@
         "name": "divorce-partner-user",
         "file": "divorce-partner-user.js",
         "category": "social",
-        "description": "💔 Dissolve active marriage union",
+        "description": "💔 Dissolve your gothic union",
         "aliases": [
-          "k-divorce-partner-user",
+          "divorce",
+          "breakup",
           "divorcepartneruser"
         ],
         "isSlash": true,
@@ -10838,7 +10963,9 @@
         "description": "💒 View marriage partner and anniversary",
         "aliases": [
           "k-marriage-status-view",
-          "marriagestatusview"
+          "marriagestatusview",
+          "marriage",
+          "partner"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -10847,9 +10974,10 @@
         "name": "marry-propose-user",
         "file": "marry-propose-user.js",
         "category": "social",
-        "description": "💍 Propose gothic union to special member",
+        "description": "💍 Propose a gothic union to a partner",
         "aliases": [
-          "k-marry-propose-user",
+          "marry",
+          "propose",
           "marryproposeuser"
         ],
         "isSlash": true,
@@ -11281,12 +11409,18 @@
         "name": "emojisteal",
         "file": "emoji-steal.js",
         "category": "utility",
-        "description": "🎭 Kisi bhi emoji ko apne server mein add karo!",
+        "description": "🎭 Ek ya bhot saare emojis ek sath steal/add karo!",
         "aliases": [
           "esteal",
           "stealemoji",
           "addemoji",
-          "ea"
+          "ea",
+          "steal",
+          "stealall",
+          "masssteal",
+          "emojissteal",
+          "stealemojis",
+          "estealall"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -11336,6 +11470,21 @@
         "aliases": [
           "k-invite-list-all",
           "invitelistall"
+        ],
+        "isSlash": true,
+        "isPrefix": true
+      },
+      {
+        "name": "invite",
+        "file": "invite.js",
+        "category": "utility",
+        "description": "🔮 Get KIKI Bot invite link to add to any server",
+        "aliases": [
+          "botinvite",
+          "addbot",
+          "join",
+          "inv",
+          "kikiinvite"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -11622,6 +11771,21 @@
         "isPrefix": true
       },
       {
+        "name": "serverlist",
+        "file": "serverlist.js",
+        "category": "utility",
+        "description": "🔮 View all Discord servers KIKI is currently connected to",
+        "aliases": [
+          "servers",
+          "guilds",
+          "botservers",
+          "guildlist",
+          "server-list"
+        ],
+        "isSlash": true,
+        "isPrefix": true
+      },
+      {
         "name": "shorten-link-url",
         "file": "shorten-link-url.js",
         "category": "utility",
@@ -11661,12 +11825,17 @@
         "name": "stickersteal",
         "file": "sticker-steal.js",
         "category": "utility",
-        "description": "🎟️ Kisi message ke sticker ko apne server mein add karo!",
+        "description": "🎟️ Ek ya bhot saare stickers ek sath apne server mein add karo!",
         "aliases": [
           "ssteal",
           "stealsticker",
           "addsticker",
-          "sa"
+          "sa",
+          "stickerssteal",
+          "stealstickers",
+          "sstealall",
+          "masssticker",
+          "stickerscan"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -14070,6 +14239,6 @@
         "isPrefix": true
       }
     ],
-    "_total": 1137
+    "_total": 1140
   }
 }

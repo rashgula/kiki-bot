@@ -1,31 +1,32 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+const Economy = require('../../utils/economy.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('inventory-view-bag')
-    .setDescription('🎒 View your owned gothic inventory items')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('🎒 View items in your gothic inventory bag'),
+
+  aliases: ['inventory', 'inv', 'bag'],
+  name: 'inventory-view-bag',
 
   async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('🎒 INVENTORY-VIEW-BAG',
-      '**Action:** View your owned gothic inventory items\\n' +
-      '**Status:** Successfully processed\\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
+    const items = Economy.getInventory(interaction.guildId, interaction.user.id);
+    const desc = items.length === 0 ?
+      'Aapka gothic bag bilkul khali hai! \`&shop\` se items khareedein.' :
+      items.map(i => `• **${i.name}** ×${i.count}\n  *${i.desc}*`).join('\n\n');
+
+    const embed = KikiEmbed.purple(`🎒 Inventory: ${interaction.user.username}`, desc);
     await interaction.reply({ embeds: [embed] });
   },
-  name: 'inventory-view-bag',
-  aliases: ['k-inventory-view-bag', 'inventoryviewbag'],
+
   async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('🎒 INVENTORY-VIEW-BAG',
-      '**Command:** `inventory-view-bag`\\n' +
-      '**Description:** View your owned gothic inventory items\\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
+    const items = Economy.getInventory(message.guild.id, message.author.id);
+    const desc = items.length === 0 ?
+      'Aapka gothic bag bilkul khali hai! `&shop` se items khareedein.' :
+      items.map(i => `• **${i.name}** ×${i.count}\n  *${i.desc}*`).join('\n\n');
+
+    const embed = KikiEmbed.purple(`🎒 Inventory: ${message.author.username}`, desc);
     message.reply({ embeds: [embed] });
   }
 };

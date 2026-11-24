@@ -1,31 +1,27 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+const FunEngine = require('../../utils/funEngine.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('slap-member-send')
-    .setDescription('👋 Deliver dramatic playful anime slap GIF')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('👋 Deliver a swift slap')
+    .addUserOption(o => o.setName('user').setDescription('Member').setRequired(true)),
+
+  aliases: ['slap'],
+  name: 'slap-member-send',
 
   async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('👋 SLAP-MEMBER-SEND',
-      '**Action:** Deliver dramatic playful anime slap GIF\\n' +
-      '**Status:** Successfully processed\\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
+    const target = interaction.options.getUser('user');
+    const act = FunEngine.getAction('slap', interaction.user.username, target?.username || 'themselves');
+    const embed = KikiEmbed.error('Shadow Slap! 👋', act.text).setImage(act.gif);
     await interaction.reply({ embeds: [embed] });
   },
-  name: 'slap-member-send',
-  aliases: ['k-slap-member-send', 'slapmembersend'],
+
   async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('👋 SLAP-MEMBER-SEND',
-      '**Command:** `slap-member-send`\\n' +
-      '**Description:** Deliver dramatic playful anime slap GIF\\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
+    const target = message.mentions.users.first();
+    const act = FunEngine.getAction('slap', message.author.username, target?.username || 'themselves');
+    const embed = KikiEmbed.error('Shadow Slap! 👋', act.text).setImage(act.gif);
     message.reply({ embeds: [embed] });
   }
 };

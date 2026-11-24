@@ -1,31 +1,27 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+const FunEngine = require('../../utils/funEngine.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('hug-member-send')
-    .setDescription('🤗 Send comforting gothic purple warm hug')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('🤗 Give a warm gothic hug to a member')
+    .addUserOption(o => o.setName('user').setDescription('Member').setRequired(true)),
+
+  aliases: ['hug'],
+  name: 'hug-member-send',
 
   async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('🤗 HUG-MEMBER-SEND',
-      '**Action:** Send comforting gothic purple warm hug\\n' +
-      '**Status:** Successfully processed\\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
+    const target = interaction.options.getUser('user');
+    const act = FunEngine.getAction('hug', interaction.user.username, target?.username || 'themselves');
+    const embed = KikiEmbed.purple('Gothic Embrace 🤗', act.text).setImage(act.gif);
     await interaction.reply({ embeds: [embed] });
   },
-  name: 'hug-member-send',
-  aliases: ['k-hug-member-send', 'hugmembersend'],
+
   async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('🤗 HUG-MEMBER-SEND',
-      '**Command:** `hug-member-send`\\n' +
-      '**Description:** Send comforting gothic purple warm hug\\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
+    const target = (message.mentions?.users?.first ? message.mentions.users.first() : null);
+    const act = FunEngine.getAction('hug', message.author.username, target?.username || 'the shadows');
+    const embed = KikiEmbed.purple('Gothic Embrace 🤗', act.text).setImage(act.gif);
     message.reply({ embeds: [embed] });
   }
 };

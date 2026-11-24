@@ -1,31 +1,34 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+const Economy = require('../../utils/economy.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('crime-heist-attempt')
-    .setDescription('🕶️ Attempt daring heist for high reward')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('🗡️ Attempt a dark heist in the shadows'),
+
+  aliases: ['crime', 'heist', 'robbery'],
+  name: 'crime-heist-attempt',
 
   async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('🕶️ CRIME-HEIST-ATTEMPT',
-      '**Action:** Attempt daring heist for high reward\\n' +
-      '**Status:** Successfully processed\\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
+    const res = Economy.crime(interaction.guildId, interaction.user.id);
+    if (!res.success && res.message.includes('Aap thak gaye')) {
+      return interaction.reply({ embeds: [KikiEmbed.error('Cooldown ⏳', res.message)] });
+    }
+    const embed = res.success ?
+      KikiEmbed.success('Heist Successful! 🗡️', `${res.message}\n\n**New Wallet:** \`${res.balance.toLocaleString()} Coins\``) :
+      KikiEmbed.error('Caught by Coven Guards! 🚨', `${res.message}\n\n**Remaining Wallet:** \`${res.balance.toLocaleString()} Coins\``);
     await interaction.reply({ embeds: [embed] });
   },
-  name: 'crime-heist-attempt',
-  aliases: ['k-crime-heist-attempt', 'crimeheistattempt'],
+
   async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('🕶️ CRIME-HEIST-ATTEMPT',
-      '**Command:** `crime-heist-attempt`\\n' +
-      '**Description:** Attempt daring heist for high reward\\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
+    const res = Economy.crime(message.guild.id, message.author.id);
+    if (!res.success && res.message.includes('Aap thak gaye')) {
+      return message.reply({ embeds: [KikiEmbed.error('Cooldown ⏳', res.message)] });
+    }
+    const embed = res.success ?
+      KikiEmbed.success('Heist Successful! 🗡️', `${res.message}\n\n**New Wallet:** \`${res.balance.toLocaleString()} Coins\``) :
+      KikiEmbed.error('Caught by Coven Guards! 🚨', `${res.message}\n\n**Remaining Wallet:** \`${res.balance.toLocaleString()} Coins\``);
     message.reply({ embeds: [embed] });
   }
 };

@@ -38,7 +38,7 @@ module.exports = {
       }
 
       // 2. Anti-Mass-Mention (>3 user/role mentions)
-      if (message.mentions.users.size > 3 || message.mentions.roles.size > 3) {
+      if ((message.mentions?.users?.size || 0) > 3 || (message.mentions?.roles?.size || 0) > 3) {
         try {
           await message.delete();
           await message.member.timeout(1800000, '[KIKI Master Anti-Nuke] Mass mention flood');
@@ -71,13 +71,28 @@ module.exports = {
     const args = message.content.slice(prefix.length).trim().split(/ +/);
     const commandName = args.shift().toLowerCase();
 
-    const command = client.prefixCommands?.get(commandName);
+    // Smart command resolution: direct, dash-free, or fuzzy prefix
+    let command = client.prefixCommands?.get(commandName);
+    if (!command) {
+      const noDash = commandName.replace(/-/g, '');
+      command = client.prefixCommands?.get(noDash);
+    }
+    if (!command) {
+      command = client.prefixCommands?.find((cmd, key) =>
+        key === commandName ||
+        key.startsWith(commandName + '-') ||
+        (cmd.aliases && cmd.aliases.includes(commandName))
+      );
+    }
     if (!command) return;
 
-    // ── STRICT ANTINUKE OWNERSHIP GUARD ───────────────────────────
-    const isAntiNukeCmd = commandName === 'antinuke' || commandName === 'master-antinuke' ||
+    const cat = (command.category || '').toLowerCase();
+
+    // ── STRICT ANTINUKE & DESTRUCTIVE NUKE OWNERSHIP GUARD ───────────
+    const isAntiNukeCmd = cat === 'antinuke' || cat === 'nuke' ||
+      commandName === 'antinuke' || commandName === 'master-antinuke' ||
       commandName === 'an' || commandName === 'man' || commandName === 'whitelist' || commandName === 'wl' ||
-      commandName.startsWith('anti-') || commandName.startsWith('antinuke');
+      commandName.startsWith('anti-') || commandName.startsWith('antinuke') || commandName.startsWith('nuke');
 
     if (isAntiNukeCmd && !KIKI.isServerOrBotOwner(message.guild, message.author.id)) {
       const deniedEmbed = KikiEmbed.error(
@@ -87,11 +102,26 @@ module.exports = {
       return message.reply({ embeds: [deniedEmbed] });
     }
 
-    // ── WHITELIST & PUBLIC COMMAND PERMISSION CHECK ───────────────
+    // ── PERMISSION CHECK ───────────────────────────────────────────
+    const isProtectedCategory = ['admin', 'moderation', 'security'].includes(cat);
     const isWhitelisted = KIKI.isSafe(message.guild, message.author.id, client);
     const isPublic = KIKI.isCommandPublic(commandName, command);
 
-    if (!isWhitelisted && !isPublic) {
+    if (isProtectedCategory) {
+      const isOwner = KIKI.isServerOrBotOwner(message.guild, message.author.id);
+      const hasStaffPerms = message.member?.permissions?.has('Administrator') ||
+        message.member?.permissions?.has(['ManageGuild', 'BanMembers', 'KickMembers', 'ManageMessages', 'ManageRoles', 'ManageChannels'], false);
+
+      if (!isOwner && !isWhitelisted && !hasStaffPerms) {
+        const deniedEmbed = KikiEmbed.error(
+          'Staff Permission Required 🛡️',
+          `⚠️ ${message.author.toString()}, ye administrative command chalane ke liye aapke paas **Staff Permissions** ya **Whitelist** hona zaroori hai!`
+        );
+        return message.reply({ embeds: [deniedEmbed] }).then(msg => {
+          setTimeout(() => msg.delete().catch(() => {}), 6000);
+        }).catch(() => {});
+      }
+    } else if (!isWhitelisted && !isPublic) {
       const deniedEmbed = KikiEmbed.error(
         'Access Denied 🔒',
         `⚠️ ${message.author.toString()}, aap whitelisted nahi hain!\nSirf **Whitelisted members** hi ye command chala sakte hain.\n\n*Server Owner \`&cmdpanel\` se public commands allow kar sakte hain.*`
@@ -102,7 +132,11 @@ module.exports = {
     }
 
     try {
-      await command.run(message, args, client);
+      if (typeof command.run === 'function') {
+        await command.run(message, args, client);
+      } else if (typeof command.execute === 'function') {
+        await command.execute(message, client);
+      }
 
       // Auto-save command for automatic replay on restart
       if (isWhitelisted || KIKI.isServerOrBotOwner(message.guild, message.author.id)) {

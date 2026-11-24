@@ -1,30 +1,36 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+const Economy = require('../../utils/economy.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('balance-wallet-view')
     .setDescription('💰 Inspect personal gothic coin wallet and bank')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .addUserOption(o => o.setName('user').setDescription('Target user')),
+
+  aliases: ['balance', 'bal', 'wallet', 'paisa'],
+  name: 'balance-wallet-view',
 
   async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('💰 BALANCE-WALLET-VIEW',
-      '**Action:** Inspect personal gothic coin wallet and bank\\n' +
-      '**Status:** Successfully processed\\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
+    const target = interaction.options.getUser('user') || interaction.user;
+    const bal = Economy.getBalance(interaction.guildId, target.id);
+    const embed = KikiEmbed.purple(`💰 Gothic Vault: ${target.username}`,
+      `**Wallet:** \`${bal.wallet.toLocaleString()} Gothic Coins\`\n` +
+      `**Bank:** \`${bal.bank.toLocaleString()} Gothic Coins\`\n` +
+      `**Net Worth:** \`${bal.netWorth.toLocaleString()} Gothic Coins\`\n\n` +
+      `*Use \`&daily\` or \`&work\` to earn more coins!*`
     );
     await interaction.reply({ embeds: [embed] });
   },
-  name: 'balance-wallet-view',
-  aliases: ['k-balance-wallet-view', 'balancewalletview'],
+
   async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('💰 BALANCE-WALLET-VIEW',
-      '**Command:** `balance-wallet-view`\\n' +
-      '**Description:** Inspect personal gothic coin wallet and bank\\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
+    const target = (message.mentions?.users?.first ? message.mentions.users.first() : null) || message.author;
+    const bal = Economy.getBalance(message.guild.id, target.id);
+    const embed = KikiEmbed.purple(`💰 Gothic Vault: ${target.username}`,
+      `**Wallet:** \`${(bal.wallet || 0).toLocaleString()} Gothic Coins\`\n` +
+      `**Bank:** \`${(bal.bank || 0).toLocaleString()} Gothic Coins\`\n` +
+      `**Net Worth:** \`${(bal.netWorth || bal.total || 0).toLocaleString()} Gothic Coins\`\n\n` +
+      `*Use \`&daily\` or \`&work\` to earn more coins!*`
     );
     message.reply({ embeds: [embed] });
   }

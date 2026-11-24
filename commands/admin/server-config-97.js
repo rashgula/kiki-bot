@@ -6,10 +6,10 @@ module.exports = {
   async run(message, args, client) {
     const input = args.join(' ') || 'None';
     const embed = KikiEmbed.purple('⚙️ SERVER-CONFIG-97',
-      '**Command:** `server-config-97`\\n' +
-      '**Description:** Server administration routine #97 for server management and automation\\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\\n' : '') +
-      '\\n*「 KIKI 」• Gothic Utility v2.2*'
+      '**Command:** `server-config-97`\n' +
+      '**Description:** Server administration routine #97 for server management and automation\n' +
+      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
+      '\n*「 KIKI 」• Gothic Utility v2.2*'
     );
     message.reply({ embeds: [embed] });
   }
