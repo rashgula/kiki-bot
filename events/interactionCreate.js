@@ -4,7 +4,7 @@ module.exports = {
   name: 'interactionCreate',
   async execute(interaction, client) {
     // ── Slash Commands ──────────────────────────────────────────
-    if (interaction.isChatInputCommand()) {
+    if (interaction.isChatInputCommand?.()) {
       const KIKI = require('../utils/kiki.js');
       const command = client.commands.get(interaction.commandName);
       if (!command) return;
@@ -125,8 +125,8 @@ module.exports = {
           return;
         }
 
-        // Help navigation buttons
-        if (customId.startsWith('help_')) {
+        // Help navigation & 1-click instant execution buttons
+        if (customId.startsWith('help_') || customId.startsWith('run_cmd_')) {
           const helpHandler = require('../commands/utility/help.js');
           if (helpHandler.handleButton) await helpHandler.handleButton(interaction, client);
           return;
@@ -169,7 +169,7 @@ module.exports = {
     // ── Select Menu Interactions ────────────────────────────────
     if (interaction.isStringSelectMenu()) {
       try {
-        if (interaction.customId === 'help_category') {
+        if (interaction.customId === 'help_category' || interaction.customId === 'help_run_cmd') {
           const helpHandler = require('../commands/utility/help.js');
           if (helpHandler.handleSelect) await helpHandler.handleSelect(interaction, client);
           return;

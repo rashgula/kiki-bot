@@ -1,7 +1,7 @@
 {
   "name": "kiki-commands-registry",
   "version": "2.2",
-  "updatedAt": 1795509655340,
+  "updatedAt": 1795510852669,
   "totalCommands": 1140,
   "builtTogetherModules": [
     {
@@ -11434,7 +11434,7 @@
         "name": "help",
         "file": "help.js",
         "category": "utility",
-        "description": "🔮 View KIKI Gothic Purple command library (1,114+ Commands)",
+        "description": "🔮 View KIKI Gothic 1-Click Interactive Help Center",
         "aliases": [
           "h",
           "commands",
