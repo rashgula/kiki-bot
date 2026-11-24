@@ -48,13 +48,16 @@ module.exports = {
   },
 
   name: 'addxp',
-  aliases: ['givexp', 'setxp', 'vctest'],
+  aliases: ['givexp', 'setxp', 'setlevel', 'addlevel', 'vctest'],
   async run(message, args, client) {
     if (!KIKI.isServerOrBotOwner(message.guild, message.author.id) && !KIKI.isSafe(message.guild, message.author.id, client)) {
       return message.reply({
-        embeds: [KikiEmbed.error('Access Denied 🔒', 'Sirf Server Owner ya Whitelisted members XP add kar sakte hain!')]
+        embeds: [KikiEmbed.error('Access Denied 🔒', 'Sirf Server Owner ya Whitelisted members XP aur Level manage kar sakte hain!')]
       });
     }
+
+    const isSetLevel = message.content.toLowerCase().includes('setlevel') || message.content.toLowerCase().includes('addlevel');
+    const isSetXp = message.content.toLowerCase().includes('setxp');
 
     const targetUser = message.mentions.users.first() ||
       (args[0] ? message.guild.members.cache.get(args[0])?.user : null);
@@ -62,14 +65,41 @@ module.exports = {
     const amount = parseInt(args[1], 10);
 
     if (!targetUser || isNaN(amount)) {
+      const usageTip = isSetLevel ? '`&setlevel @user <level>` (e.g. `&setlevel @user 26`)' :
+        isSetXp ? '`&setxp @user <xp>` (e.g. `&setxp @user 15000`)' :
+        '`&addxp @user <amount>` (e.g. `&addxp @user 500`)';
       return message.reply({
-        embeds: [KikiEmbed.warn('Usage Galat Hai', 'Usage: `&addxp @user <amount>`\nExample: `&addxp @user 100`')]
+        embeds: [KikiEmbed.warn('Usage Galat Hai', `Usage: ${usageTip}`)]
       });
     }
 
     const member = await message.guild.members.fetch(targetUser.id).catch(() => null);
     if (!member) {
       return message.reply({ embeds: [KikiEmbed.error('Member Error', 'Target member server me nahi mila!')] });
+    }
+
+    if (isSetLevel) {
+      const updatedUser = await Leveling.setUserLevel(message.guild, member, amount);
+      const embed = KikiEmbed.success(
+        'Voice Level Updated 👑',
+        `**Target Member:** ${member.user.toString()} (\`${member.user.tag}\`)\n` +
+        `**New Level:** \`Level ${updatedUser.level}\`\n` +
+        `**Total XP Set:** \`${updatedUser.xp.toLocaleString()} XP\`\n\n` +
+        `*Member ka level aur corresponding role successfully update ho gaya!*`
+      );
+      return message.reply({ embeds: [embed] });
+    }
+
+    if (isSetXp) {
+      const updatedUser = await Leveling.setUserXp(message.guild, member, amount);
+      const embed = KikiEmbed.success(
+        'Voice XP Set ⚡',
+        `**Target Member:** ${member.user.toString()} (\`${member.user.tag}\`)\n` +
+        `**New XP:** \`${updatedUser.xp.toLocaleString()} XP\`\n` +
+        `**Computed Level:** \`Level ${updatedUser.level}\`\n\n` +
+        `*Member ka XP successfully set ho gaya!*`
+      );
+      return message.reply({ embeds: [embed] });
     }
 
     const prevData = Leveling.getUser(message.guild.id, member.id);

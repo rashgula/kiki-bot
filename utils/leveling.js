@@ -7,31 +7,70 @@ const KikiEmbed = require('./embed.js');
 const config = require('../config.js');
 
 const LEVELS_FILE = path.join(__dirname, '../data/levels.json');
+const BACKUP_FILE = path.join(__dirname, '../data/levels_backup.json');
 
 // In-memory cache for fast lookups and atomic writes
 let levelsCache = null;
 let saveTimeout = null;
 
+// Helper to merge two data objects keeping the strictly HIGHEST stats (prevents regressions)
+function mergeHighestStats(primary, fallback) {
+  if (!fallback) return primary;
+  for (const guildId in fallback) {
+    if (!primary[guildId]) {
+      primary[guildId] = fallback[guildId];
+      continue;
+    }
+    for (const userId in fallback[guildId]) {
+      const fUser = fallback[guildId][userId];
+      if (!primary[guildId][userId]) {
+        primary[guildId][userId] = fUser;
+        continue;
+      }
+      const pUser = primary[guildId][userId];
+      // Keep strictly the highest stats to prevent any downgrade or regression!
+      pUser.xp = Math.max(pUser.xp || 0, fUser.xp || 0);
+      pUser.voiceTime = Math.max(pUser.voiceTime || 0, fUser.voiceTime || 0);
+      pUser.chatXp = Math.max(pUser.chatXp || 0, fUser.chatXp || 0);
+      pUser.messages = Math.max(pUser.messages || 0, fUser.messages || 0);
+      pUser.highestLevel = Math.max(pUser.highestLevel || 0, fUser.highestLevel || 0, pUser.level || 0, fUser.level || 0);
+      pUser.level = Math.max(pUser.level || 0, pUser.highestLevel);
+    }
+  }
+  return primary;
+}
+
 function loadData() {
   if (levelsCache) return levelsCache;
-  if (!fs.existsSync(LEVELS_FILE)) {
-    levelsCache = {};
-    saveDataImmediate(levelsCache);
-    return levelsCache;
+
+  let loadedData = {};
+  if (fs.existsSync(LEVELS_FILE)) {
+    try {
+      loadedData = JSON.parse(fs.readFileSync(LEVELS_FILE, 'utf-8'));
+    } catch (err) {
+      console.error('[LEVELING ERROR] Failed to parse levels.json:', err.message);
+    }
   }
-  try {
-    levelsCache = JSON.parse(fs.readFileSync(LEVELS_FILE, 'utf-8'));
-    return levelsCache;
-  } catch (err) {
-    console.error('[LEVELING ERROR] Failed to parse levels.json:', err.message);
-    levelsCache = {};
-    return levelsCache;
+
+  // Check backup file to restore any higher stats if levels.json was reverted
+  if (fs.existsSync(BACKUP_FILE)) {
+    try {
+      const backupData = JSON.parse(fs.readFileSync(BACKUP_FILE, 'utf-8'));
+      loadedData = mergeHighestStats(loadedData, backupData);
+    } catch (err) {
+      console.error('[LEVELING ERROR] Failed to parse backup file:', err.message);
+    }
   }
+
+  levelsCache = loadedData;
+  return levelsCache;
 }
 
 function saveDataImmediate(data) {
   try {
     fs.writeFileSync(LEVELS_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    // Save to persistent backup as well
+    fs.writeFileSync(BACKUP_FILE, JSON.stringify(data, null, 2), 'utf-8');
   } catch (err) {
     console.error('[LEVELING ERROR] Failed to save levels.json:', err.message);
   }
@@ -131,21 +170,59 @@ const Leveling = {
     }
 
     const user = data[guildId][userId];
-    const oldLevel = user.level || this.getLevelFromXp(user.xp);
+    const oldLevel = user.highestLevel || user.level || this.getLevelFromXp(user.xp);
     user.xp = (user.xp || 0) + xpAmount;
     user.voiceTime = (user.voiceTime || 0) + seconds;
-    const newLevel = this.getLevelFromXp(user.xp);
+    const computedLevel = this.getLevelFromXp(user.xp);
+    const newLevel = Math.max(computedLevel, oldLevel);
     user.level = newLevel;
+    user.highestLevel = Math.max(user.highestLevel || 0, newLevel);
 
     scheduleSave();
 
-    if (newLevel > oldLevel) {
+    if (computedLevel > oldLevel) {
       saveDataImmediate(data); // Immediate disk persistence on level up
-      await this.handleLevelUp(guild, member, oldLevel, newLevel);
-      return { oldLevel, newLevel, leveledUp: true, user };
+      await this.handleLevelUp(guild, member, oldLevel, computedLevel);
+      return { oldLevel, newLevel: computedLevel, leveledUp: true, user };
     }
 
     return { oldLevel, newLevel, leveledUp: false, user };
+  },
+
+  // Set user Level directly (Owner / Admin command)
+  async setUserLevel(guild, member, targetLevel) {
+    if (!guild || !member) return null;
+    const targetXp = this.getXpForLevel(targetLevel);
+    const data = loadData();
+    if (!data[guild.id]) data[guild.id] = {};
+    if (!data[guild.id][member.id]) this.getUser(guild.id, member.id);
+    const user = data[guild.id][member.id];
+    const oldLevel = user.level || 0;
+    user.xp = targetXp;
+    user.level = targetLevel;
+    user.highestLevel = Math.max(user.highestLevel || 0, targetLevel);
+    saveDataImmediate(data);
+    await this.handleLevelUp(guild, member, oldLevel, targetLevel);
+    return user;
+  },
+
+  // Set user XP directly (Owner / Admin command)
+  async setUserXp(guild, member, targetXp) {
+    if (!guild || !member) return null;
+    const data = loadData();
+    if (!data[guild.id]) data[guild.id] = {};
+    if (!data[guild.id][member.id]) this.getUser(guild.id, member.id);
+    const user = data[guild.id][member.id];
+    const oldLevel = user.level || 0;
+    user.xp = targetXp;
+    const newLevel = this.getLevelFromXp(targetXp);
+    user.level = newLevel;
+    user.highestLevel = Math.max(user.highestLevel || 0, newLevel);
+    saveDataImmediate(data);
+    if (newLevel > oldLevel) {
+      await this.handleLevelUp(guild, member, oldLevel, newLevel);
+    }
+    return user;
   },
 
   // Handle Level Up: Award roles and announce

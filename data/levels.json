@@ -1,21 +1,23 @@
 {
   "1563548609960742942": {
     "989411027798089778": {
-      "xp": 12492,
-      "level": 23,
-      "voiceTime": 36420,
+      "xp": 14870,
+      "level": 26,
+      "voiceTime": 42720,
       "messages": 32,
       "chatXp": 378,
       "chatLevel": 2,
+      "highestLevel": 26,
       "lastChatXp": 1794746709423
     },
     "1523336201896067091": {
-      "xp": 7051,
-      "level": 17,
-      "voiceTime": 20640,
+      "xp": 9100,
+      "level": 20,
+      "voiceTime": 26460,
       "messages": 0,
       "chatXp": 0,
-      "chatLevel": 0
+      "chatLevel": 0,
+      "highestLevel": 20
     },
     "498898355758432267": {
       "xp": 704,
@@ -24,7 +26,8 @@
       "messages": 26,
       "chatXp": 121,
       "chatLevel": 1,
-      "lastChatXp": 1794679158042
+      "lastChatXp": 1794679158042,
+      "highestLevel": 4
     },
     "1516927857719382036": {
       "xp": 5133,
@@ -33,7 +36,8 @@
       "messages": 50,
       "chatXp": 266,
       "chatLevel": 2,
-      "lastChatXp": 1794751870793
+      "lastChatXp": 1794751870793,
+      "highestLevel": 14
     },
     "375337787550859264": {
       "xp": 4601,
@@ -42,7 +46,8 @@
       "messages": 8,
       "chatXp": 126,
       "chatLevel": 1,
-      "lastChatXp": 1794751263049
+      "lastChatXp": 1794751263049,
+      "highestLevel": 13
     },
     "1522553088034996224": {
       "xp": 0,
@@ -52,7 +57,8 @@
       "chatLevel": 0,
       "messages": 9,
       "lastVoiceTick": 1794668109809,
-      "lastChatXp": 1794668217493
+      "lastChatXp": 1794668217493,
+      "highestLevel": 0
     },
     "1518604033609302096": {
       "xp": 6828,
@@ -60,7 +66,8 @@
       "voiceTime": 20040,
       "messages": 0,
       "chatXp": 0,
-      "chatLevel": 0
+      "chatLevel": 0,
+      "highestLevel": 17
     },
     "791248359977517097": {
       "xp": 365,
@@ -68,13 +75,16 @@
       "voiceTime": 1080,
       "messages": 0,
       "chatXp": 0,
-      "chatLevel": 0
+      "chatLevel": 0,
+      "highestLevel": 2
     },
     "1563628110987919430": {
       "xp": 44,
       "level": 0,
       "voiceTime": 120,
-      "messages": 0
+      "messages": 0,
+      "chatXp": 0,
+      "highestLevel": 0
     },
     "1225323846056542299": {
       "xp": 496,
@@ -82,7 +92,8 @@
       "voiceTime": 1440,
       "messages": 0,
       "chatXp": 0,
-      "chatLevel": 0
+      "chatLevel": 0,
+      "highestLevel": 3
     },
     "1466520912164687933": {
       "xp": 1111,
@@ -91,7 +102,8 @@
       "messages": 1,
       "chatXp": 21,
       "chatLevel": 0,
-      "lastChatXp": 1794732855868
+      "lastChatXp": 1794732855868,
+      "highestLevel": 5
     },
     "1327926519309271072": {
       "xp": 637,
@@ -99,7 +111,8 @@
       "voiceTime": 1860,
       "messages": 0,
       "chatXp": 0,
-      "chatLevel": 0
+      "chatLevel": 0,
+      "highestLevel": 4
     },
     "1505759603491864637": {
       "xp": 132,
@@ -107,7 +120,8 @@
       "voiceTime": 420,
       "messages": 0,
       "chatXp": 0,
-      "chatLevel": 0
+      "chatLevel": 0,
+      "highestLevel": 1
     },
     "1113891245232750612": {
       "xp": 1132,
@@ -115,7 +129,8 @@
       "voiceTime": 3360,
       "messages": 0,
       "chatXp": 0,
-      "chatLevel": 0
+      "chatLevel": 0,
+      "highestLevel": 6
     },
     "1105502117206167632": {
       "xp": 214,
@@ -123,7 +138,8 @@
       "voiceTime": 600,
       "messages": 0,
       "chatXp": 0,
-      "chatLevel": 0
+      "chatLevel": 0,
+      "highestLevel": 1
     }
   }
 }
