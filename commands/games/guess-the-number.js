@@ -1,31 +1,31 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+const GamesEngine = require('../../utils/gamesEngine.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('guess-the-number')
     .setDescription('🎮 Guess secret random number between 1 and 100')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .addIntegerOption(o => o.setName('guess').setDescription('Your guess (1-100)')),
+
+  aliases: ['gtn', 'guess', 'guessthenumber'],
+  name: 'guess-the-number',
 
   async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('🎮 GUESS-THE-NUMBER',
-      '**Action:** Guess secret random number between 1 and 100\n' +
-      '**Status:** Successfully processed\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
+    const g = interaction.options.getInteger('guess');
+    const res = GamesEngine.playGuessTheNumber(interaction.guildId, interaction.user.id, g);
+    const embed = res.correct ?
+      KikiEmbed.success('🎯 Guess The Number: WINNER!', res.message) :
+      KikiEmbed.purple('🎮 Guess The Number (1 - 100)', res.message);
     await interaction.reply({ embeds: [embed] });
   },
-  name: 'guess-the-number',
-  aliases: ['k-guess-the-number', 'guessthenumber'],
+
   async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('🎮 GUESS-THE-NUMBER',
-      '**Command:** `guess-the-number`\n' +
-      '**Description:** Guess secret random number between 1 and 100\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
+    const g = parseInt(args[0]);
+    const res = GamesEngine.playGuessTheNumber(message.guild.id, message.author.id, g);
+    const embed = res.correct ?
+      KikiEmbed.success('🎯 Guess The Number: WINNER!', res.message) :
+      KikiEmbed.purple('🎮 Guess The Number (1 - 100)', res.message);
     message.reply({ embeds: [embed] });
   }
 };

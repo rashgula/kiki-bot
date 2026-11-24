@@ -1,30 +1,34 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+const GamesEngine = require('../../utils/gamesEngine.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('duel-challenge-fight')
-    .setDescription('⚔️ Engage friend in turn-based mock RPG duel')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('⚔️ Engage a friend in turn-based mock RPG duel')
+    .addUserOption(o => o.setName('opponent').setDescription('Member to fight')),
+
+  aliases: ['duel', 'fight'],
+  name: 'duel-challenge-fight',
 
   async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('⚔️ DUEL-CHALLENGE-FIGHT',
-      '**Action:** Engage friend in turn-based mock RPG duel\n' +
-      '**Status:** Successfully processed\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
+    const opp = interaction.options.getUser('opponent') || { username: 'Abyssal Daemon' };
+    const res = GamesEngine.playDuel(interaction.user.username, opp.username);
+    const embed = KikiEmbed.purple('⚔️ Gothic RPG Duel: ' + res.p1 + ' vs ' + res.p2,
+      '**Combat Rounds:**\n' + res.log + '\n\n' +
+      '👑 **Victor:** **' + res.winner + '** stands triumphant!\n' +
+      '💀 **Defeated:** **' + res.loser + '** has fallen in battle.'
     );
     await interaction.reply({ embeds: [embed] });
   },
-  name: 'duel-challenge-fight',
-  aliases: ['k-duel-challenge-fight', 'duelchallengefight'],
+
   async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('⚔️ DUEL-CHALLENGE-FIGHT',
-      '**Command:** `duel-challenge-fight`\n' +
-      '**Description:** Engage friend in turn-based mock RPG duel\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
+    const opp = (message.mentions?.users?.first ? message.mentions.users.first() : null) || { username: 'Abyssal Daemon' };
+    const res = GamesEngine.playDuel(message.author.username, opp.username);
+    const embed = KikiEmbed.purple('⚔️ Gothic RPG Duel: ' + res.p1 + ' vs ' + res.p2,
+      '**Combat Rounds:**\n' + res.log + '\n\n' +
+      '👑 **Victor:** **' + res.winner + '** stands triumphant!\n' +
+      '💀 **Defeated:** **' + res.loser + '** has fallen in battle.'
     );
     message.reply({ embeds: [embed] });
   }

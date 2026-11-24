@@ -1,31 +1,28 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+const GamesEngine = require('../../utils/gamesEngine.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('russian-roulette')
-    .setDescription('🔫 Spin cylinder and test luck in party game')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('🔫 Spin the cylinder and test your luck in Russian Roulette'),
+
+  aliases: ['rr', 'russianroulette'],
+  name: 'russian-roulette',
 
   async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('🔫 RUSSIAN-ROULETTE',
-      '**Action:** Spin cylinder and test luck in party game\n' +
-      '**Status:** Successfully processed\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
+    const res = GamesEngine.playRussianRoulette(interaction.user.username);
+    const embed = res.survived ?
+      KikiEmbed.success('Survived Russian Roulette! 🔫', res.message) :
+      KikiEmbed.error('Fallen in Russian Roulette! 💀', res.message);
     await interaction.reply({ embeds: [embed] });
   },
-  name: 'russian-roulette',
-  aliases: ['k-russian-roulette', 'russianroulette'],
+
   async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('🔫 RUSSIAN-ROULETTE',
-      '**Command:** `russian-roulette`\n' +
-      '**Description:** Spin cylinder and test luck in party game\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
+    const res = GamesEngine.playRussianRoulette(message.author.username);
+    const embed = res.survived ?
+      KikiEmbed.success('Survived Russian Roulette! 🔫', res.message) :
+      KikiEmbed.error('Fallen in Russian Roulette! 💀', res.message);
     message.reply({ embeds: [embed] });
   }
 };

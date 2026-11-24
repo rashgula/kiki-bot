@@ -67,16 +67,26 @@ const POPULAR_SHORT_ALIASES = {
   'marriage-status-view': ['marriage', 'partner'],
 
   // Games
+  'blackjack-game-deal': ['blackjack', 'bj', '21'],
+  'coin-wager-bet': ['coinwager', 'wager'],
+  'connect4-challenge': ['connect4', 'c4'],
+  'duel-challenge-fight': ['duel', 'fight'],
+  'fast-typer-race': ['type', 'typerace'],
+  'flag-quiz-guess': ['flag', 'flagquiz'],
+  'guess-the-number': ['gtn', 'guess'],
+  'hangman-game-play': ['hangman'],
+  'logo-quiz-guess': ['logo', 'logoquiz'],
   'minesweeper-grid': ['minesweeper', 'mines'],
   'riddle-solve-puzzle': ['riddle'],
-  'connect4-challenge': ['connect4', 'c4'],
-  'tictactoe-challenge': ['tictactoe', 'ttt'],
-  'hangman-game-play': ['hangman'],
-  'guess-the-number': ['gtn', 'guess'],
-  'fast-typer-race': ['type', 'typerace'],
-  'slots-spin-reels': ['spin'],
   'roulette-spin-wheel': ['roulette'],
-  'russian-roulette': ['rr']
+  'russian-roulette': ['rr', 'russianroulette'],
+  'slots-spin-reels': ['spin'],
+  'tictactoe-challenge': ['tictactoe', 'ttt'],
+  'trivia-anime-quiz': ['animetrivia', 'animequiz'],
+  'trivia-gaming-quiz': ['gamingtrivia', 'gamequiz'],
+  'trivia-general-quiz': ['generaltrivia', 'gkquiz'],
+  'trivia-math-speed': ['mathspeed', 'mathquiz'],
+  'word-scramble-play': ['scramble', 'wordscramble']
 };
 
 module.exports = (client) => {

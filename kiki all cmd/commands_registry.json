@@ -1,7 +1,7 @@
 {
   "name": "kiki-commands-registry",
   "version": "2.2",
-  "updatedAt": 1795509062849,
+  "updatedAt": 1795509655340,
   "totalCommands": 1140,
   "builtTogetherModules": [
     {
@@ -5931,9 +5931,11 @@
         "name": "blackjack-game-deal",
         "file": "blackjack-game-deal.js",
         "category": "games",
-        "description": "🃏 Play hand of 21 blackjack against dealer",
+        "description": "🃏 Play 21 Blackjack against the gothic dealer",
         "aliases": [
-          "k-blackjack-game-deal",
+          "blackjack",
+          "bj",
+          "21",
           "blackjackgamedeal"
         ],
         "isSlash": true,
@@ -5943,9 +5945,10 @@
         "name": "coin-wager-bet",
         "file": "coin-wager-bet.js",
         "category": "games",
-        "description": "🪙 Wager points on 50/50 coinflip toss",
+        "description": "🪙 Wager coins on a 50/50 coinflip toss",
         "aliases": [
-          "k-coin-wager-bet",
+          "coinwager",
+          "wager",
           "coinwagerbet"
         ],
         "isSlash": true,
@@ -5955,12 +5958,11 @@
         "name": "connect4-challenge",
         "file": "connect4-challenge.js",
         "category": "games",
-        "description": "🔴 Play 4-in-a-row checkers game against friend",
+        "description": "🔴 Play 4-in-a-row checkers game against a friend",
         "aliases": [
-          "k-connect4-challenge",
-          "connect4challenge",
           "connect4",
-          "c4"
+          "c4",
+          "connect4challenge"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -5969,9 +5971,10 @@
         "name": "duel-challenge-fight",
         "file": "duel-challenge-fight.js",
         "category": "games",
-        "description": "⚔️ Engage friend in turn-based mock RPG duel",
+        "description": "⚔️ Engage a friend in turn-based mock RPG duel",
         "aliases": [
-          "k-duel-challenge-fight",
+          "duel",
+          "fight",
           "duelchallengefight"
         ],
         "isSlash": true,
@@ -5983,10 +5986,10 @@
         "category": "games",
         "description": "⌨️ Type displayed sentence fastest to win",
         "aliases": [
-          "k-fast-typer-race",
-          "fasttyperrace",
           "type",
-          "typerace"
+          "typerace",
+          "fasttype",
+          "fasttyperrace"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -5997,7 +6000,8 @@
         "category": "games",
         "description": "🚩 Identify country matching displayed flag",
         "aliases": [
-          "k-flag-quiz-guess",
+          "flag",
+          "flagquiz",
           "flagquizguess"
         ],
         "isSlash": true,
@@ -6009,10 +6013,9 @@
         "category": "games",
         "description": "🎮 Guess secret random number between 1 and 100",
         "aliases": [
-          "k-guess-the-number",
-          "guessthenumber",
           "gtn",
-          "guess"
+          "guess",
+          "guessthenumber"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -6023,9 +6026,8 @@
         "category": "games",
         "description": "🎮 Guess hidden word letters before hanging",
         "aliases": [
-          "k-hangman-game-play",
-          "hangmangameplay",
-          "hangman"
+          "hangman",
+          "hangmangameplay"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -6034,9 +6036,10 @@
         "name": "logo-quiz-guess",
         "file": "logo-quiz-guess.js",
         "category": "games",
-        "description": "🏢 Identify brand matching displayed logo",
+        "description": "🏢 Identify brand matching displayed logo & clue",
         "aliases": [
-          "k-logo-quiz-guess",
+          "logo",
+          "logoquiz",
           "logoquizguess"
         ],
         "isSlash": true,
@@ -6061,9 +6064,9 @@
         "category": "games",
         "description": "🧩 Solve clever brain teaser riddle",
         "aliases": [
-          "k-riddle-solve-puzzle",
-          "riddlesolvepuzzle",
-          "riddle"
+          "riddle",
+          "puzzle",
+          "riddlesolvepuzzle"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -6072,11 +6075,10 @@
         "name": "roulette-spin-wheel",
         "file": "roulette-spin-wheel.js",
         "category": "games",
-        "description": "🎰 Bet on red, black or number on roulette",
+        "description": "🎰 Bet on red, black, even, odd, or exact number on roulette",
         "aliases": [
-          "k-roulette-spin-wheel",
-          "roulettespinwheel",
-          "roulette"
+          "roulette",
+          "roulettespinwheel"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -6085,11 +6087,10 @@
         "name": "russian-roulette",
         "file": "russian-roulette.js",
         "category": "games",
-        "description": "🔫 Spin cylinder and test luck in party game",
+        "description": "🔫 Spin the cylinder and test your luck in Russian Roulette",
         "aliases": [
-          "k-russian-roulette",
-          "russianroulette",
-          "rr"
+          "rr",
+          "russianroulette"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -6098,11 +6099,11 @@
         "name": "slots-spin-reels",
         "file": "slots-spin-reels.js",
         "category": "games",
-        "description": "🎰 Spin three reels on gothic slot machine",
+        "description": "🎰 Spin three reels on the gothic slot machine",
         "aliases": [
-          "k-slots-spin-reels",
-          "slotsspinreels",
-          "spin"
+          "spin",
+          "gothicslots",
+          "slotsspinreels"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -6111,12 +6112,11 @@
         "name": "tictactoe-challenge",
         "file": "tictactoe-challenge.js",
         "category": "games",
-        "description": "❌ Play 3x3 tic tac toe game against friend",
+        "description": "❌ Play 3x3 tic tac toe game against friend or bot",
         "aliases": [
-          "k-tictactoe-challenge",
-          "tictactoechallenge",
           "tictactoe",
-          "ttt"
+          "ttt",
+          "tictactoechallenge"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -6127,7 +6127,8 @@
         "category": "games",
         "description": "🎮 Answer anime history and character trivia",
         "aliases": [
-          "k-trivia-anime-quiz",
+          "animetrivia",
+          "animequiz",
           "triviaanimequiz"
         ],
         "isSlash": true,
@@ -6139,7 +6140,8 @@
         "category": "games",
         "description": "🎮 Answer video game lore and history trivia",
         "aliases": [
-          "k-trivia-gaming-quiz",
+          "gamingtrivia",
+          "gamequiz",
           "triviagamingquiz"
         ],
         "isSlash": true,
@@ -6151,7 +6153,8 @@
         "category": "games",
         "description": "🎮 Answer general knowledge trivia question",
         "aliases": [
-          "k-trivia-general-quiz",
+          "generaltrivia",
+          "gkquiz",
           "triviageneralquiz"
         ],
         "isSlash": true,
@@ -6161,9 +6164,10 @@
         "name": "trivia-math-speed",
         "file": "trivia-math-speed.js",
         "category": "games",
-        "description": "🎮 Solve speed arithmetic problem for points",
+        "description": "🎮 Solve speed mental arithmetic problem for points",
         "aliases": [
-          "k-trivia-math-speed",
+          "mathspeed",
+          "mathquiz",
           "triviamathspeed"
         ],
         "isSlash": true,
@@ -6175,7 +6179,8 @@
         "category": "games",
         "description": "🎮 Unscramble mixed letters to find the word",
         "aliases": [
-          "k-word-scramble-play",
+          "scramble",
+          "wordscramble",
           "wordscrambleplay"
         ],
         "isSlash": true,

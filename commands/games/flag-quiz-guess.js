@@ -1,30 +1,29 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+const GamesEngine = require('../../utils/gamesEngine.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('flag-quiz-guess')
-    .setDescription('🚩 Identify country matching displayed flag')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('🚩 Identify country matching displayed flag'),
+
+  aliases: ['flag', 'flagquiz'],
+  name: 'flag-quiz-guess',
 
   async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('🚩 FLAG-QUIZ-GUESS',
-      '**Action:** Identify country matching displayed flag\n' +
-      '**Status:** Successfully processed\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
+    const f = GamesEngine.getFlagQuiz();
+    const embed = KikiEmbed.purple('🚩 Flag Quiz: What country is ' + f.flag + ' ?',
+      '**Options:**\n' + f.options + '\n\n' +
+      '*Click spoiler below to reveal answer:*\n' + f.answer
     );
     await interaction.reply({ embeds: [embed] });
   },
-  name: 'flag-quiz-guess',
-  aliases: ['k-flag-quiz-guess', 'flagquizguess'],
+
   async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('🚩 FLAG-QUIZ-GUESS',
-      '**Command:** `flag-quiz-guess`\n' +
-      '**Description:** Identify country matching displayed flag\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
+    const f = GamesEngine.getFlagQuiz();
+    const embed = KikiEmbed.purple('🚩 Flag Quiz: What country is ' + f.flag + ' ?',
+      '**Options:**\n' + f.options + '\n\n' +
+      '*Click spoiler below to reveal answer:*\n' + f.answer
     );
     message.reply({ embeds: [embed] });
   }

@@ -2,7 +2,7 @@
 
 > Complete catalog of all commands loaded in KIKI Gothic Purple Bot.
 > Prefix: `&` | Slash: `/<command>`
-> Last Synchronized: 24/11/2026, 2:01:02 pm
+> Last Synchronized: 24/11/2026, 2:10:55 pm
 
 ═══════════════════════════════════════════════════════════════════
 
@@ -488,26 +488,26 @@
 
 | Command Name | Aliases | Type | Description |
 | :--- | :--- | :---: | :--- |
-| `blackjack-game-deal` | `k-blackjack-game-deal`, `blackjackgamedeal` | `Prefix (&) + Slash (/)` | 🃏 Play hand of 21 blackjack against dealer |
-| `coin-wager-bet` | `k-coin-wager-bet`, `coinwagerbet` | `Prefix (&) + Slash (/)` | 🪙 Wager points on 50/50 coinflip toss |
-| `connect4-challenge` | `k-connect4-challenge`, `connect4challenge`, `connect4`, `c4` | `Prefix (&) + Slash (/)` | 🔴 Play 4-in-a-row checkers game against friend |
-| `duel-challenge-fight` | `k-duel-challenge-fight`, `duelchallengefight` | `Prefix (&) + Slash (/)` | ⚔️ Engage friend in turn-based mock RPG duel |
-| `fast-typer-race` | `k-fast-typer-race`, `fasttyperrace`, `type`, `typerace` | `Prefix (&) + Slash (/)` | ⌨️ Type displayed sentence fastest to win |
-| `flag-quiz-guess` | `k-flag-quiz-guess`, `flagquizguess` | `Prefix (&) + Slash (/)` | 🚩 Identify country matching displayed flag |
-| `guess-the-number` | `k-guess-the-number`, `guessthenumber`, `gtn`, `guess` | `Prefix (&) + Slash (/)` | 🎮 Guess secret random number between 1 and 100 |
-| `hangman-game-play` | `k-hangman-game-play`, `hangmangameplay`, `hangman` | `Prefix (&) + Slash (/)` | 🎮 Guess hidden word letters before hanging |
-| `logo-quiz-guess` | `k-logo-quiz-guess`, `logoquizguess` | `Prefix (&) + Slash (/)` | 🏢 Identify brand matching displayed logo |
+| `blackjack-game-deal` | `blackjack`, `bj`, `21`, `blackjackgamedeal` | `Prefix (&) + Slash (/)` | 🃏 Play 21 Blackjack against the gothic dealer |
+| `coin-wager-bet` | `coinwager`, `wager`, `coinwagerbet` | `Prefix (&) + Slash (/)` | 🪙 Wager coins on a 50/50 coinflip toss |
+| `connect4-challenge` | `connect4`, `c4`, `connect4challenge` | `Prefix (&) + Slash (/)` | 🔴 Play 4-in-a-row checkers game against a friend |
+| `duel-challenge-fight` | `duel`, `fight`, `duelchallengefight` | `Prefix (&) + Slash (/)` | ⚔️ Engage a friend in turn-based mock RPG duel |
+| `fast-typer-race` | `type`, `typerace`, `fasttype`, `fasttyperrace` | `Prefix (&) + Slash (/)` | ⌨️ Type displayed sentence fastest to win |
+| `flag-quiz-guess` | `flag`, `flagquiz`, `flagquizguess` | `Prefix (&) + Slash (/)` | 🚩 Identify country matching displayed flag |
+| `guess-the-number` | `gtn`, `guess`, `guessthenumber` | `Prefix (&) + Slash (/)` | 🎮 Guess secret random number between 1 and 100 |
+| `hangman-game-play` | `hangman`, `hangmangameplay` | `Prefix (&) + Slash (/)` | 🎮 Guess hidden word letters before hanging |
+| `logo-quiz-guess` | `logo`, `logoquiz`, `logoquizguess` | `Prefix (&) + Slash (/)` | 🏢 Identify brand matching displayed logo & clue |
 | `minesweeper-grid` | `minesweeper`, `mines`, `minesweepergrid` | `Prefix (&) + Slash (/)` | 💣 Play interactive spoiler minesweeper grid |
-| `riddle-solve-puzzle` | `k-riddle-solve-puzzle`, `riddlesolvepuzzle`, `riddle` | `Prefix (&) + Slash (/)` | 🧩 Solve clever brain teaser riddle |
-| `roulette-spin-wheel` | `k-roulette-spin-wheel`, `roulettespinwheel`, `roulette` | `Prefix (&) + Slash (/)` | 🎰 Bet on red, black or number on roulette |
-| `russian-roulette` | `k-russian-roulette`, `russianroulette`, `rr` | `Prefix (&) + Slash (/)` | 🔫 Spin cylinder and test luck in party game |
-| `slots-spin-reels` | `k-slots-spin-reels`, `slotsspinreels`, `spin` | `Prefix (&) + Slash (/)` | 🎰 Spin three reels on gothic slot machine |
-| `tictactoe-challenge` | `k-tictactoe-challenge`, `tictactoechallenge`, `tictactoe`, `ttt` | `Prefix (&) + Slash (/)` | ❌ Play 3x3 tic tac toe game against friend |
-| `trivia-anime-quiz` | `k-trivia-anime-quiz`, `triviaanimequiz` | `Prefix (&) + Slash (/)` | 🎮 Answer anime history and character trivia |
-| `trivia-gaming-quiz` | `k-trivia-gaming-quiz`, `triviagamingquiz` | `Prefix (&) + Slash (/)` | 🎮 Answer video game lore and history trivia |
-| `trivia-general-quiz` | `k-trivia-general-quiz`, `triviageneralquiz` | `Prefix (&) + Slash (/)` | 🎮 Answer general knowledge trivia question |
-| `trivia-math-speed` | `k-trivia-math-speed`, `triviamathspeed` | `Prefix (&) + Slash (/)` | 🎮 Solve speed arithmetic problem for points |
-| `word-scramble-play` | `k-word-scramble-play`, `wordscrambleplay` | `Prefix (&) + Slash (/)` | 🎮 Unscramble mixed letters to find the word |
+| `riddle-solve-puzzle` | `riddle`, `puzzle`, `riddlesolvepuzzle` | `Prefix (&) + Slash (/)` | 🧩 Solve clever brain teaser riddle |
+| `roulette-spin-wheel` | `roulette`, `roulettespinwheel` | `Prefix (&) + Slash (/)` | 🎰 Bet on red, black, even, odd, or exact number on roulette |
+| `russian-roulette` | `rr`, `russianroulette` | `Prefix (&) + Slash (/)` | 🔫 Spin the cylinder and test your luck in Russian Roulette |
+| `slots-spin-reels` | `spin`, `gothicslots`, `slotsspinreels` | `Prefix (&) + Slash (/)` | 🎰 Spin three reels on the gothic slot machine |
+| `tictactoe-challenge` | `tictactoe`, `ttt`, `tictactoechallenge` | `Prefix (&) + Slash (/)` | ❌ Play 3x3 tic tac toe game against friend or bot |
+| `trivia-anime-quiz` | `animetrivia`, `animequiz`, `triviaanimequiz` | `Prefix (&) + Slash (/)` | 🎮 Answer anime history and character trivia |
+| `trivia-gaming-quiz` | `gamingtrivia`, `gamequiz`, `triviagamingquiz` | `Prefix (&) + Slash (/)` | 🎮 Answer video game lore and history trivia |
+| `trivia-general-quiz` | `generaltrivia`, `gkquiz`, `triviageneralquiz` | `Prefix (&) + Slash (/)` | 🎮 Answer general knowledge trivia question |
+| `trivia-math-speed` | `mathspeed`, `mathquiz`, `triviamathspeed` | `Prefix (&) + Slash (/)` | 🎮 Solve speed mental arithmetic problem for points |
+| `word-scramble-play` | `scramble`, `wordscramble`, `wordscrambleplay` | `Prefix (&) + Slash (/)` | 🎮 Unscramble mixed letters to find the word |
 
 ───────────────────────────────────────────────────────────────────
 
