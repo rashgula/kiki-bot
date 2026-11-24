@@ -313,47 +313,61 @@ const FunEngine = {
   },
 
   calculateShip(user1, user2) {
-    const str = `${user1.id}_${user2.id}`.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const percent = str % 101;
+    const name1 = (typeof user1 === 'object' ? (user1.username || user1.id || 'User1') : String(user1 || 'User1')).toLowerCase();
+    const name2 = (typeof user2 === 'object' ? (user2.username || user2.id || 'User2') : String(user2 || 'User2')).toLowerCase();
+    // Sort names so ship(A, B) === ship(B, A) consistently
+    const pair = [name1, name2].sort().join(':');
+    const hash = pair.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const percent = Math.abs(hash * 37) % 101;
 
     let verdict = '💔 No Chemistry... Dark skies ahead!';
     if (percent > 85) verdict = '💍 Soulmates! Made for each other in the gothic heavens!';
-    else if (percent > 65) verdict = '💖 Great Match! High compatibility & sparks flying!';
+    else if (percent > 65) verdict = '💖 Great Match! High compatibility & dark sparks flying!';
     else if (percent > 40) verdict = '🤝 Decent Friends! Could become something special.';
     else if (percent > 20) verdict = '⚡ A bit turbulent, proceed with caution!';
 
     const filled = Math.round(percent / 10);
     const bar = '█'.repeat(filled) + '░'.repeat(10 - filled);
 
-    return { percent, bar, verdict };
+    return { percent, bar, verdict, comment: verdict };
   },
 
   marry(guildId, u1Id, u2Id) {
+    if (u1Id === u2Id) {
+      return { success: false, error: 'Aap khud se shaadi nahi kar sakte! Kisi aur partner ko mention karein.', message: 'Aap khud se shaadi nahi kar sakte! Kisi aur partner ko mention karein.' };
+    }
     const m = loadMarriages();
     const gKey = guildId || 'global';
     if (!m[gKey]) m[gKey] = {};
 
-    if (m[gKey][u1Id]) return { error: 'Aap already married ho! Pehle divorce karein.' };
-    if (m[gKey][u2Id]) return { error: 'Ye user already kisi aur ke sath married hai!' };
+    if (m[gKey][u1Id]) {
+      return { success: false, error: 'Aap already married ho! Pehle `&divorce` karein.', message: 'Aap already married ho! Pehle `&divorce` karein.' };
+    }
+    if (m[gKey][u2Id]) {
+      return { success: false, error: 'Ye user already kisi aur ke sath married hai!', message: 'Ye user already kisi aur ke sath married hai!' };
+    }
 
-    m[gKey][u1Id] = { partnerId: u2Id, date: Date.now() };
-    m[gKey][u2Id] = { partnerId: u1Id, date: Date.now() };
+    const now = Date.now();
+    m[gKey][u1Id] = { partnerId: u2Id, date: now };
+    m[gKey][u2Id] = { partnerId: u1Id, date: now };
     saveMarriages(m);
 
-    return { success: true };
+    return { success: true, message: 'Gothic union successfully sealed!' };
   },
 
   divorce(guildId, uId) {
     const m = loadMarriages();
     const gKey = guildId || 'global';
-    if (!m[gKey] || !m[gKey][uId]) return { error: 'Aap abhi kisi ke sath married nahi hain!' };
+    if (!m[gKey] || !m[gKey][uId]) {
+      return { success: false, error: 'Aap abhi kisi ke sath married nahi hain!', message: 'Aap abhi kisi ke sath married nahi hain!' };
+    }
 
     const partnerId = m[gKey][uId].partnerId;
     delete m[gKey][uId];
     if (partnerId && m[gKey][partnerId]) delete m[gKey][partnerId];
     saveMarriages(m);
 
-    return { success: true, exPartnerId: partnerId };
+    return { success: true, exPartnerId: partnerId, message: `<@${uId}> aur <@${partnerId}> ka gothic covenant officially dissolve ho gaya.` };
   },
 
   getMarriage(guildId, uId) {

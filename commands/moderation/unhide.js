@@ -28,7 +28,7 @@ module.exports = {
     if (!message.member.permissions.has(PermissionFlagsBits.ManageChannels)) {
       return message.reply({ embeds: [KikiEmbed.error('No Permission', 'You need **Manage Channels** permission.')] });
     }
-    const channel = message.mentions.channels.first() || message.channel;
+    const channel = message.mentions?.channels?.first?.() || message.channel;
     try {
       await channel.permissionOverwrites.edit(message.guild.roles.everyone, { ViewChannel: null });
       message.reply({ embeds: [KikiEmbed.success('👁️ Channel Visible', `${channel} is now visible to @everyone.`)] });

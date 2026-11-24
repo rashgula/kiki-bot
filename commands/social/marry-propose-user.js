@@ -8,8 +8,8 @@ module.exports = {
     .setDescription('💍 Propose a gothic union to a partner')
     .addUserOption(o => o.setName('user').setDescription('Target partner').setRequired(true)),
 
-  aliases: ['marry', 'propose'],
   name: 'marry-propose-user',
+  aliases: ['marry', 'propose'],
 
   async execute(interaction, client) {
     const target = interaction.options.getUser('user');
@@ -24,7 +24,9 @@ module.exports = {
   },
 
   async run(message, args, client) {
-    const target = message.mentions.users.first();
+    const target = message.mentions?.users?.first?.() ||
+      (args && args[0] ? message.guild?.members.cache.find(m => m.id === args[0].replace(/[<@!>]/g, '') || m.user.username.toLowerCase() === args[0].toLowerCase())?.user : null);
+
     if (!target) {
       return message.reply({ embeds: [KikiEmbed.error('No Partner', 'Kripya apne partner ko mention karein: `&marry @user`')] });
     }

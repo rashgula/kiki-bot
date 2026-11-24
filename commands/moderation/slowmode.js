@@ -38,7 +38,7 @@ module.exports = {
     if (isNaN(seconds) || seconds < 0 || seconds > 21600) {
       return message.reply({ embeds: [KikiEmbed.error('Invalid Value', 'Please provide a value between 0 and 21600 seconds.')] });
     }
-    const channel = message.mentions.channels.first() || message.channel;
+    const channel = message.mentions?.channels?.first?.() || message.channel;
 
     try {
       await channel.setRateLimitPerUser(seconds);

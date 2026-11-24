@@ -399,33 +399,100 @@ async function executeDirectCommand(interaction, cmdName, client) {
   }
 
   try {
+    const { Collection } = require('discord.js');
+    let repliedOrEdited = false;
+
+    // Full Collection instances for all mention types
+    const mentionsUsers = new Collection();
+    const mentionsMembers = new Collection();
+    const mentionsChannels = new Collection();
+    const mentionsRoles = new Collection();
+
     const fakeMsg = {
       id: interaction.id,
       guild: interaction.guild,
       guildId: interaction.guildId,
       channel: interaction.channel,
+      channelId: interaction.channelId,
       author: interaction.user,
+      user: interaction.user,
       member: interaction.member,
+      client: client,
       content: `&${cmdName}`,
+      createdTimestamp: Date.now(),
+      createdAt: new Date(),
       mentions: {
-        users: new Map(),
-        roles: new Map(),
+        users: mentionsUsers,
+        members: mentionsMembers,
+        channels: mentionsChannels,
+        roles: mentionsRoles,
+        crosspostedChannels: new Collection(),
+        everyone: false,
+        has: () => false,
         first: () => null
       },
+      attachments: new Collection(),
+      embeds: [],
+      components: [],
+      reactions: { cache: new Collection() },
+      reference: null,
+      pinned: false,
+      tts: false,
+      nonce: null,
+      system: false,
+      flags: { bitfield: 0, has: () => false },
       reply: async (payload) => {
-        return await interaction.editReply(payload);
-      }
+        let msgPayload = typeof payload === 'string' ? { content: payload } : payload;
+        try {
+          if (!repliedOrEdited) {
+            repliedOrEdited = true;
+            if (interaction.deferred) {
+              return await interaction.editReply(msgPayload);
+            } else if (!interaction.replied) {
+              return await interaction.reply(msgPayload);
+            }
+          }
+          return await interaction.followUp(msgPayload);
+        } catch (err) {
+          return await interaction.channel?.send?.(msgPayload).catch(() => null);
+        }
+      },
+      react: async () => {},
+      delete: async () => {}
     };
 
     if (typeof command.run === 'function') {
       await command.run(fakeMsg, [], client);
     } else if (typeof command.execute === 'function') {
-      await command.execute(interaction, client);
+      const safeInteraction = new Proxy(interaction, {
+        get(target, prop) {
+          if (prop === 'reply') {
+            return async (payload) => {
+              repliedOrEdited = true;
+              if (target.deferred || target.replied) {
+                return await target.editReply(payload);
+              }
+              return await target.reply(payload);
+            };
+          }
+          if (prop === 'deferReply') {
+            return async () => {};
+          }
+          return target[prop];
+        }
+      });
+      await command.execute(safeInteraction, client);
+    }
+
+    if (!repliedOrEdited && interaction.deferred) {
+      await interaction.editReply({
+        embeds: [KikiEmbed.success('Command Executed ⚡', `Command **&${cmdName}** successfully run ho chuki hai!`)]
+      }).catch(() => null);
     }
   } catch (err) {
     console.error(`[1-CLICK CMD ERROR] ${cmdName}:`, err);
     const errEmbed = KikiEmbed.error('Execution Error', `\`\`\`${err.message}\`\`\``);
-    await interaction.editReply({ embeds: [errEmbed] });
+    await interaction.editReply({ embeds: [errEmbed] }).catch(() => null);
   }
 }
 

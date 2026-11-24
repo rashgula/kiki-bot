@@ -1,31 +1,50 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+const FunEngine = require('../../utils/funEngine.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('marriage-status-view')
     .setDescription('💒 View marriage partner and anniversary')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .addUserOption(o => o.setName('user').setDescription('Target user to check')),
+
+  name: 'marriage-status-view',
+  aliases: ['k-marriage-status-view', 'marriagestatusview', 'marriage', 'partner'],
 
   async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('💒 MARRIAGE-STATUS-VIEW',
-      '**Action:** View marriage partner and anniversary\n' +
-      '**Status:** Successfully processed\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
+    const target = interaction.options.getUser('user') || interaction.user;
+    const marriage = FunEngine.getMarriage(interaction.guildId, target.id);
+    let desc = '';
+    if (marriage && marriage.partnerId) {
+      const timeSec = Math.floor(marriage.date / 1000);
+      desc = `💍 **Partner:** <@${marriage.partnerId}>\n` +
+        `📅 **Married Since:** <t:${timeSec}:F> (<t:${timeSec}:R>)\n\n` +
+        `*Covenant status: Eternal Dark Love 🖤*`;
+    } else {
+      desc = `💔 **Status:** Single (No active covenant)\n\n` +
+        `💡 *Propose to someone with \`&marry @user\`!*`;
+    }
+    const embed = KikiEmbed.purple(`💒 Gothic Marriage: ${target.username}`, desc);
     await interaction.reply({ embeds: [embed] });
   },
-  name: 'marriage-status-view',
-  aliases: ['k-marriage-status-view', 'marriagestatusview'],
+
   async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('💒 MARRIAGE-STATUS-VIEW',
-      '**Command:** `marriage-status-view`\n' +
-      '**Description:** View marriage partner and anniversary\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
+    const target = message.mentions?.users?.first?.() ||
+      (args && args[0] ? message.guild?.members.cache.find(m => m.id === args[0].replace(/[<@!>]/g, '') || m.user.username.toLowerCase() === args[0].toLowerCase())?.user : null) ||
+      message.author;
+
+    const marriage = FunEngine.getMarriage(message.guild.id, target.id);
+    let desc = '';
+    if (marriage && marriage.partnerId) {
+      const timeSec = Math.floor(marriage.date / 1000);
+      desc = `💍 **Partner:** <@${marriage.partnerId}>\n` +
+        `📅 **Married Since:** <t:${timeSec}:F> (<t:${timeSec}:R>)\n\n` +
+        `*Covenant status: Eternal Dark Love 🖤*`;
+    } else {
+      desc = `💔 **Status:** Single (No active covenant)\n\n` +
+        `💡 *Propose to someone with \`&marry @user\`!*`;
+    }
+    const embed = KikiEmbed.purple(`💒 Gothic Marriage: ${target.username}`, desc);
     message.reply({ embeds: [embed] });
   }
 };
