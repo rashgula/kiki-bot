@@ -10,30 +10,20 @@ module.exports = {
     if (!member.guild) return;
     const cfg = KIKI.loadConfig();
 
-    // ── 1. Leave Log / Goodbye Card ─────────────────────────────────
+    // ── 1. Leave Log / Animated Goodbye Card ───────────────────────
     const leaveChannel = KIKI.getGuildChannel(member.guild, 'leave_channel_id');
-    if (leaveChannel) {
+    const isLeaveEnabled = cfg.guilds?.[member.guild.id]?.leave_enabled !== false && cfg.leave_enabled !== false;
+
+    if (leaveChannel && isLeaveEnabled) {
       try {
+        const leavePanel = require('../commands/admin/leavepanel.js');
+        const cardPayload = leavePanel.buildLeaveCard(member.guild, member.user, {
+          joinedTimestamp: member.joinedTimestamp
+        });
 
-        if (leaveChannel) {
-          const joinedAt = member.joinedTimestamp
-            ? `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>`
-            : 'Unknown';
-
-          const embed = KikiEmbed.build({
-            title: '🚪 Member Left',
-            description: `${member.user.toString()} (\`${member.user.tag}\`) server chhod kar chala gaya.`,
-            color: config.COLORS.RED || 0xC0392B,
-            thumbnail: member.user.displayAvatarURL({ dynamic: true }),
-            fields: [
-              { name: '👤 Member', value: `${member.user.tag} (\`${member.user.id}\`)`, inline: true },
-              { name: '📊 Remaining Members', value: `#${member.guild.memberCount}`, inline: true },
-              { name: '📅 Joined Server', value: joinedAt, inline: true }
-            ]
-          });
-
-          await leaveChannel.send({ embeds: [embed] }).catch(() => {});
-        }
+        await leaveChannel.send(cardPayload).catch((err) => {
+          console.error('[LEAVE MESSAGE SEND ERROR]', err.message);
+        });
       } catch (err) {
         console.error('[LEAVE LOG ERROR]', err.message);
       }

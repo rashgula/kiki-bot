@@ -163,6 +163,7 @@ const RUNNABLE_COMMANDS = {
     { name: 'slowmode', label: '⏱️ Set Slowmode', desc: 'Adjust channel slowmode' }
   ],
   admin: [
+    { name: 'leavepanel', label: '🚪 Leave Setup Panel', desc: 'Configure goodbye card & channel' },
     { name: 'setuplogs', label: '📋 Setup Logs', desc: 'Auto-create 5 log channels' },
     { name: 'setuplevelroles', label: '🏆 Setup Level Roles', desc: 'Auto-create 10 level roles' },
     { name: 'autorole', label: '🎭 Setup Autoroles', desc: 'Auto-assign join roles' }

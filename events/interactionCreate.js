@@ -92,6 +92,15 @@ module.exports = {
       }
     }
 
+    // ── Member Leave & Goodbye Panel Interactions ───────────────
+    if (interaction.customId && interaction.customId.startsWith('lp_')) {
+      const lpHandler = require('../commands/admin/leavepanel.js');
+      if (lpHandler.handleInteraction) {
+        await lpHandler.handleInteraction(interaction, client);
+        return;
+      }
+    }
+
     // ── Voice Master Panel Interactions (Buttons & Modals) ───────
     if (interaction.customId && interaction.customId.startsWith('vm_')) {
       const VoiceMaster = require('../utils/voiceMaster.js');
