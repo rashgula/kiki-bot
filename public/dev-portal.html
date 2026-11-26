@@ -91,7 +91,10 @@
 
       <div id="tabStudio">
         <div class="card">
-          <h2>💬 CMD / Problem Box</h2>
+          <div class="row" style="justify-content:space-between;margin-bottom:8px;">
+            <h2 style="margin:0;">💬 CMD / Problem Box</h2>
+            <span id="aiModeBadge" class="badge">Checking AI...</span>
+          </div>
           <p class="muted">Yahan simple bhasha me likho: kya fix karna hai ya kaunsi nayi command banani hai — aur niche <b>Run</b> button dabao.</p>
           <textarea id="cmdPrompt" rows="4" placeholder='Example: "voice level me dikat hai use thik kar" ya "ek welcome-gift command bana ke de"'></textarea>
           <button class="big-run" onclick="oneClickRun()">🚀 RUN &amp; APPLY (Inspect → Test → GitHub &amp; Notify)</button>
@@ -99,7 +102,19 @@
           <div class="row" style="margin-top:12px;">
             <button class="sec" onclick="toggleSection('newCmdBox')">➕ Quick New Command Maker</button>
             <button class="sec" onclick="toggleSection('advancedBox')">🛠️ Manual Code Editor (<span id="draftCount">0</span> Drafts)</button>
+            <button id="aiHelpBtn" class="sec hidden" onclick="toggleSection('aiHelpBox')">🔑 Auto-Code AI Kaise ON Karein?</button>
           </div>
+
+          <div id="aiHelpBox" class="status-box info hidden"><b>Auto-Code AI abhi OFF hai</b> kyunki koi AI API Key (<code>GEMINI_API_KEY</code> / <code>GROQ_API_KEY</code> / <code>OPENAI_API_KEY</code>) abhi bot me saved nahi hai.
+
+<b>Free me 1 minute me ON karne ke steps (Bot Owner ke liye Discord ya Railway se):</b>
+1. Free key banayein: <b>Google AI Studio</b> (<code>aistudio.google.com</code> → Get API Key) ya <b>Groq</b> (<code>console.groq.com</code> → API Keys).
+2. Bot ke Discord DM me ya server me run karein:
+   <code>&amp;devaccess setkey GEMINI_API_KEY &lt;APNI_KEY&gt;</code>
+   (ya <b>Railway Dashboard → Variables</b> me <code>GEMINI_API_KEY</code> add karein).
+3. Page refresh karte hi badge <b>Auto-Code AI: ON ✅</b> ho jayega!
+
+<i>Tab tak aap bina AI key ke bhi <b>➕ Quick New Command Maker</b> aur <b>🛠️ Manual Code Editor</b> + <b>🚀 RUN &amp; APPLY</b> use kar sakte hain.</i></div>
 
           <div id="runResultBox" class="status-box hidden"></div>
           <div id="matchedBtns" class="pill-list"></div>
@@ -215,6 +230,19 @@
         document.getElementById('authBadge').classList.remove('hidden');
         document.getElementById('logoutBtn').classList.remove('hidden');
         document.getElementById('userLabel').textContent = `${me.session.discordTag} (${me.session.discordId})`;
+        const aiBadge = document.getElementById('aiModeBadge');
+        if (me.aiConfigured) {
+          aiBadge.textContent = `🤖 Auto-Code AI: ON (${me.aiProvider || 'active'})`;
+          aiBadge.style.borderColor = 'var(--green)';
+          aiBadge.style.background = '#142a1e';
+          aiBadge.style.color = 'var(--green)';
+        } else {
+          aiBadge.textContent = '🤖 Auto-Code AI: OFF (Manual / Cmd Maker Ready)';
+          aiBadge.style.borderColor = '#e67e22';
+          aiBadge.style.background = '#2b1e10';
+          aiBadge.style.color = '#f39c12';
+          document.getElementById('aiHelpBtn').classList.remove('hidden');
+        }
         const fl = await api('/api/dev/files');
         ALL_FILES = fl.files || [];
         renderFileList();
@@ -356,7 +384,7 @@
         });
 
         if (res.stage === 'needs_edit') {
-          showBox('runResultBox', `${res.rootCause}\n\n${res.message}`, 'info');
+          showBox('runResultBox', `${res.rootCause}\n\n${res.message}`, res.error ? 'err' : 'info');
           const box = document.getElementById('matchedBtns');
           (res.matchedFiles || []).forEach(f => {
             const b = document.createElement('button');
@@ -365,6 +393,12 @@
             b.onclick = () => openFile(f.path);
             box.appendChild(b);
           });
+          if (!res.aiPowered && /\b(bana|bna|create|make|new|add)\b/i.test(prompt)) {
+            const nb = document.createElement('button');
+            nb.textContent = '✨ Open New Command Maker';
+            nb.onclick = () => { document.getElementById('newCmdBox').classList.remove('hidden'); };
+            box.appendChild(nb);
+          }
           return;
         }
 

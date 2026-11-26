@@ -282,10 +282,12 @@ async function handleRequest(req, res, client) {
 
   // ── 5. Maintenance Studio Endpoints (/api/dev/*) ─────────────────
   if (method === 'GET' && pathname === '/api/dev/me') {
+    const aiCfg = DevAi.getAiProviderConfig();
     return sendJson(res, 200, {
       authenticated: true,
       session: { discordId: session.discordId, discordTag: session.discordTag, expiresAt: session.expiresAt },
-      aiConfigured: Boolean(DevAi.getAiProviderConfig()),
+      aiConfigured: Boolean(aiCfg),
+      aiProvider: aiCfg?.provider || null,
       githubConfigured: GitHubIntegration.getConfigSummary().connected
     });
   }
@@ -376,12 +378,16 @@ module.exports = {
         return sendJson(res, 200, {
           stage: 'needs_edit',
           aiPowered: diagnosis.aiPowered,
+          aiProvider: diagnosis.provider || null,
+          error: diagnosis.error || null,
           rootCause: diagnosis.rootCause,
           matchedFiles: diagnosis.matchedFiles || [],
           recentErrors: diagnosis.recentErrors || [],
-          message: diagnosis.aiPowered
-            ? 'AI ne koi automatic file edit propose nahi kiya. Niche editor se file kholkar edit karein aur dubara Run dabayein.'
-            : 'GEMINI_API_KEY set nahi hai, isliye auto-code generation off hai — niche matched file kholkar edit karein ya New Command Draft banayein aur dubara Run dabayein.'
+          message: diagnosis.error
+            ? `${diagnosis.error}\n\nNiche matched file kholkar edit karein ya New Command Maker use karein.`
+            : diagnosis.aiPowered
+              ? 'AI ne koi automatic file edit propose nahi kiya. Niche editor se file kholkar edit karein aur dubara Run dabayein.'
+              : 'Auto-Code AI abhi OFF hai (koi GEMINI_API_KEY / GROQ_API_KEY / OPENAI_API_KEY set nahi hai). Owner Discord me "&devaccess setkey GEMINI_API_KEY <key>" (ya Railway Variables) se free key set kar sakte hain — ya niche se Quick New Command Maker / Manual Editor use karke Run dabayein.'
         });
       }
     }

@@ -7,6 +7,7 @@ const DevAccess = require('../../utils/devAccess.js');
 const GitHubIntegration = require('../../utils/githubIntegration.js');
 const RailwayIntegration = require('../../utils/railwayIntegration.js');
 const ActivityLogger = require('../../utils/activityLogger.js');
+const CloudSync = require('../../utils/cloudSync.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -40,8 +41,8 @@ module.exports = {
       s.setName('setkey')
         .setDescription('Privately save encrypted GitHub / AI / Railway integration setting')
         .addStringOption(o => o.setName('key').setDescription('Setting name').setRequired(true).addChoices(
+          { name: 'GEMINI_API_KEY / GROQ / OPENAI', value: 'aiApiKey' },
           { name: 'GITHUB_TOKEN', value: 'githubToken' },
-          { name: 'GEMINI_API_KEY', value: 'aiApiKey' },
           { name: 'DASHBOARD_BASE_URL', value: 'dashboardBaseUrl' },
           { name: 'RAILWAY_API_TOKEN', value: 'railwayToken' },
           { name: 'RAILWAY_PROJECT_ID', value: 'railwayProjectId' },
@@ -125,6 +126,7 @@ module.exports = {
       const mins = interaction.options.getInteger('minutes') || 30;
       try {
         const inv = DevAccess.createInvite(interaction.user.id, friend.id, friend.tag, mins);
+        CloudSync.schedulePush(client, 3000);
         return interaction.reply({
           embeds: [KikiEmbed.purple(
             '🎟️ Single-Use Developer Invite Created',
@@ -145,14 +147,16 @@ module.exports = {
       const key = interaction.options.getString('key');
       const val = interaction.options.getString('value');
       DevAccess.saveOwnerIntegrations(interaction.user.id, { [key]: val });
+      CloudSync.schedulePush(client, 3000);
       return interaction.reply({
-        embeds: [KikiEmbed.success('Encrypted Setting Saved 🔐', `Key \`${key}\` AES-256-GCM encryption ke sath save ho gayi hai!`)],
+        embeds: [KikiEmbed.success('Encrypted Setting Saved 🔐', `Key \`${key}\` AES-256-GCM encryption ke sath save + CloudSync schedule ho gayi hai!`)],
         ephemeral: true
       });
     }
 
     if (sub === 'revoke') {
       const out = DevAccess.revokeDeveloper(interaction.user.id, 'Revoked via /devaccess revoke');
+      CloudSync.schedulePush(client, 3000);
       return interaction.reply({
         embeds: [KikiEmbed.success('Developer Revoked 🛑', `Access revoked for \`${out.previousDeveloper?.discordTag || 'active developer'}\`. All active sessions terminated immediately!`)],
         ephemeral: true
@@ -162,6 +166,7 @@ module.exports = {
     if (sub === 'autodeploy') {
       const enabled = interaction.options.getBoolean('enabled');
       DevAccess.setUrgentAutoDeploy(interaction.user.id, enabled);
+      CloudSync.schedulePush(client, 3000);
       return interaction.reply({
         embeds: [KikiEmbed.info('Urgent Auto-Deploy Updated ⚡', `Urgent Auto-Deploy is now **${enabled ? 'ENABLED' : 'DISABLED'}**.`)],
         ephemeral: true
@@ -265,8 +270,47 @@ module.exports = {
       }
     }
 
+    if (sub === 'setkey') {
+      const rawKeyName = (args[1] || '').toUpperCase();
+      const rawValue = args.slice(2).join(' ').trim();
+      await message.delete().catch(() => {});
+      const keyMap = {
+        GEMINI_API_KEY: 'aiApiKey',
+        GROQ_API_KEY: 'aiApiKey',
+        OPENROUTER_API_KEY: 'aiApiKey',
+        OPENAI_API_KEY: 'aiApiKey',
+        AI_API_KEY: 'aiApiKey',
+        AIAPIKEY: 'aiApiKey',
+        GITHUB_TOKEN: 'githubToken',
+        GITHUBTOKEN: 'githubToken',
+        DASHBOARD_BASE_URL: 'dashboardBaseUrl',
+        DASHBOARDBASEURL: 'dashboardBaseUrl',
+        RAILWAY_API_TOKEN: 'railwayToken',
+        RAILWAYTOKEN: 'railwayToken',
+        RAILWAY_PROJECT_ID: 'railwayProjectId',
+        RAILWAY_SERVICE_ID: 'railwayServiceId',
+        RAILWAY_ENVIRONMENT_ID: 'railwayEnvironmentId',
+        DISCORD_CLIENT_SECRET: 'discordClientSecret'
+      };
+      const mapped = keyMap[rawKeyName];
+      if (!mapped || !rawValue) {
+        return message.channel.send({
+          embeds: [KikiEmbed.warn(
+            'Usage: &devaccess setkey (Private/DM Recommended)',
+            '`&devaccess setkey GEMINI_API_KEY <key>` (ya `GROQ_API_KEY` / `OPENAI_API_KEY` / `GITHUB_TOKEN` / `DASHBOARD_BASE_URL`)\n*(Security ke liye aapka command message auto-delete kar diya jata hai)*'
+          )]
+        });
+      }
+      DevAccess.saveOwnerIntegrations(message.author.id, { [mapped]: rawValue });
+      CloudSync.schedulePush(client, 3000);
+      return message.channel.send({
+        embeds: [KikiEmbed.success('Encrypted Setting Saved 🔐', `**${rawKeyName}** AES-256-GCM encrypted vault me save ho gaya hai! Ab website par Auto-Code AI **ON ✅** ho jayega.`)]
+      });
+    }
+
     if (sub === 'revoke') {
       const out = DevAccess.revokeDeveloper(message.author.id, 'Revoked via &devaccess revoke');
+      CloudSync.schedulePush(client, 3000);
       return message.reply({
         embeds: [KikiEmbed.success('Developer Revoked 🛑', `Access revoked for \`${out.previousDeveloper?.discordTag || 'active developer'}\`. Active sessions killed!`)]
       });
@@ -275,6 +319,7 @@ module.exports = {
     if (sub === 'autodeploy') {
       const enabled = args[1]?.toLowerCase() === 'on' || args[1]?.toLowerCase() === 'true';
       DevAccess.setUrgentAutoDeploy(message.author.id, enabled);
+      CloudSync.schedulePush(client, 3000);
       return message.reply({ embeds: [KikiEmbed.info('Urgent Auto-Deploy', `Set to **${enabled ? 'ON' : 'OFF'}**`)] });
     }
 

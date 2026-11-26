@@ -83,12 +83,71 @@ function findRelevantFiles(query, client = null, limit = 8) {
     .slice(0, limit);
 }
 
+function detectProviderFromKey(key) {
+  const k = String(key || '').trim();
+  if (!k) return null;
+  if (k.startsWith('gsk_')) return { provider: 'groq', key: k };
+  if (k.startsWith('sk-or-')) return { provider: 'openrouter', key: k };
+  if (k.startsWith('sk-')) return { provider: 'openai', key: k };
+  return { provider: 'gemini', key: k };
+}
+
 function getAiProviderConfig() {
-  const gemini = DevAccess.getSecretFromEnvOrVault('GEMINI_API_KEY', 'aiApiKeyEnc');
-  const openai = process.env.OPENAI_API_KEY;
-  if (gemini && !gemini.startsWith('sk-')) return { provider: 'gemini', key: gemini };
-  if (openai || (gemini && gemini.startsWith('sk-'))) return { provider: 'openai', key: openai || gemini };
+  const vaultOrGemini = DevAccess.getSecretFromEnvOrVault('GEMINI_API_KEY', 'aiApiKeyEnc');
+  if (vaultOrGemini) return detectProviderFromKey(vaultOrGemini);
+  if (process.env.GROQ_API_KEY) return { provider: 'groq', key: process.env.GROQ_API_KEY.trim() };
+  if (process.env.OPENROUTER_API_KEY) return { provider: 'openrouter', key: process.env.OPENROUTER_API_KEY.trim() };
+  if (process.env.OPENAI_API_KEY) return { provider: 'openai', key: process.env.OPENAI_API_KEY.trim() };
+  if (process.env.AI_API_KEY) return detectProviderFromKey(process.env.AI_API_KEY);
   return null;
+}
+
+function stripJsonFences(text) {
+  const s = String(text || '').trim();
+  const m = s.match(/^```(?:json)?\s*([\s\S]*?)```$/i);
+  return m ? m[1].trim() : s;
+}
+
+async function callGemini(key, promptText) {
+  const primary = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  const models = primary === 'gemini-2.0-flash' ? [primary] : [primary, 'gemini-2.0-flash'];
+  let lastErr;
+  for (const model of models) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
+      const resp = await axios.post(url, {
+        contents: [{ role: 'user', parts: [{ text: promptText }] }],
+        generationConfig: { responseMimeType: 'application/json' }
+      }, { timeout: 30000 });
+      return resp.data?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+    } catch (err) {
+      lastErr = err;
+      const st = err.response?.status;
+      if (st !== 404 && st !== 400) throw err;
+    }
+  }
+  throw lastErr;
+}
+
+async function callOpenAiCompatible(provider, key, systemPrompt, userPrompt) {
+  const endpoints = {
+    groq: { url: 'https://api.groq.com/openai/v1/chat/completions', model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile' },
+    openrouter: { url: 'https://openrouter.ai/api/v1/chat/completions', model: process.env.OPENROUTER_MODEL || 'google/gemini-2.0-flash-001' },
+    openai: { url: 'https://api.openai.com/v1/chat/completions', model: process.env.OPENAI_MODEL || 'gpt-4o-mini' }
+  };
+  const cfg = endpoints[provider] || endpoints.openai;
+  const resp = await axios.post(cfg.url, {
+    model: cfg.model,
+    response_format: { type: 'json_object' },
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt }
+    ]
+  }, {
+    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+    timeout: 30000
+  });
+  return resp.data?.choices?.[0]?.message?.content || '{}';
 }
 
 async function analyzeAndGenerateFix({ prompt, targetPaths = [], client = null }) {
@@ -114,9 +173,10 @@ async function analyzeAndGenerateFix({ prompt, targetPaths = [], client = null }
   if (!aiCfg) {
     return {
       aiPowered: false,
+      provider: null,
       rootCause: matched.length
-        ? `Matched ${matched.length} file(s) related to "${prompt.slice(0, 120)}". Open them in the editor below to apply edits, run sandbox tests, and submit a PR (or connect GEMINI_API_KEY / OPENAI_API_KEY in Owner Settings for automatic AI code generation).`
-        : 'No direct filename match found. Pick a file from the left tree or connect GEMINI_API_KEY / OPENAI_API_KEY.',
+        ? `Matched ${matched.length} file(s) related to "${prompt.slice(0, 120)}".`
+        : `No direct filename match found for "${prompt.slice(0, 120)}".`,
       matchedFiles: fileContexts.map(f => ({ path: f.path, reason: f.reason })),
       recentErrors,
       proposedEdits: []
@@ -136,31 +196,11 @@ async function analyzeAndGenerateFix({ prompt, targetPaths = [], client = null }
   });
 
   try {
-    let rawJsonText = '';
-    if (aiCfg.provider === 'gemini') {
-      const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${aiCfg.key}`;
-      const resp = await axios.post(url, {
-        contents: [{ role: 'user', parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }],
-        generationConfig: { responseMimeType: 'application/json' }
-      }, { timeout: 30000 });
-      rawJsonText = resp.data?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-    } else {
-      const resp = await axios.post('https://api.openai.com/v1/chat/completions', {
-        model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ]
-      }, {
-        headers: { Authorization: `Bearer ${aiCfg.key}`, 'Content-Type': 'application/json' },
-        timeout: 30000
-      });
-      rawJsonText = resp.data?.choices?.[0]?.message?.content || '{}';
-    }
+    const rawJsonText = aiCfg.provider === 'gemini'
+      ? await callGemini(aiCfg.key, `${systemPrompt}\n\n${userPrompt}`)
+      : await callOpenAiCompatible(aiCfg.provider, aiCfg.key, systemPrompt, userPrompt);
 
-    const parsed = JSON.parse(rawJsonText);
+    const parsed = JSON.parse(stripJsonFences(rawJsonText));
     const safeEdits = [];
     const blocked = [];
 
@@ -186,8 +226,9 @@ async function analyzeAndGenerateFix({ prompt, targetPaths = [], client = null }
   } catch (err) {
     return {
       aiPowered: false,
-      error: `AI provider request failed (${err.response?.data?.error?.message || err.message}). Falling back to local file match.`,
-      rootCause: matched.length ? `Matched ${matched.length} file(s) locally for manual review.` : 'Check recent error log below.',
+      provider: aiCfg.provider,
+      error: `AI provider (${aiCfg.provider}) request failed: ${err.response?.data?.error?.message || err.message}`,
+      rootCause: matched.length ? `Matched ${matched.length} file(s) locally for manual review.` : 'Check error or select a file manually.',
       matchedFiles: fileContexts.map(f => ({ path: f.path, reason: f.reason })),
       recentErrors,
       proposedEdits: []
