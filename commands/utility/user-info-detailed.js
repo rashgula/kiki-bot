@@ -1,31 +1,38 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+
+function buildUserEmbed(member) {
+  const user = member.user;
+  const roles = member.roles?.cache?.filter(r => r.id !== member.guild.id).map(r => r.toString()).slice(0, 15) || [];
+  return KikiEmbed.purple(`👤 User Info • ${user.tag}`, `**User ID:** \`${user.id}\``)
+    .setThumbnail(user.displayAvatarURL?.({ dynamic: true }) || null)
+    .addFields(
+      { name: '📅 Joined Server', value: member.joinedTimestamp ? `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>` : 'Unknown', inline: true },
+      { name: '📆 Account Created', value: `<t:${Math.floor(user.createdTimestamp / 1000)}:R>`, inline: true },
+      { name: '🤖 Bot Account', value: user.bot ? 'Yes' : 'No', inline: true },
+      { name: `🏷️ Roles (${Math.max(0, (member.roles?.cache?.size || 1) - 1)})`, value: roles.length ? roles.join(' ') : 'None', inline: false }
+    );
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('user-info-detailed')
-    .setDescription('👤 Detailed member profile statistics')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('👤 Inspect detailed account and server member metadata')
+    .addUserOption(o => o.setName('user').setDescription('Target member')),
 
-  async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('👤 USER-INFO-DETAILED',
-      '**Action:** Detailed member profile statistics\n' +
-      '**Status:** Successfully processed\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    await interaction.reply({ embeds: [embed] });
-  },
-  name: 'user-info-detailed',
   aliases: ['k-user-info-detailed', 'userinfodetailed'],
-  async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('👤 USER-INFO-DETAILED',
-      '**Command:** `user-info-detailed`\n' +
-      '**Description:** Detailed member profile statistics\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    message.reply({ embeds: [embed] });
+  name: 'user-info-detailed',
+
+  async execute(interaction) {
+    const member = interaction.options.getMember('user') || interaction.member;
+    await interaction.reply({ embeds: [buildUserEmbed(member)] });
+  },
+
+  async run(message, args) {
+    const cleanId = args[0]?.replace(/[<@!>]/g, '');
+    const member = message.mentions?.members?.first?.()
+      || (cleanId && /^\d{17,20}$/.test(cleanId) ? await message.guild.members.fetch(cleanId).catch(() => null) : null)
+      || message.member;
+    message.reply({ embeds: [buildUserEmbed(member)] });
   }
 };

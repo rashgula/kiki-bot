@@ -38,6 +38,22 @@ module.exports = {
       return;
     }
 
+    // 1.5 Anti-Raid Mode Lockdown (Per-Guild)
+    const isAntiRaid = KIKI.getGuildConfig(guild.id, 'anti_raid', false) === true;
+    if (isAntiRaid && !KIKI.isSafe(guild, member.id, client)) {
+      try {
+        await member.kick('[KIKI Anti-Raid Mode] Server lockdown active — unauthorized join blocked');
+        const alert = KikiEmbed.nuke(
+          'Anti-Raid Kick 🛡️',
+          `**Member:** ${member.user.tag} (\`${member.id}\`)\n**Action:** Auto-kicked because **Anti-Raid Mode** is enabled.`
+        );
+        await KIKI.logSecurity(guild, alert);
+      } catch (e) {
+        console.error('[ANTI-RAID KICK]', e.message);
+      }
+      return;
+    }
+
     // 2. Auto-Role for human members (Multi-Server Isolated)
     const autoroleId = cfg.guilds?.[guild.id]?.autorole_id || (guild.roles.cache.has(cfg.autorole_id) ? cfg.autorole_id : null);
     if (autoroleId && !member.user.bot) {

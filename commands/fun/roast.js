@@ -1,4 +1,4 @@
-﻿const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
 
 const roasts = [
@@ -19,7 +19,7 @@ module.exports = {
   },
   name: 'roast', aliases: [],
   async run(message) {
-    const user = message.mentions.users.first() || message.author;
+    const user = message.mentions?.users?.first?.() || message.author;
     const roast = roasts[Math.floor(Math.random() * roasts.length)];
     message.reply({ embeds: [KikiEmbed.purple('🔥 Roast', `${user.username}, ${roast}`)] });
   }

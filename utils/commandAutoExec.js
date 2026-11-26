@@ -1,16 +1,32 @@
 // KIKI Bot - Command Persistence & Auto-Replay Engine
-// Saves all setup/admin commands entered by the owner so they auto-run upon bot restart!
+// Saves ONLY safe, idempotent setup/admin commands entered by the owner so they auto-restore upon bot restart!
 
 const fs = require('fs');
 const path = require('path');
 const chalk = require('chalk');
+const { Collection } = require('discord.js');
 const KIKI = require('./kiki.js');
-const KikiEmbed = require('./embed.js');
 const config = require('../config.js');
+const CloudSync = require('./cloudSync.js');
 
-const SAVED_CMDS_FILE = path.join(__dirname, '..', 'data', 'saved_commands.json');
+const LEGACY_SAVED_CMDS_FILE = path.join(__dirname, '..', 'data', 'saved_commands.json');
 
-// Ephemeral / Read-only commands that don't need to be auto-replayed on restart
+// Strict allowlist of safe, idempotent configuration/setup commands that can auto-replay on boot.
+// Moderation/channel mutation commands (lock, ban, kick, nuke, purge, etc.) MUST NEVER auto-replay on restart!
+const SAFE_AUTO_REPLAY_ALLOWLIST = new Set([
+  'master-antinuke',
+  'antinuke',
+  'setuplogs',
+  'setuplevelroles',
+  'autorole',
+  'chatlevelpanel',
+  'deafafkpanel',
+  'deafmover',
+  'voicemaster',
+  'invitetracker',
+  'leavepanel'
+]);
+
 const READ_ONLY_COMMANDS = [
   'ping', 'help', 'h', 'commands', 'cmds', 'avatar', 'av', 'banner',
   'userinfo', 'ui', 'serverinfo', 'si', 'botinfo', 'bi', 'uptime', 'membercount',
@@ -22,9 +38,12 @@ const READ_ONLY_COMMANDS = [
 
 function loadSavedCommands() {
   try {
-    if (fs.existsSync(SAVED_CMDS_FILE)) {
-      const data = JSON.parse(fs.readFileSync(SAVED_CMDS_FILE, 'utf8'));
-      if (Array.isArray(data.commands)) return data.commands;
+    const file = CloudSync.getDataFile('saved_commands.json');
+    const data = CloudSync.readJsonSafe(file, null);
+    if (data && Array.isArray(data.commands)) return data.commands;
+    if (fs.existsSync(LEGACY_SAVED_CMDS_FILE)) {
+      const legacy = JSON.parse(fs.readFileSync(LEGACY_SAVED_CMDS_FILE, 'utf8'));
+      if (Array.isArray(legacy.commands)) return legacy.commands;
     }
   } catch (err) {
     console.error('[AUTO-EXEC] Error reading saved commands:', err.message);
@@ -34,16 +53,22 @@ function loadSavedCommands() {
 
 function writeSavedCommands(commands) {
   try {
-    fs.writeFileSync(SAVED_CMDS_FILE, JSON.stringify({ commands, updatedAt: Date.now() }, null, 2), 'utf8');
+    const payload = { commands, updatedAt: Date.now() };
+    CloudSync.writeJsonAtomic(CloudSync.getDataFile('saved_commands.json'), payload);
   } catch (err) {
     console.error('[AUTO-EXEC] Error saving commands:', err.message);
   }
 }
 
-// Pre-populate historical setup commands if file doesn't exist
 function initDefaultCommands() {
   const existing = loadSavedCommands();
-  if (existing.length > 0) return existing;
+  if (existing.length > 0) {
+    const safeExisting = existing.filter(c => SAFE_AUTO_REPLAY_ALLOWLIST.has(String(c.name || '').toLowerCase()));
+    if (safeExisting.length !== existing.length) {
+      writeSavedCommands(safeExisting);
+    }
+    return safeExisting;
+  }
 
   const cfg = KIKI.loadConfig();
   const defaults = [
@@ -138,50 +163,39 @@ const CommandAutoExec = {
     return loadSavedCommands();
   },
 
-  // Save a command automatically when run by owner / admin
+  // Save a command ONLY if it is in the explicit safe setup allowlist
   recordCommand(commandName, args = [], messageOrInteraction) {
     const cleanCmd = String(commandName).toLowerCase().trim();
-
-    // Skip read-only queries
-    if (READ_ONLY_COMMANDS.includes(cleanCmd)) return false;
+    if (READ_ONLY_COMMANDS.includes(cleanCmd) || !SAFE_AUTO_REPLAY_ALLOWLIST.has(cleanCmd)) {
+      return false;
+    }
 
     const commands = loadSavedCommands();
     const prefix = config.PREFIX || '&';
     const fullCmdString = `${prefix}${cleanCmd}${args.length ? ' ' + args.join(' ') : ''}`;
-
-    // Look for existing entry with same command name or primary key
-    const existingIndex = commands.findIndex(c => c.name === cleanCmd && (cleanCmd !== 'voicemaster' || c.args[0] === args[0]));
+    const existingIndex = commands.findIndex(c => c.name === cleanCmd && (cleanCmd !== 'voicemaster' || c.args?.[0] === args[0]));
 
     const authorUser = messageOrInteraction.author || messageOrInteraction.user;
-    const authorTag = authorUser ? authorUser.tag : 'Admin';
-    const authorId = authorUser ? authorUser.id : 'Owner';
-    const guildId = messageOrInteraction.guildId || messageOrInteraction.guild?.id || null;
-    const channelId = messageOrInteraction.channelId || null;
-
     const entry = {
       id: `${cleanCmd}${args.length ? '-' + args[0] : ''}`,
       command: fullCmdString,
       name: cleanCmd,
       args: args.map(String),
-      guildId,
-      channelId,
-      author: authorTag,
-      authorId,
+      guildId: messageOrInteraction.guildId || messageOrInteraction.guild?.id || null,
+      channelId: messageOrInteraction.channelId || null,
+      author: authorUser ? authorUser.tag : 'Admin',
+      authorId: authorUser ? authorUser.id : 'Owner',
       timestamp: Date.now()
     };
 
-    if (existingIndex >= 0) {
-      commands[existingIndex] = entry;
-    } else {
-      commands.push(entry);
-    }
+    if (existingIndex >= 0) commands[existingIndex] = entry;
+    else commands.push(entry);
 
     writeSavedCommands(commands);
-    console.log(chalk.green(`  💾 [AUTO-SAVE] Command '${fullCmdString}' saved for auto-replay on restart!`));
+    console.log(chalk.green(`  💾 [AUTO-SAVE] Setup command '${fullCmdString}' saved for restore on restart!`));
     return true;
   },
 
-  // Remove a command from the auto-replay list
   removeCommand(cmdName) {
     const clean = String(cmdName).toLowerCase().replace(/^[&/]/, '').trim();
     const commands = loadSavedCommands();
@@ -193,83 +207,40 @@ const CommandAutoExec = {
     return false;
   },
 
-  // Clear all saved commands
   clearCommands() {
     writeSavedCommands([]);
   },
 
-  // Re-run all saved commands automatically on bot boot
   async replayOnStartup(client) {
-    console.log(chalk.magenta('  🔄 [AUTO-EXEC ENGINE] Replaying all saved commands on startup...'));
+    console.log(chalk.magenta('  🔄 [AUTO-EXEC ENGINE] Verifying saved setup state on startup...'));
     const commands = initDefaultCommands();
     let replayed = 0;
 
+    const passiveStateCmds = new Set([
+      'setuplevelroles', 'setuplogs', 'voicemaster', 'invitetracker',
+      'deafafkpanel', 'deafmover', 'chatlevelpanel', 'master-antinuke', 'antinuke'
+    ]);
+
     for (const item of commands) {
       try {
-        const cmdName = item.name;
+        const cmdName = String(item.name || '').toLowerCase();
+        if (!SAFE_AUTO_REPLAY_ALLOWLIST.has(cmdName)) continue;
+
         const cmd = client.prefixCommands.get(cmdName) || client.commands.get(cmdName);
+        if (!cmd) continue;
 
-        if (!cmd) {
-          continue;
-        }
-
-        // Dedicated state verification / auto-execution for core commands
-        if (cmdName === 'setuplevelroles') {
-          for (const [, guild] of client.guilds.cache) {
-            const BootRestorer = require('./bootRestorer.js');
-            // roles self-heal internally
-          }
+        if (passiveStateCmds.has(cmdName)) {
           replayed++;
-          console.log(chalk.cyan(`  ⚡ [AUTO-EXEC] Restored: ${item.command}`));
+          console.log(chalk.cyan(`  ⚡ [AUTO-EXEC] Verified state: ${item.command}`));
           continue;
         }
 
-        if (cmdName === 'setuplogs') {
-          replayed++;
-          console.log(chalk.cyan(`  ⚡ [AUTO-EXEC] Restored: ${item.command}`));
-          continue;
-        }
-
-        if (cmdName === 'voicemaster') {
-          // VoiceMaster init cleans & activates
-          replayed++;
-          console.log(chalk.cyan(`  ⚡ [AUTO-EXEC] Restored: ${item.command}`));
-          continue;
-        }
-
-        if (cmdName === 'invitetracker') {
-          // InviteTracker caches & restores
-          replayed++;
-          console.log(chalk.cyan(`  ⚡ [AUTO-EXEC] Restored: ${item.command}`));
-          continue;
-        }
-
-        if (cmdName === 'deafafkpanel' || cmdName === 'deafmover') {
-          // Deaf mover init runs ticker
-          replayed++;
-          console.log(chalk.cyan(`  ⚡ [AUTO-EXEC] Restored: ${item.command}`));
-          continue;
-        }
-
-        if (cmdName === 'chatlevelpanel') {
-          replayed++;
-          console.log(chalk.cyan(`  ⚡ [AUTO-EXEC] Restored: ${item.command}`));
-          continue;
-        }
-
-        if (cmdName === 'master-antinuke' || cmdName === 'antinuke') {
-          replayed++;
-          console.log(chalk.cyan(`  ⚡ [AUTO-EXEC] Restored: ${item.command}`));
-          continue;
-        }
-
-        // Generic mock runner for custom future commands
+        // Only safe non-passive allowlisted setup commands reach here
         for (const [, guild] of client.guilds.cache) {
           if (item.guildId && guild.id !== item.guildId) continue;
           const defaultChannel = item.channelId
             ? (guild.channels.cache.get(item.channelId) || guild.channels.cache.find(c => c.isTextBased()))
             : guild.channels.cache.find(c => c.isTextBased());
-
           if (!defaultChannel) continue;
 
           const mockMessage = {
@@ -278,12 +249,18 @@ const CommandAutoExec = {
             author: { id: item.authorId || guild.ownerId, tag: item.author || 'Owner', bot: false },
             member: guild.members.cache.get(item.authorId) || guild.members.me,
             content: item.command,
+            mentions: {
+              users: new Collection(),
+              members: new Collection(),
+              channels: new Collection(),
+              roles: new Collection()
+            },
             reply: async () => {},
             react: async () => {}
           };
 
           if (typeof cmd.run === 'function') {
-            await cmd.run(mockMessage, item.args, client).catch(() => {});
+            await cmd.run(mockMessage, item.args || [], client).catch(() => {});
           }
         }
 
@@ -294,12 +271,11 @@ const CommandAutoExec = {
       }
     }
 
-    console.log(chalk.bold.green(`  ✅ [AUTO-EXEC ENGINE] All ${replayed} saved command(s) successfully replayed & restored!\n`));
+    console.log(chalk.bold.green(`  ✅ [AUTO-EXEC ENGINE] Verified ${replayed} safe setup command(s).\n`));
     return replayed;
   }
 };
 
-// Initialize default commands file on startup if not present
 initDefaultCommands();
 
 module.exports = CommandAutoExec;

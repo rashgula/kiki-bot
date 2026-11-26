@@ -1,31 +1,42 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+
+function resolveUnix(input) {
+  const nowSec = Math.floor(Date.now() / 1000);
+  if (!input) return nowSec;
+  const rel = String(input).trim().match(/^\+?(\d+)\s*([smhd])$/i);
+  if (rel) {
+    const n = parseInt(rel[1], 10);
+    const mult = { s: 1, m: 60, h: 3600, d: 86400 }[rel[2].toLowerCase()];
+    return nowSec + n * mult;
+  }
+  if (/^\d{9,11}$/.test(input.trim())) return parseInt(input.trim(), 10);
+  const parsed = Date.parse(input);
+  return Number.isNaN(parsed) ? nowSec : Math.floor(parsed / 1000);
+}
+
+function buildEmbed(unix) {
+  const formats = ['f', 'F', 'R', 'd', 't'];
+  const lines = formats.map(f => `• \`<t:${unix}:${f}>\` → <t:${unix}:${f}>`).join('\n');
+  return KikiEmbed.purple(`⏰ Discord Timestamp Generator (\`${unix}\`)`, lines);
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('timestamp-gen')
-    .setDescription('⏱️ Generate copyable Discord relative timestamps')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('⏰ Generate Discord dynamic timestamps (e.g. now, +2h, 2026-12-31)')
+    .addStringOption(o => o.setName('time').setDescription('Offset (+30m, +2h, +1d) or date/unix')),
 
-  async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('⏱️ TIMESTAMP-GEN',
-      '**Action:** Generate copyable Discord relative timestamps\n' +
-      '**Status:** Successfully processed\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    await interaction.reply({ embeds: [embed] });
-  },
+  aliases: ['k-timestamp-gen', 'timestampgen', 'timestamp', 'ts'],
   name: 'timestamp-gen',
-  aliases: ['k-timestamp-gen', 'timestampgen'],
-  async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('⏱️ TIMESTAMP-GEN',
-      '**Command:** `timestamp-gen`\n' +
-      '**Description:** Generate copyable Discord relative timestamps\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    message.reply({ embeds: [embed] });
+
+  async execute(interaction) {
+    const unix = resolveUnix(interaction.options.getString('time'));
+    await interaction.reply({ embeds: [buildEmbed(unix)] });
+  },
+
+  async run(message, args) {
+    const unix = resolveUnix(args.join(' '));
+    message.reply({ embeds: [buildEmbed(unix)] });
   }
 };

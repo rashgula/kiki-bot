@@ -29,6 +29,15 @@ module.exports = {
     if (oldContent === newContent) return;
     if (!oldContent && !newContent) return;
 
+    // Record in per-channel editsnipe history
+    MessageCache.recordEdited(newMessage.channelId, {
+      oldContent,
+      newContent,
+      authorId: newMessage.author?.id || cached?.authorId,
+      authorTag: newMessage.author?.tag || newMessage.author?.username || cached?.authorTag || 'Unknown User',
+      authorAvatar: newMessage.author?.displayAvatarURL?.({ dynamic: true }) || cached?.authorAvatar || null
+    });
+
     const logChannel = KIKI.getGuildChannel(guild, 'chat_log_channel_id');
     if (!logChannel || !logChannel.isTextBased() || newMessage.channelId === logChannel.id) return;
 

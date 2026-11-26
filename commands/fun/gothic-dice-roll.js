@@ -8,7 +8,7 @@ module.exports = {
     .setDescription('🎲 Roll a polyhedral die (default 6 sides)')
     .addIntegerOption(o => o.setName('sides').setDescription('Number of sides')),
 
-  aliases: ['dice', 'roll'],
+  aliases: ['gdice', 'groll'],
   name: 'gothic-dice-roll',
 
   async execute(interaction, client) {

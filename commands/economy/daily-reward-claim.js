@@ -18,7 +18,7 @@ module.exports = {
       return interaction.reply({ embeds: [KikiEmbed.error('Daily Cooldown ⏳', `Aap pehle hi daily reward le chuke hain!\nAgla reward claim karne ke liye **${wait}** intezar karein.`)] });
     }
     const embed = KikiEmbed.success('Daily Reward Claimed! 🎁',
-      `Aapko **+${res.amount.toLocaleString()} Gothic Coins** mile!\n🔥 **Daily Streak:** \`${res.streak} days\`\n💰 **New Wallet:** \`${res.wallet.toLocaleString()} Coins\\`
+      `Aapko **+${res.amount.toLocaleString()} Gothic Coins** mile!\n🔥 **Daily Streak:** \`${res.streak} days\`\n💰 **New Wallet:** \`${res.wallet.toLocaleString()} Coins\``
     );
     await interaction.reply({ embeds: [embed] });
   },
@@ -30,7 +30,7 @@ module.exports = {
       return message.reply({ embeds: [KikiEmbed.error('Daily Cooldown ⏳', `Aap pehle hi daily reward le chuke hain!\nAgla reward claim karne ke liye **${wait}** intezar karein.`)] });
     }
     const embed = KikiEmbed.success('Daily Reward Claimed! 🎁',
-      `Aapko **+${res.amount.toLocaleString()} Gothic Coins** mile!\n🔥 **Daily Streak:** \`${res.streak} days\`\n💰 **New Wallet:** \`${res.wallet.toLocaleString()} Coins\\`
+      `Aapko **+${res.amount.toLocaleString()} Gothic Coins** mile!\n🔥 **Daily Streak:** \`${res.streak} days\`\n💰 **New Wallet:** \`${res.wallet.toLocaleString()} Coins\``
     );
     message.reply({ embeds: [embed] });
   }

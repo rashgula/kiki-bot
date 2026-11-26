@@ -18,7 +18,7 @@ module.exports = {
   name:'mass-role-add',aliases:['mra'],
   async run(message,args){
     if(!message.member.permissions.has(PermissionFlagsBits.Administrator))return;
-    const role=message.mentions.roles.first();if(!role)return;
+    const role=message.mentions?.roles?.first?.()||(args[0]?message.guild.roles.cache.get(args[0].replace(/[<@&>]/g,'')):null);if(!role)return;
     let c=0;
     for(const [,m] of message.guild.members.cache.filter(m=>!m.user.bot)){try{await m.roles.add(role);c++;}catch{}}
     message.reply({embeds:[KikiEmbed.success('Mass Role Add',`${c} members updated!`)]});

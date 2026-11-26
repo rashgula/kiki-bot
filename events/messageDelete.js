@@ -17,6 +17,21 @@ module.exports = {
     // If message is bot, ignore
     if (message.author?.bot || cached?.authorTag?.toLowerCase() === 'kiki') return;
 
+    // Store in per-channel snipe history (works even if logChannel is unset)
+    const rawContentForSnipe = message.content || cached?.content || '';
+    const snipeAttachments = message.attachments?.size
+      ? message.attachments.map(a => a.url)
+      : (cached?.attachments || []);
+    if (rawContentForSnipe || snipeAttachments.length > 0) {
+      MessageCache.recordDeleted(message.channelId, {
+        content: rawContentForSnipe,
+        authorId: message.author?.id || cached?.authorId,
+        authorTag: message.author?.tag || message.author?.username || cached?.authorTag || 'Unknown User',
+        authorAvatar: message.author?.displayAvatarURL?.({ dynamic: true }) || cached?.authorAvatar || null,
+        attachments: snipeAttachments
+      });
+    }
+
     const logChannel = KIKI.getGuildChannel(guild, 'chat_log_channel_id');
     if (!logChannel || !logChannel.isTextBased() || message.channelId === logChannel.id) return;
 

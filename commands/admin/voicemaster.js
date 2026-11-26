@@ -444,7 +444,8 @@ module.exports = {
       }
 
       if (sub === 'kick') {
-        const target = message.mentions.members.first() || guild.members.cache.get(args[1]);
+        const cleanId = args[1]?.replace(/[<@!>]/g, '');
+        const target = message.mentions?.members?.first?.() || (cleanId ? guild.members.cache.get(cleanId) : null);
         if (!target) {
           return message.reply({ embeds: [KikiEmbed.error('User Missing', 'Usage: `&vm kick @member`')] });
         }
@@ -469,7 +470,8 @@ module.exports = {
       }
 
       if (sub === 'permit') {
-        const target = message.mentions.members.first() || guild.members.cache.get(args[1]);
+        const cleanId = args[1]?.replace(/[<@!>]/g, '');
+        const target = message.mentions?.members?.first?.() || (cleanId ? guild.members.cache.get(cleanId) : null);
         if (!target) {
           return message.reply({ embeds: [KikiEmbed.error('User Missing', 'Usage: `&vm permit @member`')] });
         }
@@ -493,7 +495,7 @@ module.exports = {
       if (sub === 'delete') {
         const info = tempChannels.get(currentVc.id);
         const durationMs = info?.createdAt ? Date.now() - info.createdAt : 0;
-        const durationStr = KIKI.formatDuration(Math.floor(durationMs / 1000));
+        const durationStr = KIKI.formatDuration(durationMs);
         const chName = currentVc.name;
 
         VoiceMaster.removeTempChannel(currentVc.id);
@@ -531,8 +533,11 @@ module.exports = {
       }
 
       const cfg = KIKI.loadConfig();
+      const gCfg = cfg.guilds?.[guild.id] || {};
 
-      let category = cfg.voice_master_category_id ? guild.channels.cache.get(cfg.voice_master_category_id) : null;
+      let category = (gCfg.voice_master_category_id || cfg.voice_master_category_id)
+        ? guild.channels.cache.get(gCfg.voice_master_category_id || cfg.voice_master_category_id)
+        : null;
       if (!category) {
         category = await guild.channels.create({
           name: '🔊〢Voice Master',
@@ -542,7 +547,9 @@ module.exports = {
         });
       }
 
-      let interfaceChannel = cfg.voice_master_interface_id ? guild.channels.cache.get(cfg.voice_master_interface_id) : null;
+      let interfaceChannel = (gCfg.voice_master_interface_id || cfg.voice_master_interface_id)
+        ? guild.channels.cache.get(gCfg.voice_master_interface_id || cfg.voice_master_interface_id)
+        : null;
       if (!interfaceChannel) {
         interfaceChannel = await guild.channels.create({
           name: '🔊〢voice-control',
@@ -563,7 +570,9 @@ module.exports = {
         });
       }
 
-      let joinChannel = cfg.voice_master_channel_id ? guild.channels.cache.get(cfg.voice_master_channel_id) : null;
+      let joinChannel = (gCfg.voice_master_channel_id || cfg.voice_master_channel_id)
+        ? guild.channels.cache.get(gCfg.voice_master_channel_id || cfg.voice_master_channel_id)
+        : null;
       if (!joinChannel) {
         joinChannel = await guild.channels.create({
           name: '➕〢Join to Create',
@@ -576,7 +585,9 @@ module.exports = {
         });
       }
 
-      let logChannel = cfg.voice_master_log_channel_id ? guild.channels.cache.get(cfg.voice_master_log_channel_id) : null;
+      let logChannel = (gCfg.voice_master_log_channel_id || cfg.voice_master_log_channel_id)
+        ? guild.channels.cache.get(gCfg.voice_master_log_channel_id || cfg.voice_master_log_channel_id)
+        : null;
       if (!logChannel) {
         logChannel = guild.channels.cache.find(c => c.parentId === category.id && (c.name.includes('vm-logs') || c.name.includes('voice-master-logs')));
         if (!logChannel) {
@@ -644,7 +655,7 @@ module.exports = {
     }
 
     if (sub === 'setlog' || sub === 'log' || sub === 'logchannel') {
-      const channel = message.mentions.channels.first() || guild.channels.cache.get(args[1]);
+      const channel = message.mentions?.channels?.first?.() || (args[1] ? guild.channels.cache.get(args[1]) : null);
       if (!channel || channel.type !== ChannelType.GuildText) {
         return message.reply({
           embeds: [KikiEmbed.error('Invalid Channel ⚠️', 'Usage: `&vm setlog #channel` (ek valid text channel mention karein)')]

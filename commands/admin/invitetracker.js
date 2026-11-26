@@ -114,7 +114,7 @@ module.exports = {
   category: 'admin',
   usage: '&invitetracker [setup|setchannel #channel|sync|stats]',
 
-  async run(client, message, args) {
+  async run(message, args, client) {
     if (!KIKI.isServerOrBotOwner(message.guild, message.author.id) && !KIKI.isSafe(message.guild, message.author.id, client)) {
       return message.channel.send({
         embeds: [KikiEmbed.error('Access Denied 🔒', 'Sirf Server Owner ya Whitelisted members hi Invite Tracker setup kar sakte hain!')]
@@ -146,7 +146,7 @@ module.exports = {
     }
 
     if (sub === 'setchannel') {
-      const channel = message.mentions.channels.first() || message.guild.channels.cache.get(args[1]);
+      const channel = message.mentions?.channels?.first?.() || (args[1] ? message.guild.channels.cache.get(args[1]) : null);
       if (!channel) {
         return message.channel.send({
           embeds: [KikiEmbed.error('Channel Error', 'Kripya target text channel mention karein! (e.g. `&invitetracker setchannel #invite-logs`)')]
@@ -180,16 +180,16 @@ module.exports = {
       return message.channel.send({ embeds: [embed] });
     }
 
-    // Default / stats
-    const cfg = KIKI.loadConfig();
-    const chId = cfg.invite_tracker_channel_id;
-    const catId = cfg.invite_tracker_category_id;
+    // Default / stats (per-guild isolated)
+    const gCfg = KIKI.getGuildConfig(message.guild.id);
+    const chId = gCfg.invite_tracker_channel_id;
+    const catId = gCfg.invite_tracker_category_id;
     const ch = chId ? message.guild.channels.cache.get(chId) : null;
     const cat = catId ? message.guild.channels.cache.get(catId) : null;
 
     const embed = KikiEmbed.info(
       'Invite Tracker Status 📊',
-      `• **Status:** ${cfg.invite_tracker_enabled !== false ? '🟢 Active' : '🔴 Disabled'}\n` +
+      `• **Status:** ${gCfg.invite_tracker_enabled !== false ? '🟢 Active' : '🔴 Disabled'}\n` +
       `• **Category:** ${cat ? cat.name : '`Not Set`'}\n` +
       `• **Logs Channel:** ${ch ? ch.toString() : '`Not Set`'}\n\n` +
       `*Setup chalane ke liye: \`&invitetracker setup\`*`

@@ -55,7 +55,7 @@ module.exports = {
   },
 
   name: 'invite',
-  aliases: ['botinvite', 'addbot', 'join', 'inv', 'kikiinvite'],
+  aliases: ['botinvite', 'addbot', 'join', 'kikiinvite'],
   async run(message, args, client) {
     const response = buildInviteResponse(client);
     await message.reply(response);

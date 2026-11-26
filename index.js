@@ -74,10 +74,20 @@ client.login(TOKEN).catch(err => {
 });
 
 // ── Graceful Shutdown & Safe State Persistence ──────────────────
-function onShutdown(signal) {
+let _shuttingDown = false;
+async function onShutdown(signal) {
+  if (_shuttingDown) return;
+  _shuttingDown = true;
   console.log(chalk.magenta(`\n  🔮 KIKI shutting down (${signal})... Saving all levels, XP and configs!\n`));
   try {
     require('./utils/leveling.js').saveNow();
+  } catch {}
+  try {
+    const CloudSync = require('./utils/cloudSync.js');
+    await Promise.race([
+      CloudSync.pushToDiscord(client, true),
+      new Promise(r => setTimeout(r, 4000))
+    ]);
   } catch {}
   try {
     client.destroy();

@@ -1,4 +1,4 @@
-﻿const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
 module.exports = {
   data: new SlashCommandBuilder().setName('userinfo').setDescription('👤 Detailed user information')
@@ -19,13 +19,19 @@ module.exports = {
   },
   name: 'userinfo', aliases: ['ui', 'whois'],
   async run(message, args) {
-    const member = message.mentions.members.first() || message.member;
+    const cleanId = args[0]?.replace(/[<@!>]/g, '');
+    const member = message.mentions?.members?.first?.()
+      || (cleanId && /^\d{17,20}$/.test(cleanId) ? await message.guild.members.fetch(cleanId).catch(() => null) : null)
+      || message.member;
     const user = member.user;
-    const embed = KikiEmbed.purple(`User Info - ${user.tag}`)
-      .setThumbnail(user.displayAvatarURL())
+    const roles = member.roles?.cache?.filter(r => r.id !== message.guild.id).map(r => r.toString()).slice(0, 15) || [];
+    const embed = KikiEmbed.purple(`User Info - ${user.tag}`, `ID: \`${user.id}\``)
+      .setThumbnail(user.displayAvatarURL({ dynamic: true }))
       .addFields(
-        { name: 'ID', value: user.id, inline: true },
-        { name: 'Joined', value: member.joinedAt.toDateString(), inline: true }
+        { name: '📅 Joined Server', value: member.joinedTimestamp ? `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>` : 'Unknown', inline: true },
+        { name: '📆 Account Created', value: `<t:${Math.floor(user.createdTimestamp / 1000)}:R>`, inline: true },
+        { name: '🤖 Is Bot', value: user.bot ? 'Yes' : 'No', inline: true },
+        { name: `🏷️ Roles (${Math.max(0, (member.roles?.cache?.size || 1) - 1)})`, value: roles.length ? roles.join(' ') : 'None', inline: false }
       );
     message.reply({ embeds: [embed] });
   }

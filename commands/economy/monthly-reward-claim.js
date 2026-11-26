@@ -1,30 +1,36 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+const Economy = require('../../utils/economy.js');
+const KIKI = require('../../utils/kiki.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('monthly-reward-claim')
-    .setDescription('🏆 Claim monthly elite coin jackpot')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('🏆 Claim monthly elite coin jackpot'),
+
+  aliases: ['monthly', 'claimmonthly'],
+  name: 'monthly-reward-claim',
 
   async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('🏆 MONTHLY-REWARD-CLAIM',
-      '**Action:** Claim monthly elite coin jackpot\n' +
-      '**Status:** Successfully processed\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
+    const res = Economy.claimMonthly(interaction.guildId, interaction.user.id);
+    if (res.cooldown) {
+      const wait = KIKI.formatDuration(res.remainingMs);
+      return interaction.reply({ embeds: [KikiEmbed.error('Monthly Cooldown ⏳', `Aap apna monthly jackpot claim kar chuke hain!\nNext claim in: **${wait}**`)] });
+    }
+    const embed = KikiEmbed.success('Monthly Jackpot Claimed! 🏆',
+      `${res.message}\n\n**New Wallet:** \`${res.wallet.toLocaleString()} Coins\``
     );
     await interaction.reply({ embeds: [embed] });
   },
-  name: 'monthly-reward-claim',
-  aliases: ['k-monthly-reward-claim', 'monthlyrewardclaim'],
+
   async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('🏆 MONTHLY-REWARD-CLAIM',
-      '**Command:** `monthly-reward-claim`\n' +
-      '**Description:** Claim monthly elite coin jackpot\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
+    const res = Economy.claimMonthly(message.guild.id, message.author.id);
+    if (res.cooldown) {
+      const wait = KIKI.formatDuration(res.remainingMs);
+      return message.reply({ embeds: [KikiEmbed.error('Monthly Cooldown ⏳', `Aap apna monthly jackpot claim kar chuke hain!\nNext claim in: **${wait}**`)] });
+    }
+    const embed = KikiEmbed.success('Monthly Jackpot Claimed! 🏆',
+      `${res.message}\n\n**New Wallet:** \`${res.wallet.toLocaleString()} Coins\``
     );
     message.reply({ embeds: [embed] });
   }

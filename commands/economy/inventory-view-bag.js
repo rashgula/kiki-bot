@@ -11,20 +11,21 @@ module.exports = {
   name: 'inventory-view-bag',
 
   async execute(interaction, client) {
-    const items = Economy.getInventory(interaction.guildId, interaction.user.id);
-    const desc = items.length === 0 ?
-      'Aapka gothic bag bilkul khali hai! \`&shop\` se items khareedein.' :
-      items.map(i => `• **${i.name}** ×${i.count}\n  *${i.desc}*`).join('\n\n');
+    const target = interaction.user;
+    const items = Economy.getInventoryList(interaction.guildId, target.id);
+    const desc = items.length === 0
+      ? 'Aapka gothic bag bilkul khali hai! `&shop` se items khareedein.'
+      : items.map(i => `• **${i.name}** (\`${i.id}\`) ×${i.count}\n  *${i.desc}*`).join('\n\n');
 
-    const embed = KikiEmbed.purple(`🎒 Inventory: ${interaction.user.username}`, desc);
+    const embed = KikiEmbed.purple(`🎒 Inventory: ${target.username}`, desc);
     await interaction.reply({ embeds: [embed] });
   },
 
   async run(message, args, client) {
-    const items = Economy.getInventory(message.guild.id, message.author.id);
-    const desc = items.length === 0 ?
-      'Aapka gothic bag bilkul khali hai! `&shop` se items khareedein.' :
-      items.map(i => `• **${i.name}** ×${i.count}\n  *${i.desc}*`).join('\n\n');
+    const items = Economy.getInventoryList(message.guild.id, message.author.id);
+    const desc = items.length === 0
+      ? 'Aapka gothic bag bilkul khali hai! `&shop` se items khareedein.'
+      : items.map(i => `• **${i.name}** (\`${i.id}\`) ×${i.count}\n  *${i.desc}*`).join('\n\n');
 
     const embed = KikiEmbed.purple(`🎒 Inventory: ${message.author.username}`, desc);
     message.reply({ embeds: [embed] });

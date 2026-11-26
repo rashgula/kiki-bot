@@ -51,8 +51,11 @@ function buildPanelEmbed(guild = null, statusNotice = null) {
   return embed;
 }
 
-function buildPanelComponents() {
+function buildPanelComponents(guild = null) {
   const cfg = KIKI.loadConfig();
+  const gData = (guild ? cfg.guilds?.[guild.id] : null) || {};
+  const isAlertsOn = gData.chat_level_alerts !== undefined ? gData.chat_level_alerts : (cfg.chat_level_alerts !== false);
+  const isXpOn = gData.chat_xp_enabled !== undefined ? gData.chat_xp_enabled : (cfg.chat_xp_enabled !== false);
 
   // Row 1: Channel Selector
   const channelSelect = new ChannelSelectMenuBuilder()
@@ -64,14 +67,14 @@ function buildPanelComponents() {
   // Row 2: Control Buttons with Animated Custom Emojis
   const alertBtn = new ButtonBuilder()
     .setCustomId('cl_btn_alerts')
-    .setLabel(cfg.chat_level_alerts !== false ? 'Disable Alerts' : 'Enable Alerts')
-    .setStyle(cfg.chat_level_alerts !== false ? ButtonStyle.Danger : ButtonStyle.Success)
-    .setEmoji(cfg.chat_level_alerts !== false ? KikiEmojis.btn('cross') : KikiEmojis.btn('sparkle'));
+    .setLabel(isAlertsOn ? 'Disable Alerts' : 'Enable Alerts')
+    .setStyle(isAlertsOn ? ButtonStyle.Danger : ButtonStyle.Success)
+    .setEmoji(isAlertsOn ? KikiEmojis.btn('cross') : KikiEmojis.btn('sparkle'));
 
   const xpBtn = new ButtonBuilder()
     .setCustomId('cl_btn_xp')
-    .setLabel(cfg.chat_xp_enabled !== false ? 'Pause Chat XP' : 'Resume Chat XP')
-    .setStyle(cfg.chat_xp_enabled !== false ? ButtonStyle.Secondary : ButtonStyle.Success)
+    .setLabel(isXpOn ? 'Pause Chat XP' : 'Resume Chat XP')
+    .setStyle(isXpOn ? ButtonStyle.Secondary : ButtonStyle.Success)
     .setEmoji(KikiEmojis.btn('fire'));
 
   const clearBtn = new ButtonBuilder()
@@ -108,8 +111,8 @@ module.exports = {
       });
     }
 
-    const embed = buildPanelEmbed();
-    const components = buildPanelComponents();
+    const embed = buildPanelEmbed(interaction.guild);
+    const components = buildPanelComponents(interaction.guild);
     await interaction.reply({ embeds: [embed], components });
   },
 
@@ -126,7 +129,7 @@ module.exports = {
 
     // ── CLI Subcommands ─────────────────────────────────────────────
     if (sub === 'channel' || sub === 'setchannel') {
-      const ch = message.mentions.channels.first() || message.guild.channels.cache.get(args[1]);
+      const ch = message.mentions?.channels?.first?.() || (args[1] ? message.guild.channels.cache.get(args[1].replace(/[<#>]/g, '')) : null);
       if (!ch) return message.reply('Channel mention karein! Jaise: `&chatlevelpanel channel #chat-levels`');
 
       const cfg = KIKI.loadConfig();
@@ -170,7 +173,7 @@ module.exports = {
 
     // Default: Open Interactive UI Panel
     const embed = buildPanelEmbed(message.guild);
-    const components = buildPanelComponents();
+    const components = buildPanelComponents(message.guild);
     await message.channel.send({ embeds: [embed], components });
   },
 
@@ -198,7 +201,7 @@ module.exports = {
 
       const notice = `✅ **Channel Bound!** Chat level-up notifications ab <#${selectedChannelId}> me aayenge.`;
       const embed = buildPanelEmbed(guild, notice);
-      const components = buildPanelComponents();
+      const components = buildPanelComponents(guild);
       return interaction.update({ embeds: [embed], components });
     }
 
@@ -210,7 +213,7 @@ module.exports = {
 
       const notice = `🔔 **Alerts:** Level-up celebration cards are now **${!current ? 'ENABLED' : 'DISABLED'}**.`;
       const embed = buildPanelEmbed(guild, notice);
-      const components = buildPanelComponents();
+      const components = buildPanelComponents(guild);
       return interaction.update({ embeds: [embed], components });
     }
 
@@ -222,7 +225,7 @@ module.exports = {
 
       const notice = `⚡ **Chat XP:** Chat tracking is now **${!current ? 'ACTIVE' : 'PAUSED'}**.`;
       const embed = buildPanelEmbed(guild, notice);
-      const components = buildPanelComponents();
+      const components = buildPanelComponents(guild);
       return interaction.update({ embeds: [embed], components });
     }
 
@@ -233,14 +236,14 @@ module.exports = {
 
       const notice = '🚫 Chat level-up announcement channel unset kar diya gaya hai.';
       const embed = buildPanelEmbed(guild, notice);
-      const components = buildPanelComponents();
+      const components = buildPanelComponents(guild);
       return interaction.update({ embeds: [embed], components });
     }
 
     // 5. Button: Refresh
     if (customId === 'cl_btn_refresh') {
       const embed = buildPanelEmbed(guild, '🔃 Panel refreshed!');
-      const components = buildPanelComponents();
+      const components = buildPanelComponents(guild);
       return interaction.update({ embeds: [embed], components });
     }
   }

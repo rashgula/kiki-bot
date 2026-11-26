@@ -1,21 +1,29 @@
 // KIKI Bot - Full Fun, Games, Social & Anime Actions Engine
 const fs = require('fs');
 const path = require('path');
+const CloudSync = require('./cloudSync.js');
 
-const MARRIAGE_FILE = path.join(__dirname, '..', 'data', 'marriages.json');
+const LEGACY_MARRIAGE_FILE = path.join(__dirname, '..', 'data', 'marriages.json');
+
+function getMarriageFile() {
+  const target = CloudSync.getDataFile('marriages.json');
+  if (!fs.existsSync(target) && fs.existsSync(LEGACY_MARRIAGE_FILE)) {
+    try {
+      const legacy = CloudSync.readJsonSafe(LEGACY_MARRIAGE_FILE, null);
+      if (legacy && typeof legacy === 'object') CloudSync.writeJsonAtomic(target, legacy);
+    } catch {}
+  }
+  return target;
+}
 
 function loadMarriages() {
-  try {
-    if (fs.existsSync(MARRIAGE_FILE)) {
-      return JSON.parse(fs.readFileSync(MARRIAGE_FILE, 'utf8'));
-    }
-  } catch {}
-  return {};
+  const data = CloudSync.readJsonSafe(getMarriageFile(), null);
+  return (data && typeof data === 'object') ? data : {};
 }
 
 function saveMarriages(data) {
   try {
-    fs.writeFileSync(MARRIAGE_FILE, JSON.stringify(data, null, 2), 'utf8');
+    CloudSync.writeJsonAtomic(getMarriageFile(), data);
   } catch {}
 }
 
@@ -374,6 +382,22 @@ const FunEngine = {
     const m = loadMarriages();
     const gKey = guildId || 'global';
     return m[gKey]?.[uId] || null;
+  },
+
+  getAllMarriages(guildId) {
+    const m = loadMarriages();
+    const gData = m[guildId || 'global'] || {};
+    const seen = new Set();
+    const couples = [];
+    for (const [u1, info] of Object.entries(gData)) {
+      if (!info?.partnerId) continue;
+      const pairKey = [u1, info.partnerId].sort().join(':');
+      if (seen.has(pairKey)) continue;
+      seen.add(pairKey);
+      couples.push({ user1: u1, user2: info.partnerId, date: info.date || Date.now() });
+    }
+    couples.sort((a, b) => a.date - b.date);
+    return couples;
   }
 };
 

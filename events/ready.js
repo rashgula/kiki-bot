@@ -51,6 +51,20 @@ module.exports = {
     console.log(chalk.italic.magenta(`\n  ${KIKI.randomQuote()}\n`));
     console.log(chalk.bold.green('  ✅ KIKI is ONLINE and ready to serve!\n'));
 
+    // ── 0. Restore Cloud State Snapshot before tickers & managers start ──
+    try {
+      const CloudSync = require('../utils/cloudSync.js');
+      await CloudSync.restoreFromDiscord(client);
+      if (!client._cloudSyncInterval) {
+        client._cloudSyncInterval = setInterval(() => {
+          CloudSync.pushToDiscord(client).catch(() => {});
+        }, 4 * 60 * 1000);
+        if (typeof client._cloudSyncInterval.unref === 'function') client._cloudSyncInterval.unref();
+      }
+    } catch (e) {
+      console.error(chalk.red('[CLOUD SYNC RESTORE ERROR]'), e.message);
+    }
+
     // ── 1. Start Voice XP Ticker IMMEDIATELY on boot ────────────
     try {
       require('../utils/leveling.js').initVoiceTicker(client);

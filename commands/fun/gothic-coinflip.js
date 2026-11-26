@@ -7,7 +7,7 @@ module.exports = {
     .setName('gothic-coinflip')
     .setDescription('🪙 Flip a gothic silver coin'),
 
-  aliases: ['coinflip', 'flip', 'coin'],
+  aliases: ['coin', 'gcoinflip'],
   name: 'gothic-coinflip',
 
   async execute(interaction, client) {

@@ -23,7 +23,7 @@ module.exports = {
   },
 
   async run(message, args, client) {
-    const opp = (message.mentions?.users?.first ? message.mentions.users.first() : null) || { username: 'Abyssal Daemon' };
+    const opp = message.mentions?.users?.first?.() || { username: 'Abyssal Daemon' };
     const res = GamesEngine.playDuel(message.author.username, opp.username);
     const embed = KikiEmbed.purple('⚔️ Gothic RPG Duel: ' + res.p1 + ' vs ' + res.p2,
       '**Combat Rounds:**\n' + res.log + '\n\n' +

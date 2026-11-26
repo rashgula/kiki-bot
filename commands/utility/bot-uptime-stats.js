@@ -1,31 +1,24 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+const KIKI = require('../../utils/kiki.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('bot-uptime-stats')
-    .setDescription('⏱️ Total uptime and operational duration')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('⏱️ View live process uptime and start time'),
 
-  async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('⏱️ BOT-UPTIME-STATS',
-      '**Action:** Total uptime and operational duration\n' +
-      '**Status:** Successfully processed\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    await interaction.reply({ embeds: [embed] });
-  },
-  name: 'bot-uptime-stats',
   aliases: ['k-bot-uptime-stats', 'botuptimestats'],
-  async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('⏱️ BOT-UPTIME-STATS',
-      '**Command:** `bot-uptime-stats`\n' +
-      '**Description:** Total uptime and operational duration\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    message.reply({ embeds: [embed] });
+  name: 'bot-uptime-stats',
+
+  async execute(interaction) {
+    const up = KIKI.formatDuration(process.uptime() * 1000);
+    const startedAt = Math.floor((Date.now() - process.uptime() * 1000) / 1000);
+    await interaction.reply({ embeds: [KikiEmbed.purple('⏱️ KIKI Uptime', `• **Running For:** \`${up}\`\n• **Started:** <t:${startedAt}:F> (<t:${startedAt}:R>)`)] });
+  },
+
+  async run(message) {
+    const up = KIKI.formatDuration(process.uptime() * 1000);
+    const startedAt = Math.floor((Date.now() - process.uptime() * 1000) / 1000);
+    message.reply({ embeds: [KikiEmbed.purple('⏱️ KIKI Uptime', `• **Running For:** \`${up}\`\n• **Started:** <t:${startedAt}:F> (<t:${startedAt}:R>)`)] });
   }
 };

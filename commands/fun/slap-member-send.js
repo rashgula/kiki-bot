@@ -19,7 +19,8 @@ module.exports = {
   },
 
   async run(message, args, client) {
-    const target = message.mentions.users.first();
+    const cleanId = args[0]?.replace(/[<@!>]/g, '');
+    const target = message.mentions?.users?.first?.() || (cleanId && /^\d{17,20}$/.test(cleanId) ? message.guild?.members?.cache.get(cleanId)?.user : null);
     const act = FunEngine.getAction('slap', message.author.username, target?.username || 'themselves');
     const embed = KikiEmbed.error('Shadow Slap! 👋', act.text).setImage(act.gif);
     message.reply({ embeds: [embed] });

@@ -159,7 +159,7 @@ module.exports = {
   },
 
   name: 'leavepanel',
-  aliases: ['leavechannel', 'setleave', 'setgoodbye', 'goodbyepanel', 'leaveconfig', 'lp'],
+  aliases: ['goodbyepanel', 'leaveconfig', 'lp'],
 
   async run(message, args, client) {
     if (!KIKI.isSafe(message.guild, message.author.id, client)) {
@@ -172,7 +172,7 @@ module.exports = {
 
     // CLI Subcommands: channel / setchannel
     if (sub === 'channel' || sub === 'setchannel') {
-      const ch = message.mentions.channels.first() || message.guild.channels.cache.get(args[1]);
+      const ch = message.mentions?.channels?.first?.() || (args[1] ? message.guild.channels.cache.get(args[1].replace(/[<#>]/g, '')) : null);
       if (!ch) return message.reply('Channel mention karein! Jaise: `&leavepanel channel #leave-logs`');
 
       const cfg = KIKI.loadConfig();

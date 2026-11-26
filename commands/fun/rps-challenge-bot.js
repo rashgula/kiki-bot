@@ -8,7 +8,7 @@ module.exports = {
     .setDescription('✂️ Play Rock Paper Scissors against KIKI')
     .addStringOption(o => o.setName('choice').setDescription('rock, paper, or scissors').setRequired(true)),
 
-  aliases: ['rps', 'rockpaperscissors'],
+  aliases: ['grps', 'rockpaperscissors'],
   name: 'rps-challenge-bot',
 
   async execute(interaction, client) {

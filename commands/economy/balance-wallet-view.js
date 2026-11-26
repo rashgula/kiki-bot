@@ -24,7 +24,10 @@ module.exports = {
   },
 
   async run(message, args, client) {
-    const target = (message.mentions?.users?.first ? message.mentions.users.first() : null) || message.author;
+    const cleanId = args[0]?.replace(/[<@!>]/g, '');
+    const target = message.mentions?.users?.first?.()
+      || (cleanId && /^\d{17,20}$/.test(cleanId) ? message.guild.members.cache.get(cleanId)?.user : null)
+      || message.author;
     const bal = Economy.getBalance(message.guild.id, target.id);
     const embed = KikiEmbed.purple(`💰 Gothic Vault: ${target.username}`,
       `**Wallet:** \`${(bal.wallet || 0).toLocaleString()} Gothic Coins\`\n` +

@@ -85,17 +85,6 @@
       "description": "Invite Tracker category and real-time logs channel setup",
       "author": "Owner",
       "timestamp": 1794744411998
-    },
-    {
-      "id": "lock",
-      "command": "&lock",
-      "name": "lock",
-      "args": [],
-      "guildId": "1563548609960742942",
-      "channelId": "1571504631639707678",
-      "author": "rrealrashgula",
-      "authorId": "989411027798089778",
-      "timestamp": 1794746710331
     }
   ],
   "updatedAt": 1794746710331

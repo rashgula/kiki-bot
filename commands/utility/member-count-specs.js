@@ -1,31 +1,32 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+
+function buildCountEmbed(guild) {
+  const total = guild.memberCount;
+  const cached = guild.members.cache;
+  const bots = cached.filter(m => m.user.bot).size;
+  const humans = Math.max(0, total - bots);
+  return KikiEmbed.purple(`👥 Member Count • ${guild.name}`,
+    `• **Total Members:** \`${total.toLocaleString()}\`\n` +
+    `• **Humans (est.):** \`${humans.toLocaleString()}\`\n` +
+    `• **Cached Bots:** \`${bots.toLocaleString()}\`\n` +
+    `• **Boosters:** \`${guild.premiumSubscriptionCount || 0}\``
+  );
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('member-count-specs')
-    .setDescription('👥 Human vs bot member count breakdown')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('👥 View human, bot, booster and total member breakdown'),
 
-  async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('👥 MEMBER-COUNT-SPECS',
-      '**Action:** Human vs bot member count breakdown\n' +
-      '**Status:** Successfully processed\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    await interaction.reply({ embeds: [embed] });
-  },
-  name: 'member-count-specs',
   aliases: ['k-member-count-specs', 'membercountspecs'],
-  async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('👥 MEMBER-COUNT-SPECS',
-      '**Command:** `member-count-specs`\n' +
-      '**Description:** Human vs bot member count breakdown\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    message.reply({ embeds: [embed] });
+  name: 'member-count-specs',
+
+  async execute(interaction) {
+    await interaction.reply({ embeds: [buildCountEmbed(interaction.guild)] });
+  },
+
+  async run(message) {
+    message.reply({ embeds: [buildCountEmbed(message.guild)] });
   }
 };

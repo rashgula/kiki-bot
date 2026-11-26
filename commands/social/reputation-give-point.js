@@ -1,31 +1,39 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+const Social = require('../../utils/social.js');
+const KIKI = require('../../utils/kiki.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('reputation-give-point')
-    .setDescription('⭐ Give positive reputation point to helpful member')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('⭐ Give positive reputation point to a helpful member')
+    .addUserOption(o => o.setName('user').setDescription('Member to commend').setRequired(true)),
 
-  async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('⭐ REPUTATION-GIVE-POINT',
-      '**Action:** Give positive reputation point to helpful member\n' +
-      '**Status:** Successfully processed\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    await interaction.reply({ embeds: [embed] });
+  async execute(interaction) {
+    const target = interaction.options.getUser('user');
+    if (target.bot) return interaction.reply({ embeds: [KikiEmbed.error('Invalid Target', 'Bots ko rep nahi de sakte!')] });
+    const res = Social.giveRep(interaction.guildId, interaction.user.id, target.id);
+    if (res.cooldown) {
+      return interaction.reply({ embeds: [KikiEmbed.error('Rep Cooldown ⏳', `Agla rep point dene ke liye **${KIKI.formatDuration(res.remainingMs)}** wait karein!`)] });
+    }
+    if (!res.success) return interaction.reply({ embeds: [KikiEmbed.error('Rep Error', res.message)] });
+    await interaction.reply({ embeds: [KikiEmbed.success('Reputation Given ⭐', `${interaction.user.toString()} ne ${target.toString()} ko **+1 Reputation** diya!\n**Total Rep:** \`${res.rep} ⭐\``)] });
   },
+
   name: 'reputation-give-point',
-  aliases: ['k-reputation-give-point', 'reputationgivepoint'],
+  aliases: ['k-reputation-give-point', 'reputationgivepoint', 'rep'],
   async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('⭐ REPUTATION-GIVE-POINT',
-      '**Command:** `reputation-give-point`\n' +
-      '**Description:** Give positive reputation point to helpful member\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    message.reply({ embeds: [embed] });
+    const cleanId = args[0]?.replace(/[<@!>]/g, '');
+    const target = message.mentions?.users?.first?.()
+      || (cleanId && /^\d{17,20}$/.test(cleanId) ? await client.users.fetch(cleanId).catch(() => null) : null);
+    if (!target || target.bot) {
+      return message.reply({ embeds: [KikiEmbed.warn('Usage', '`&rep @user` (kisi member ko mention karein! Check karne ke liye `&checkrep @user`)')] });
+    }
+    const res = Social.giveRep(message.guild.id, message.author.id, target.id);
+    if (res.cooldown) {
+      return message.reply({ embeds: [KikiEmbed.error('Rep Cooldown ⏳', `Agla rep point dene ke liye **${KIKI.formatDuration(res.remainingMs)}** wait karein!`)] });
+    }
+    if (!res.success) return message.reply({ embeds: [KikiEmbed.error('Rep Error', res.message)] });
+    message.reply({ embeds: [KikiEmbed.success('Reputation Given ⭐', `${message.author.toString()} ne ${target.toString()} ko **+1 Reputation** diya!\n**Total Rep:** \`${res.rep} ⭐\``)] });
   }
 };

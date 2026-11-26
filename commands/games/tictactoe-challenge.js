@@ -22,7 +22,7 @@ module.exports = {
   },
 
   async run(message, args, client) {
-    const opp = (message.mentions?.users?.first ? message.mentions.users.first() : null) || { username: 'KIKI Shadow AI' };
+    const opp = message.mentions?.users?.first?.() || { username: 'KIKI Shadow AI' };
     const res = GamesEngine.playTicTacToe(message.author.username, opp.username);
     const embed = KikiEmbed.purple('❌ Tic-Tac-Toe: ' + res.p1 + ' vs ' + res.p2,
       '**Final Board:**\n' + res.grid + '\n\n' +

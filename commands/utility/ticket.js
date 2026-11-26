@@ -1,12 +1,6 @@
-﻿const { SlashCommandBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
+const { SlashCommandBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
-const fs = require('fs');
-const path = require('path');
-
-function getCfg() {
-  const p = path.join(__dirname, '../../data/config.json');
-  return JSON.parse(fs.readFileSync(p, 'utf-8'));
-}
+const KIKI = require('../../utils/kiki.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -40,9 +34,10 @@ module.exports = {
   },
 
   async handleButton(interaction, client) {
-    const cfg = getCfg();
     const guild = interaction.guild;
-    const channelName = `ticket-${interaction.user.username.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+    const staffRoleId = KIKI.getGuildConfig(guild.id, 'staff_role_id');
+    const ticketCategoryId = KIKI.getGuildConfig(guild.id, 'ticket_category_id');
+    const channelName = `ticket-${interaction.user.username.toLowerCase().replace(/[^a-z0-9]/g, '') || interaction.user.id.slice(-4)}`;
 
     const existing = guild.channels.cache.find(c => c.name === channelName);
     if (existing) {
@@ -55,14 +50,15 @@ module.exports = {
       { id: client.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ManageChannels] }
     ];
 
-    if (cfg.staff_role_id) {
-      overwrites.push({ id: cfg.staff_role_id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] });
+    if (staffRoleId && guild.roles.cache.has(staffRoleId)) {
+      overwrites.push({ id: staffRoleId, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] });
     }
 
+    const validCategory = ticketCategoryId && guild.channels.cache.has(ticketCategoryId) ? ticketCategoryId : null;
     const ticketChannel = await guild.channels.create({
       name: channelName,
       type: ChannelType.GuildText,
-      parent: cfg.ticket_category_id || null,
+      parent: validCategory,
       permissionOverwrites: overwrites,
       reason: `Ticket created for ${interaction.user.tag}`
     });

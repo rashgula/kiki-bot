@@ -1,31 +1,28 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+
+function toBinary(text) {
+  return [...Buffer.from(text, 'utf8')].map(b => b.toString(2).padStart(8, '0')).join(' ');
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('binary-encode-str')
-    .setDescription('💻 Encode plain text string to binary digits')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('💾 Convert text into 8-bit binary')
+    .addStringOption(o => o.setName('text').setDescription('Text to encode').setRequired(true)),
 
-  async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('💻 BINARY-ENCODE-STR',
-      '**Action:** Encode plain text string to binary digits\n' +
-      '**Status:** Successfully processed\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    await interaction.reply({ embeds: [embed] });
-  },
+  aliases: ['k-binary-encode-str', 'binaryencodestr', 'binaryencode'],
   name: 'binary-encode-str',
-  aliases: ['k-binary-encode-str', 'binaryencodestr'],
-  async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('💻 BINARY-ENCODE-STR',
-      '**Command:** `binary-encode-str`\n' +
-      '**Description:** Encode plain text string to binary digits\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    message.reply({ embeds: [embed] });
+
+  async execute(interaction) {
+    const out = toBinary(interaction.options.getString('text'));
+    await interaction.reply({ embeds: [KikiEmbed.purple('💾 Binary Encoded', `\`\`\`\n${out.slice(0, 1900)}\n\`\`\``)] });
+  },
+
+  async run(message, args) {
+    const text = args.join(' ');
+    if (!text) return message.reply({ embeds: [KikiEmbed.warn('Usage', '`&binaryencode KIKI`')] });
+    const out = toBinary(text);
+    message.reply({ embeds: [KikiEmbed.purple('💾 Binary Encoded', `\`\`\`\n${out.slice(0, 1900)}\n\`\`\``)] });
   }
 };

@@ -1,31 +1,28 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+
+function fromBinary(bin) {
+  const bytes = String(bin || '').trim().split(/\s+/).filter(Boolean).map(b => parseInt(b, 2)).filter(n => !isNaN(n));
+  return Buffer.from(bytes).toString('utf8');
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('binary-decode-str')
-    .setDescription('💻 Decode binary digits string to plain text')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('💾 Decode 8-bit binary back into plain text')
+    .addStringOption(o => o.setName('binary').setDescription('Space-separated binary bytes').setRequired(true)),
 
-  async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('💻 BINARY-DECODE-STR',
-      '**Action:** Decode binary digits string to plain text\n' +
-      '**Status:** Successfully processed\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    await interaction.reply({ embeds: [embed] });
-  },
+  aliases: ['k-binary-decode-str', 'binarydecodestr', 'binarydecode'],
   name: 'binary-decode-str',
-  aliases: ['k-binary-decode-str', 'binarydecodestr'],
-  async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('💻 BINARY-DECODE-STR',
-      '**Command:** `binary-decode-str`\n' +
-      '**Description:** Decode binary digits string to plain text\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    message.reply({ embeds: [embed] });
+
+  async execute(interaction) {
+    const out = fromBinary(interaction.options.getString('binary'));
+    await interaction.reply({ embeds: [KikiEmbed.purple('💾 Binary Decoded', `\`\`\`\n${(out || '[Invalid binary]').slice(0, 1900)}\n\`\`\``)] });
+  },
+
+  async run(message, args) {
+    if (!args.length) return message.reply({ embeds: [KikiEmbed.warn('Usage', '`&binarydecode 01001011 01001001`')] });
+    const out = fromBinary(args.join(' '));
+    message.reply({ embeds: [KikiEmbed.purple('💾 Binary Decoded', `\`\`\`\n${(out || '[Invalid binary]').slice(0, 1900)}\n\`\`\``)] });
   }
 };

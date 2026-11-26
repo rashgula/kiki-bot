@@ -25,13 +25,13 @@ module.exports = {
     const guild = interaction.guild;
     const userData = Leveling.getUser(guild.id, targetUser.id);
 
-    const currentLevel = userData.level || Leveling.getLevelFromXp(userData.xp);
-    const currentXp = userData.xp || 0;
+    const currentLevel = userData.level ?? Leveling.getLevelFromXp(userData.xp);
+    const currentXp = Math.max(0, userData.xp || 0);
     const prevLvlXp = Leveling.getXpForLevel(currentLevel);
     const nextLvlXp = Leveling.getXpForLevel(currentLevel + 1);
 
-    const xpInCurrentLevel = currentXp - prevLvlXp;
-    const xpNeededForNext = nextLvlXp - prevLvlXp;
+    const xpInCurrentLevel = Math.max(0, currentXp - prevLvlXp);
+    const xpNeededForNext = Math.max(1, nextLvlXp - prevLvlXp);
     const progressBar = createProgressBar(xpInCurrentLevel, xpNeededForNext);
 
     // Get Leaderboard Position
@@ -39,9 +39,8 @@ module.exports = {
     const rankIndex = leaderboard.findIndex(u => u.userId === targetUser.id);
     const rankDisplay = rankIndex !== -1 ? `#${rankIndex + 1}` : 'Unranked';
 
-    // Check currently unlocked role and next role unlock
-    const cfg = KIKI.loadConfig();
-    const levelRoles = cfg.level_roles || {};
+    // Check currently unlocked role and next role unlock (Per-Guild Isolated)
+    const levelRoles = KIKI.getGuildLevelRoles(guild);
     let unlockedRoleDisplay = '`None` *(Roles unlock at Level 5+)*';
 
     const descendingLevels = Object.keys(levelRoles).map(Number).sort((a, b) => b - a);
@@ -86,11 +85,12 @@ module.exports = {
   name: 'rank',
   aliases: ['level', 'vcrank', 'vclevel', 'xp'],
   async run(message, args) {
-    let targetUser = message.mentions?.users?.first();
+    let targetUser = message.mentions?.users?.first?.();
     if (!targetUser && args[0]) {
       const cleanId = args[0].replace(/[<@!>]/g, '');
-      const m = message.guild.members.cache.get(cleanId) ||
-        await message.guild.members.fetch(cleanId).catch(() => null);
+      const m = message.guild.members.cache.get(cleanId)
+        || message.guild.members.cache.find(mem => mem.user.username.toLowerCase() === args.join(' ').toLowerCase() || mem.displayName.toLowerCase() === args.join(' ').toLowerCase())
+        || await message.guild.members.fetch(cleanId).catch(() => null);
       if (m) targetUser = m.user;
     }
     if (!targetUser) targetUser = message.author;
@@ -98,13 +98,13 @@ module.exports = {
     const guild = message.guild;
     const userData = Leveling.getUser(guild.id, targetUser.id);
 
-    const currentLevel = userData.level || Leveling.getLevelFromXp(userData.xp);
-    const currentXp = userData.xp || 0;
+    const currentLevel = userData.level ?? Leveling.getLevelFromXp(userData.xp);
+    const currentXp = Math.max(0, userData.xp || 0);
     const prevLvlXp = Leveling.getXpForLevel(currentLevel);
     const nextLvlXp = Leveling.getXpForLevel(currentLevel + 1);
 
-    const xpInCurrentLevel = currentXp - prevLvlXp;
-    const xpNeededForNext = nextLvlXp - prevLvlXp;
+    const xpInCurrentLevel = Math.max(0, currentXp - prevLvlXp);
+    const xpNeededForNext = Math.max(1, nextLvlXp - prevLvlXp);
     const progressBar = createProgressBar(xpInCurrentLevel, xpNeededForNext);
 
     // Get Leaderboard Position
@@ -112,9 +112,8 @@ module.exports = {
     const rankIndex = leaderboard.findIndex(u => u.userId === targetUser.id);
     const rankDisplay = rankIndex !== -1 ? `#${rankIndex + 1}` : 'Unranked';
 
-    // Check currently unlocked role and next role unlock
-    const cfg = KIKI.loadConfig();
-    const levelRoles = cfg.level_roles || {};
+    // Check currently unlocked role and next role unlock (Per-Guild Isolated)
+    const levelRoles = KIKI.getGuildLevelRoles(guild);
     let unlockedRoleDisplay = '`None` *(Roles unlock at Level 5+)*';
 
     const descendingLevels = Object.keys(levelRoles).map(Number).sort((a, b) => b - a);

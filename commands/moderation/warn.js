@@ -67,7 +67,7 @@ module.exports = {
     if (!message.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
       return message.reply({ embeds: [KikiEmbed.error('No Permission', 'You need **Moderate Members** permission.')] });
     }
-    const target = message.mentions.users.first();
+    const target = message.mentions?.users?.first?.() || (args[0] ? await client.users.fetch(args[0].replace(/[<@!>]/g, '')).catch(() => null) : null);
     if (!target) return message.reply({ embeds: [KikiEmbed.error('Invalid User', 'Please mention a user to warn.')] });
     const reason = args.slice(1).join(' ');
     if (!reason) return message.reply({ embeds: [KikiEmbed.error('Missing Reason', 'Please provide a reason for the warning.')] });

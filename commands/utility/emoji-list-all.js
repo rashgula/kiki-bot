@@ -1,31 +1,30 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+
+function buildEmojiList(guild) {
+  const emojis = [...guild.emojis.cache.values()];
+  const animated = emojis.filter(e => e.animated).length;
+  const staticCount = emojis.length - animated;
+  const preview = emojis.slice(0, 45).map(e => `${e.toString()} \`:${e.name}:\``).join('  ');
+  return KikiEmbed.purple(`🎭 Server Emojis • ${guild.name} (${emojis.length})`,
+    `**Animated:** \`${animated}\` | **Static:** \`${staticCount}\`\n\n` +
+    (emojis.length ? preview + (emojis.length > 45 ? `\n\n*...and ${emojis.length - 45} more emojis*` : '') : 'Server me abhi koi custom emoji nahi hai.')
+  );
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('emoji-list-all')
-    .setDescription('😀 Catalog of custom server emojis and IDs')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('🎭 List custom emojis in this server'),
 
-  async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('😀 EMOJI-LIST-ALL',
-      '**Action:** Catalog of custom server emojis and IDs\n' +
-      '**Status:** Successfully processed\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    await interaction.reply({ embeds: [embed] });
-  },
+  aliases: ['k-emoji-list-all', 'emojilistall', 'emojis'],
   name: 'emoji-list-all',
-  aliases: ['k-emoji-list-all', 'emojilistall'],
-  async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('😀 EMOJI-LIST-ALL',
-      '**Command:** `emoji-list-all`\n' +
-      '**Description:** Catalog of custom server emojis and IDs\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    message.reply({ embeds: [embed] });
+
+  async execute(interaction) {
+    await interaction.reply({ embeds: [buildEmojiList(interaction.guild)] });
+  },
+
+  async run(message) {
+    message.reply({ embeds: [buildEmojiList(message.guild)] });
   }
 };

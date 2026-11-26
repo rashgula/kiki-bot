@@ -36,16 +36,17 @@ module.exports = {
   },
 
   name: 'invites',
-  aliases: ['invite', 'invs', 'myinvites', 'invitetracker-check'],
+  aliases: ['invs', 'myinvites', 'invitetracker-check'],
   description: 'Check your or another member\'s invite stats',
   category: 'utility',
   usage: '&invites [@user]',
 
-  async run(client, message, args) {
+  async run(message, args, client) {
     let targetUser = message.author;
-    if (message.mentions.users.first()) {
-      targetUser = message.mentions.users.first();
-    } else if (args[0] && !isNaN(args[0])) {
+    const mentioned = message.mentions?.users?.first?.();
+    if (mentioned) {
+      targetUser = mentioned;
+    } else if (args[0] && /^\d{17,20}$/.test(args[0])) {
       targetUser = await client.users.fetch(args[0]).catch(() => message.author);
     }
 

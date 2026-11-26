@@ -18,7 +18,7 @@ module.exports = {
       return interaction.reply({ embeds: [KikiEmbed.error('Work Cooldown ⏳', `Aap thak chuke hain! Agle shift ke liye **${wait}** aaram karein.`)] });
     }
     const embed = KikiEmbed.success(res.job,
-      `${res.desc}\n\n**Earned:** \`+${res.amount.toLocaleString()} Gothic Coins\`\n**New Wallet:** \`${res.wallet.toLocaleString()} Coins\\`
+      `${res.desc}\n\n**Earned:** \`+${res.amount.toLocaleString()} Gothic Coins\`\n**New Wallet:** \`${res.wallet.toLocaleString()} Coins\``
     );
     await interaction.reply({ embeds: [embed] });
   },
@@ -30,7 +30,7 @@ module.exports = {
       return message.reply({ embeds: [KikiEmbed.error('Work Cooldown ⏳', `Aap thak chuke hain! Agle shift ke liye **${wait}** aaram karein.`)] });
     }
     const embed = KikiEmbed.success(res.job,
-      `${res.desc}\n\n**Earned:** \`+${res.amount.toLocaleString()} Gothic Coins\`\n**New Wallet:** \`${res.wallet.toLocaleString()} Coins\\`
+      `${res.desc}\n\n**Earned:** \`+${res.amount.toLocaleString()} Gothic Coins\`\n**New Wallet:** \`${res.wallet.toLocaleString()} Coins\``
     );
     message.reply({ embeds: [embed] });
   }

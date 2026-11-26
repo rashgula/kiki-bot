@@ -368,8 +368,7 @@ const VoiceMaster = {
             try {
               const info = tempChannels.get(oldChannelId);
               const durationMs = info?.createdAt ? Date.now() - info.createdAt : 0;
-              const durationSec = Math.floor(durationMs / 1000);
-              const durationStr = KIKI.formatDuration(durationSec);
+              const durationStr = KIKI.formatDuration(durationMs);
 
               tempChannels.delete(oldChannelId);
               saveTempData();

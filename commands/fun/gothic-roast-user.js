@@ -8,7 +8,7 @@ module.exports = {
     .setDescription('🔥 Deliver a savage gothic roast')
     .addUserOption(o => o.setName('user').setDescription('Target to roast')),
 
-  aliases: ['roast', 'burn'],
+  aliases: ['groast', 'burn'],
   name: 'gothic-roast-user',
 
   async execute(interaction, client) {
@@ -19,7 +19,7 @@ module.exports = {
   },
 
   async run(message, args, client) {
-    const target = message.mentions.users.first() || message.author;
+    const target = message.mentions?.users?.first?.() || message.author;
     const r = FunEngine.getRoast(target.username);
     const embed = KikiEmbed.error(`🔥 Roast for ${target.username}`, r);
     message.reply({ embeds: [embed] });

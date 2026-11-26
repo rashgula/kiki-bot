@@ -9,8 +9,20 @@ const chalk = require('chalk');
 const KikiEmbed = require('./embed.js');
 const KIKI = require('./kiki.js');
 const config = require('../config.js');
+const CloudSync = require('./cloudSync.js');
 
-const DB_PATH = path.join(__dirname, '../data/invites.json');
+const LEGACY_DB_PATH = path.join(__dirname, '../data/invites.json');
+
+function getDbPath() {
+  const target = CloudSync.getDataFile('invites.json');
+  if (!fs.existsSync(target) && fs.existsSync(LEGACY_DB_PATH)) {
+    try {
+      const legacy = CloudSync.readJsonSafe(LEGACY_DB_PATH, null);
+      if (legacy && typeof legacy === 'object') CloudSync.writeJsonAtomic(target, legacy);
+    } catch {}
+  }
+  return target;
+}
 
 // In-memory invite caches:
 // invitesCache: Map<guildId, Collection<code, { code, uses, inviterId, inviterTag, maxUses }>>
@@ -19,22 +31,20 @@ const invitesCache = new Map();
 const vanityCache = new Map();
 
 function loadData() {
-  if (!fs.existsSync(DB_PATH)) {
-    const initial = { guilds: {} };
-    fs.writeFileSync(DB_PATH, JSON.stringify(initial, null, 2), 'utf-8');
-    return initial;
+  const dbPath = getDbPath();
+  const parsed = CloudSync.readJsonSafe(dbPath, null);
+  if (parsed && typeof parsed === 'object') {
+    if (!parsed.guilds) parsed.guilds = {};
+    return parsed;
   }
-  try {
-    return JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
-  } catch (err) {
-    console.error(chalk.red('[INVITE TRACKER LOAD ERROR]'), err.message);
-    return { guilds: {} };
-  }
+  const initial = { guilds: {} };
+  CloudSync.writeJsonAtomic(dbPath, initial);
+  return initial;
 }
 
 function saveData(data) {
   try {
-    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), 'utf-8');
+    CloudSync.writeJsonAtomic(getDbPath(), data);
   } catch (err) {
     console.error(chalk.red('[INVITE TRACKER SAVE ERROR]'), err.message);
   }

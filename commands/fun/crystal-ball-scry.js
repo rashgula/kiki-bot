@@ -1,31 +1,24 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+const FunEngine = require('../../utils/funEngine.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('crystal-ball-scry')
-    .setDescription('🔮 Scry into deep purple amethyst sphere')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('🔮 Gaze into the crystal ball for an omen')
+    .addStringOption(o => o.setName('question').setDescription('What do you wish to foresee?')),
 
-  async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('🔮 CRYSTAL-BALL-SCRY',
-      '**Action:** Scry into deep purple amethyst sphere\n' +
-      '**Status:** Successfully processed\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    await interaction.reply({ embeds: [embed] });
-  },
+  aliases: ['k-crystal-ball-scry', 'crystalballscry', 'scry'],
   name: 'crystal-ball-scry',
-  aliases: ['k-crystal-ball-scry', 'crystalballscry'],
-  async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('🔮 CRYSTAL-BALL-SCRY',
-      '**Command:** `crystal-ball-scry`\n' +
-      '**Description:** Scry into deep purple amethyst sphere\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    message.reply({ embeds: [embed] });
+
+  async execute(interaction) {
+    const q = interaction.options.getString('question');
+    const res = FunEngine.get8Ball(q);
+    await interaction.reply({ embeds: [KikiEmbed.purple('🔮 Crystal Ball Scry', `**Question:** *${res.question}*\n**Vision:** ${res.answer}`)] });
+  },
+
+  async run(message, args) {
+    const res = FunEngine.get8Ball(args.join(' '));
+    message.reply({ embeds: [KikiEmbed.purple('🔮 Crystal Ball Scry', `**Question:** *${res.question}*\n**Vision:** ${res.answer}`)] });
   }
 };

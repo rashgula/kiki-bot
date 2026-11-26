@@ -43,9 +43,9 @@ module.exports = {
     if (!message.member.permissions.has(PermissionFlagsBits.BanMembers)) {
       return message.reply({ embeds: [KikiEmbed.error('No Permission', 'You need **Ban Members** permission.')] });
     }
-    const target = message.mentions.users.first() || (args[0] ? await client.users.fetch(args[0]).catch(() => null) : null);
+    const target = message.mentions?.users?.first?.() || (args[0] ? await client.users.fetch(args[0]).catch(() => null) : null);
     if (!target) return message.reply({ embeds: [KikiEmbed.error('Invalid User', 'Please mention a user or provide a valid ID.')] });
-    const reason = args.slice(message.mentions.users.size ? 1 : 1).join(' ') || 'No reason provided';
+    const reason = args.slice((message.mentions?.users?.size || 0) ? 1 : 1).join(' ') || 'No reason provided';
     const member = message.guild.members.cache.get(target.id);
 
     if (member) {

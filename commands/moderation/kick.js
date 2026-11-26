@@ -40,7 +40,7 @@ module.exports = {
     if (!message.member.permissions.has(PermissionFlagsBits.KickMembers)) {
       return message.reply({ embeds: [KikiEmbed.error('No Permission', 'You need **Kick Members** permission.')] });
     }
-    const target = message.mentions.members.first();
+    const target = message.mentions?.members?.first?.() || (args[0] ? await message.guild.members.fetch(args[0].replace(/[<@!>]/g, '')).catch(() => null) : null);
     if (!target) return message.reply({ embeds: [KikiEmbed.error('Invalid User', 'Please mention a member to kick.')] });
     const reason = args.slice(1).join(' ') || 'No reason provided';
 

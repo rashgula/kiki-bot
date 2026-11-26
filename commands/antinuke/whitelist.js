@@ -99,7 +99,7 @@ module.exports = {
 
     // 1. ADD
     if (action === 'add') {
-      let targetUser = message.mentions.users.first();
+      let targetUser = message.mentions?.users?.first?.();
       const rawId = args[1]?.replace(/[<@!>]/g, '');
 
       if (!targetUser && rawId && /^\d{17,20}$/.test(rawId)) {
@@ -129,7 +129,7 @@ module.exports = {
 
     // 2. REMOVE
     if (action === 'remove' || action === 'del' || action === 'delete') {
-      let targetUser = message.mentions.users.first();
+      let targetUser = message.mentions?.users?.first?.();
       const rawId = args[1]?.replace(/[<@!>]/g, '');
       const userId = targetUser ? targetUser.id : rawId;
 

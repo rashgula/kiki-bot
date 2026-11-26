@@ -1,31 +1,28 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+const FunEngine = require('../../utils/funEngine.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('pat-member-send')
-    .setDescription('💆 Give gentle caring headpat GIF')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('✨ Gently pat a member on the head')
+    .addUserOption(o => o.setName('user').setDescription('Target member').setRequired(true)),
 
-  async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('💆 PAT-MEMBER-SEND',
-      '**Action:** Give gentle caring headpat GIF\n' +
-      '**Status:** Successfully processed\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    await interaction.reply({ embeds: [embed] });
-  },
-  name: 'pat-member-send',
   aliases: ['k-pat-member-send', 'patmembersend'],
-  async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('💆 PAT-MEMBER-SEND',
-      '**Command:** `pat-member-send`\n' +
-      '**Description:** Give gentle caring headpat GIF\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    message.reply({ embeds: [embed] });
+  name: 'pat-member-send',
+
+  async execute(interaction) {
+    const target = interaction.options.getUser('user') || interaction.user;
+    const act = FunEngine.getAction('pat', interaction.user.username, target.username);
+    await interaction.reply({ embeds: [KikiEmbed.purple('✨ Gentle Headpat', act.text).setImage(act.gif)] });
+  },
+
+  async run(message, args) {
+    const cleanId = args[0]?.replace(/[<@!>]/g, '');
+    const target = message.mentions?.users?.first?.()
+      || (cleanId && /^\d{17,20}$/.test(cleanId) ? message.guild?.members?.cache.get(cleanId)?.user : null)
+      || message.author;
+    const act = FunEngine.getAction('pat', message.author.username, target.username);
+    message.reply({ embeds: [KikiEmbed.purple('✨ Gentle Headpat', act.text).setImage(act.gif)] });
   }
 };

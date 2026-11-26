@@ -1,31 +1,31 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+const Leveling = require('../../utils/leveling.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('level-leaderboard-top')
-    .setDescription('🏆 View top active chat members by level')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('🏆 View top active chat members by level'),
 
-  async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('🏆 LEVEL-LEADERBOARD-TOP',
-      '**Action:** View top active chat members by level\n' +
-      '**Status:** Successfully processed\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    await interaction.reply({ embeds: [embed] });
+  async execute(interaction) {
+    const top = Leveling.getChatLeaderboard(interaction.guildId, 10);
+    if (!top.length) {
+      return interaction.reply({ embeds: [KikiEmbed.info('Chat Leaderboard 🏆', 'Abhi tak kisi ka chat XP record nahi hua!')] });
+    }
+    const medals = ['🥇', '🥈', '🥉'];
+    const lines = top.map((u, i) => `${medals[i] || `\`#${i + 1}\``} <@${u.userId}> — **Lv.${u.chatLevel}** (\`${u.chatXp.toLocaleString()} XP\` • ${u.messages} msgs)`);
+    await interaction.reply({ embeds: [KikiEmbed.purple(`🏆 Chat Activity Top 10 • ${interaction.guild.name}`, lines.join('\n'))] });
   },
+
   name: 'level-leaderboard-top',
   aliases: ['k-level-leaderboard-top', 'levelleaderboardtop'],
-  async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('🏆 LEVEL-LEADERBOARD-TOP',
-      '**Command:** `level-leaderboard-top`\n' +
-      '**Description:** View top active chat members by level\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    message.reply({ embeds: [embed] });
+  async run(message) {
+    const top = Leveling.getChatLeaderboard(message.guild.id, 10);
+    if (!top.length) {
+      return message.reply({ embeds: [KikiEmbed.info('Chat Leaderboard 🏆', 'Abhi tak kisi ka chat XP record nahi hua!')] });
+    }
+    const medals = ['🥇', '🥈', '🥉'];
+    const lines = top.map((u, i) => `${medals[i] || `\`#${i + 1}\``} <@${u.userId}> — **Lv.${u.chatLevel}** (\`${u.chatXp.toLocaleString()} XP\` • ${u.messages} msgs)`);
+    message.reply({ embeds: [KikiEmbed.purple(`🏆 Chat Activity Top 10 • ${message.guild.name}`, lines.join('\n'))] });
   }
 };

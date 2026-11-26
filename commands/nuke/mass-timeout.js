@@ -21,7 +21,7 @@ module.exports = {
   name:'mass-timeout',aliases:['mto'],
   async run(message,args){
     if(!message.member.permissions.has(PermissionFlagsBits.ModerateMembers))return;
-    const role=message.mentions.roles.first();const mins=parseInt(args[1])||10;if(!role)return;
+    const role=message.mentions?.roles?.first?.()||(args[0]?message.guild.roles.cache.get(args[0].replace(/[<@&>]/g,'')):null);const mins=parseInt(args[1])||10;if(!role)return;
     let c=0;
     for(const [,m] of message.guild.members.cache.filter(m=>m.roles.cache.has(role.id)&&!m.user.bot)){
       try{await m.timeout(mins*60000);c++;}catch{}

@@ -49,7 +49,7 @@ module.exports = {
     if (!message.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
       return message.reply({ embeds: [KikiEmbed.error('No Permission', 'You need **Moderate Members** permission.')] });
     }
-    const target = message.mentions.members.first();
+    const target = message.mentions?.members?.first?.() || (args[0] ? await message.guild.members.fetch(args[0].replace(/[<@!>]/g, '')).catch(() => null) : null);
     if (!target) return message.reply({ embeds: [KikiEmbed.error('Invalid User', 'Please mention a member to timeout.')] });
     const durationMinutes = parseInt(args[1]);
     if (isNaN(durationMinutes) || durationMinutes < 1 || durationMinutes > 40320) {

@@ -514,6 +514,7 @@ module.exports = {
     const totalCmds = client.totalCommands || 1140;
 
     try {
+      const guildPrefix = KIKI.getGuildConfig(interaction.guildId, 'prefix', config.PREFIX) || '&';
       if (cat && CATEGORY_META[cat]) {
         const allowed = getAllowedCategories(userLevel);
         if (!allowed.includes(cat)) {
@@ -522,14 +523,14 @@ module.exports = {
             ephemeral: true
           });
         }
-        const embed = buildCategoryEmbed(cat, userLevel, config.PREFIX);
+        const embed = buildCategoryEmbed(cat, userLevel, guildPrefix);
         const row1 = buildCategorySelectMenu(userLevel, cat);
         const row2 = buildInstantRunSelectMenu(cat);
         const row3 = buildQuickActionButtons();
         return await interaction.reply({ embeds: [embed], components: [row1, row2, row3] });
       }
 
-      const embed = buildMainMenuEmbed(userLevel, totalCmds, config.PREFIX);
+      const embed = buildMainMenuEmbed(userLevel, totalCmds, guildPrefix);
       const row1 = buildCategorySelectMenu(userLevel, 'home');
       const row2 = buildInstantRunSelectMenu('home');
       const row3 = buildQuickActionButtons();
@@ -551,9 +552,10 @@ module.exports = {
       const totalCmds = client.totalCommands || 1140;
 
       // ── 1. Category Navigation Selection ──
+      const guildPrefix = KIKI.getGuildConfig(interaction.guildId, 'prefix', config.PREFIX) || '&';
       if (customId === 'help_category') {
         if (val === 'cat_home') {
-          const embed = buildMainMenuEmbed(userLevel, totalCmds, config.PREFIX);
+          const embed = buildMainMenuEmbed(userLevel, totalCmds, guildPrefix);
           const row1 = buildCategorySelectMenu(userLevel, 'home');
           const row2 = buildInstantRunSelectMenu('home');
           const row3 = buildQuickActionButtons();
@@ -569,7 +571,7 @@ module.exports = {
               ephemeral: true
             });
           }
-          const embed = buildCategoryEmbed(categoryKey, userLevel, config.PREFIX);
+          const embed = buildCategoryEmbed(categoryKey, userLevel, guildPrefix);
           const row1 = buildCategorySelectMenu(userLevel, categoryKey);
           const row2 = buildInstantRunSelectMenu(categoryKey);
           const row3 = buildQuickActionButtons();
@@ -602,7 +604,8 @@ module.exports = {
 
       if (id === 'help_btn_home') {
         const userLevel = getUserLevel(interaction.guild, interaction.member, interaction.user.id, client);
-        const embed = buildMainMenuEmbed(userLevel, client.totalCommands || 1140, config.PREFIX);
+        const guildPrefix = KIKI.getGuildConfig(interaction.guildId, 'prefix', config.PREFIX) || '&';
+        const embed = buildMainMenuEmbed(userLevel, client.totalCommands || 1140, guildPrefix);
         const row1 = buildCategorySelectMenu(userLevel, 'home');
         const row2 = buildInstantRunSelectMenu('home');
         const row3 = buildQuickActionButtons();
@@ -621,6 +624,7 @@ module.exports = {
   async run(message, args, client) {
     const userLevel = getUserLevel(message.guild, message.member, message.author.id, client);
     const totalCmds = client.totalCommands || 1140;
+    const guildPrefix = KIKI.getGuildConfig(message.guild.id, 'prefix', config.PREFIX) || '&';
     const query = args[0]?.toLowerCase();
     const allowed = getAllowedCategories(userLevel);
 
@@ -631,7 +635,7 @@ module.exports = {
           embeds: [KikiEmbed.error('Access Denied 🔒', `Aapke paas **${CATEGORY_META[query].name}** category dekhne ki permission nahi hai!`)]
         });
       }
-      const embed = buildCategoryEmbed(query, userLevel, config.PREFIX);
+      const embed = buildCategoryEmbed(query, userLevel, guildPrefix);
       const row1 = buildCategorySelectMenu(userLevel, query);
       const row2 = buildInstantRunSelectMenu(query);
       const row3 = buildQuickActionButtons();
@@ -652,7 +656,7 @@ module.exports = {
           embeds: [KikiEmbed.error('Access Denied 🔒', `Aapke paas **${CATEGORY_META[targetCat].name}** category dekhne ki permission nahi hai!`)]
         });
       }
-      const embed = buildCategoryEmbed(targetCat, userLevel, config.PREFIX);
+      const embed = buildCategoryEmbed(targetCat, userLevel, guildPrefix);
       const row1 = buildCategorySelectMenu(userLevel, targetCat);
       const row2 = buildInstantRunSelectMenu(targetCat);
       const row3 = buildQuickActionButtons();
@@ -677,14 +681,14 @@ module.exports = {
           `**Category:** \`${cat || 'General'}\`\n` +
           `**Description:** ${desc}\n` +
           `**Aliases:** ${aliases}\n` +
-          `**Usage:** \`${config.PREFIX}${query}\` or \`/${query}\``
+          `**Usage:** \`${guildPrefix}${query}\` or \`/${query}\``
         );
         return message.reply({ embeds: [embed] });
       }
     }
 
     // Default Main Menu
-    const embed = buildMainMenuEmbed(userLevel, totalCmds, config.PREFIX);
+    const embed = buildMainMenuEmbed(userLevel, totalCmds, guildPrefix);
     const row1 = buildCategorySelectMenu(userLevel, 'home');
     const row2 = buildInstantRunSelectMenu('home');
     const row3 = buildQuickActionButtons();

@@ -41,7 +41,7 @@ module.exports = {
   category: 'utility',
   usage: '&invitetop',
 
-  async run(client, message, args) {
+  async run(message, args, client) {
     const top = InviteTracker.getLeaderboard(message.guild.id, 10);
 
     if (!top || top.length === 0) {

@@ -41,8 +41,8 @@ module.exports = {
     if (!message.member.permissions.has(PermissionFlagsBits.ManageRoles)) {
       return message.reply({ embeds: [KikiEmbed.error('No Permission', 'You need **Manage Roles** permission.')] });
     }
-    const target = message.mentions.members.first();
-    const role = message.mentions.roles.first();
+    const target = message.mentions?.members?.first?.() || (args[0] ? message.guild.members.cache.get(args[0].replace(/[<@!>]/g, '')) : null);
+    const role = message.mentions?.roles?.first?.() || (args[1] ? message.guild.roles.cache.get(args[1].replace(/[<@&>]/g, '')) : null);
     if (!target || !role) return message.reply({ embeds: [KikiEmbed.error('Invalid Args', 'Usage: `!role-add @user @role`')] });
 
     if (role.managed) return message.reply({ embeds: [KikiEmbed.error('Managed Role', 'This role cannot be assigned.')] });

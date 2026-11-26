@@ -1,31 +1,27 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+
+function buildServerBannerEmbed(guild) {
+  const banner = guild.bannerURL({ size: 1024 });
+  if (!banner) {
+    return KikiEmbed.info('No Server Banner', `**${guild.name}** ke paas server banner set nahi hai (Level 2+ Boost required).`);
+  }
+  return KikiEmbed.purple(`🏴 Server Banner • ${guild.name}`, `[Open Full Image](${banner})`).setImage(banner);
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('server-banner-view')
-    .setDescription('🏰 View server banner image and download')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('🏴 View the server banner in high resolution'),
 
-  async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('🏰 SERVER-BANNER-VIEW',
-      '**Action:** View server banner image and download\n' +
-      '**Status:** Successfully processed\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    await interaction.reply({ embeds: [embed] });
-  },
+  aliases: ['k-server-banner-view', 'serverbannerview', 'serverbanner'],
   name: 'server-banner-view',
-  aliases: ['k-server-banner-view', 'serverbannerview'],
-  async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('🏰 SERVER-BANNER-VIEW',
-      '**Command:** `server-banner-view`\n' +
-      '**Description:** View server banner image and download\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    message.reply({ embeds: [embed] });
+
+  async execute(interaction) {
+    await interaction.reply({ embeds: [buildServerBannerEmbed(interaction.guild)] });
+  },
+
+  async run(message) {
+    message.reply({ embeds: [buildServerBannerEmbed(message.guild)] });
   }
 };

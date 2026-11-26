@@ -26,10 +26,18 @@ module.exports = {
   },
 
   async run(message, args, client) {
-    const target = message.mentions.users.first();
-    const amt = parseInt(args[1]) || parseInt(args[0]);
-    if (!target) {
-      return message.reply({ embeds: [KikiEmbed.error('Invalid Target', 'Kripya kisi member ko mention karein: `&pay @user 500`')] });
+    let target = message.mentions?.users?.first?.() || null;
+    let amt = NaN;
+    for (const a of args) {
+      const clean = a.replace(/[<@!>]/g, '');
+      if (!target && /^\d{17,20}$/.test(clean)) {
+        target = await client.users.fetch(clean).catch(() => null);
+      } else if (/^\d+$/.test(a) && a.length < 10) {
+        amt = parseInt(a, 10);
+      }
+    }
+    if (!target || isNaN(amt)) {
+      return message.reply({ embeds: [KikiEmbed.error('Invalid Target', 'Kripya kisi member ko mention karein aur amount dein: `&pay @user 500`')] });
     }
     const res = Economy.transfer(message.guild.id, message.author.id, target.id, amt);
     if (!res.success) {

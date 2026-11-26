@@ -1,4 +1,4 @@
-﻿const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
 module.exports = {
   data: new SlashCommandBuilder().setName('avatar').setDescription('🖼️ View user avatar')
@@ -11,8 +11,11 @@ module.exports = {
     await interaction.reply({ embeds: [embed] });
   },
   name: 'avatar', aliases: ['av', 'pfp'],
-  async run(message, args) {
-    const user = message.mentions.users.first() || message.author;
+  async run(message, args, client) {
+    const cleanId = args[0]?.replace(/[<@!>]/g, '');
+    const user = message.mentions?.users?.first?.()
+      || (cleanId && /^\d{17,20}$/.test(cleanId) ? await client.users.fetch(cleanId).catch(() => null) : null)
+      || message.author;
     const png = user.displayAvatarURL({ extension: 'png', size: 1024 });
     message.reply({ embeds: [KikiEmbed.purple(`${user.username}'s Avatar`).setImage(png)] });
   }

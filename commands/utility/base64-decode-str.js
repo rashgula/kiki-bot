@@ -1,31 +1,25 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('base64-decode-str')
-    .setDescription('🔓 Decode base64 string to plain text')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('🔓 Decode Base64 string back to plain text')
+    .addStringOption(o => o.setName('encoded').setDescription('Base64 text').setRequired(true)),
 
-  async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('🔓 BASE64-DECODE-STR',
-      '**Action:** Decode base64 string to plain text\n' +
-      '**Status:** Successfully processed\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    await interaction.reply({ embeds: [embed] });
-  },
+  aliases: ['k-base64-decode-str', 'base64decodestr', 'base64decode', 'b64decode'],
   name: 'base64-decode-str',
-  aliases: ['k-base64-decode-str', 'base64decodestr'],
-  async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('🔓 BASE64-DECODE-STR',
-      '**Command:** `base64-decode-str`\n' +
-      '**Description:** Decode base64 string to plain text\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    message.reply({ embeds: [embed] });
+
+  async execute(interaction) {
+    const raw = interaction.options.getString('encoded').trim();
+    const out = Buffer.from(raw, 'base64').toString('utf8');
+    await interaction.reply({ embeds: [KikiEmbed.purple('🔓 Base64 Decoded', `\`\`\`\n${out.slice(0, 1900)}\n\`\`\``)] });
+  },
+
+  async run(message, args) {
+    const raw = args.join(' ').trim();
+    if (!raw) return message.reply({ embeds: [KikiEmbed.warn('Usage', '`&base64decode aGVsbG8=`')] });
+    const out = Buffer.from(raw, 'base64').toString('utf8');
+    message.reply({ embeds: [KikiEmbed.purple('🔓 Base64 Decoded', `\`\`\`\n${out.slice(0, 1900)}\n\`\`\``)] });
   }
 };

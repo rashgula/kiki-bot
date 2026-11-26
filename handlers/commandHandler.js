@@ -25,8 +25,11 @@ const POPULAR_SHORT_ALIASES = {
   'leaderboard-rich': ['rich', 'ecotop', 'ecolb'],
   'gamble-dice-bet': ['bet', 'gamble'],
   'gamble-slots-bet': ['slots', 'slot'],
-  'rob-member-coins': ['rob', 'steal'],
+  'rob-member-coins': ['rob'],
   'use-inventory-item': ['use'],
+
+  // Steal & Utility
+  'emojisteal': ['steal', 'esteal', 'stealemoji', 'stealall', 'masssteal'],
 
   // Fun & Animals
   'cat-photo-random': ['cat', 'meow', 'catphoto'],
@@ -46,11 +49,11 @@ const POPULAR_SHORT_ALIASES = {
   'simp-meter-check': ['simp', 'simpmeter'],
   'sus-meter-check': ['sus', 'susmeter'],
   'trivia-question-play': ['trivia', 'quiz'],
-  'rps-challenge-bot': ['rps', 'rockpaperscissors'],
-  'gothic-coinflip': ['coinflip', 'flip', 'coin'],
-  'gothic-dice-roll': ['dice', 'roll'],
-  'gothic-roast-user': ['roast'],
-  'dark-romance-ship': ['ship', 'love'],
+  'rps-challenge-bot': ['grps', 'rockpaperscissors'],
+  'gothic-coinflip': ['coin', 'gcoinflip'],
+  'gothic-dice-roll': ['gdice', 'groll'],
+  'gothic-roast-user': ['groast', 'burn'],
+  'dark-romance-ship': ['darkship'],
 
   // Actions
   'hug-member-send': ['hug'],

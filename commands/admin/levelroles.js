@@ -105,7 +105,7 @@ module.exports = {
   },
 
   name: 'levelroles',
-  aliases: ['setuplevelroles', 'setuplevels', 'levelsetup', 'vclevelsetup', 'vcrolesetup', 'levelpanel', 'levelrole'],
+  aliases: ['levelsetup', 'vclevelsetup', 'vcrolesetup', 'levelpanel', 'levelrole'],
   async run(message, args, client) {
     const sub = args[0]?.toLowerCase();
 

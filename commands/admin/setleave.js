@@ -38,7 +38,7 @@ module.exports = {
       return message.reply({ embeds: [KikiEmbed.error('Permission Denied', 'Aapke paas **Administrator** permission honi chahiye!')] });
     }
 
-    const ch = message.mentions.channels.first() || (args[0] ? message.guild.channels.cache.get(args[0]) : null);
+    const ch = message.mentions?.channels?.first?.() || (args[0] ? message.guild.channels.cache.get(args[0].replace(/[<#>]/g, '')) : null);
     if (!ch) {
       // If no channel given, redirect directly to interactive leave panel
       const leavePanel = require('./leavepanel.js');

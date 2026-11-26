@@ -24,13 +24,13 @@ module.exports = {
     const guild = interaction.guild;
     const userData = Leveling.getUser(guild.id, targetUser.id);
 
-    const currentLevel = userData.chatLevel || Leveling.getLevelFromXp(userData.chatXp || 0);
-    const currentXp = userData.chatXp || 0;
+    const currentLevel = userData.chatLevel ?? Leveling.getLevelFromXp(userData.chatXp || 0);
+    const currentXp = Math.max(0, userData.chatXp || 0);
     const prevLvlXp = Leveling.getXpForLevel(currentLevel);
     const nextLvlXp = Leveling.getXpForLevel(currentLevel + 1);
 
-    const xpInCurrentLevel = currentXp - prevLvlXp;
-    const xpNeededForNext = nextLvlXp - prevLvlXp;
+    const xpInCurrentLevel = Math.max(0, currentXp - prevLvlXp);
+    const xpNeededForNext = Math.max(1, nextLvlXp - prevLvlXp);
     const progressBar = createProgressBar(xpInCurrentLevel, xpNeededForNext);
 
     // Get Leaderboard Position
@@ -58,20 +58,26 @@ module.exports = {
   name: 'chatrank',
   aliases: ['chatlevel', 'crank', 'clevel', 'cxp'],
   async run(message, args) {
-    const targetUser = message.mentions.users.first() ||
-      (args[0] ? message.guild.members.cache.get(args[0])?.user : null) ||
-      message.author;
+    let targetUser = message.mentions?.users?.first?.();
+    if (!targetUser && args[0]) {
+      const cleanId = args[0].replace(/[<@!>]/g, '');
+      const m = message.guild.members.cache.get(cleanId)
+        || message.guild.members.cache.find(mem => mem.user.username.toLowerCase() === args.join(' ').toLowerCase())
+        || (/^\d{17,20}$/.test(cleanId) ? await message.guild.members.fetch(cleanId).catch(() => null) : null);
+      if (m) targetUser = m.user;
+    }
+    if (!targetUser) targetUser = message.author;
 
     const guild = message.guild;
     const userData = Leveling.getUser(guild.id, targetUser.id);
 
-    const currentLevel = userData.chatLevel || Leveling.getLevelFromXp(userData.chatXp || 0);
-    const currentXp = userData.chatXp || 0;
+    const currentLevel = userData.chatLevel ?? Leveling.getLevelFromXp(userData.chatXp || 0);
+    const currentXp = Math.max(0, userData.chatXp || 0);
     const prevLvlXp = Leveling.getXpForLevel(currentLevel);
     const nextLvlXp = Leveling.getXpForLevel(currentLevel + 1);
 
-    const xpInCurrentLevel = currentXp - prevLvlXp;
-    const xpNeededForNext = nextLvlXp - prevLvlXp;
+    const xpInCurrentLevel = Math.max(0, currentXp - prevLvlXp);
+    const xpNeededForNext = Math.max(1, nextLvlXp - prevLvlXp);
     const progressBar = createProgressBar(xpInCurrentLevel, xpNeededForNext);
 
     // Get Leaderboard Position

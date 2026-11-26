@@ -47,7 +47,7 @@ module.exports = {
   },
 
   name: 'purge',
-  aliases: ['clear', 'prune'],
+  aliases: ['clear'],
   async run(message, args, client) {
     if (!message.member.permissions.has(PermissionFlagsBits.ManageMessages)) {
       return message.reply({ embeds: [KikiEmbed.error('No Permission', 'You need **Manage Messages** permission.')] });
@@ -56,7 +56,7 @@ module.exports = {
     if (isNaN(amount) || amount < 1 || amount > 100) {
       return message.reply({ embeds: [KikiEmbed.error('Invalid Amount', 'Please provide a number between 1 and 100.')] });
     }
-    const targetUser = message.mentions.users.first();
+    const targetUser = message.mentions?.users?.first?.();
 
     await message.delete().catch(() => {});
 

@@ -56,15 +56,22 @@ module.exports = {
       });
     }
 
-    const isSetLevel = message.content.toLowerCase().includes('setlevel') || message.content.toLowerCase().includes('addlevel');
-    const isSetXp = message.content.toLowerCase().includes('setxp');
+    const cmdUsed = (message.content || '').trim().split(/\s+/)[0].toLowerCase();
+    const isSetLevel = cmdUsed.includes('setlevel') || cmdUsed.includes('addlevel');
+    const isSetXp = cmdUsed.includes('setxp');
 
-    const targetUser = message.mentions.users.first() ||
-      (args[0] ? message.guild.members.cache.get(args[0])?.user : null);
+    let targetUser = message.mentions?.users?.first?.() || null;
+    let amount = NaN;
+    for (const a of args) {
+      const clean = a.replace(/[<@!>]/g, '');
+      if (!targetUser && /^\d{17,20}$/.test(clean)) {
+        targetUser = message.guild.members.cache.get(clean)?.user || await client.users.fetch(clean).catch(() => null);
+      } else if (/^-?\d+$/.test(a) && a.length < 10) {
+        amount = parseInt(a, 10);
+      }
+    }
 
-    const amount = parseInt(args[1], 10);
-
-    if (!targetUser || isNaN(amount)) {
+    if (!targetUser || isNaN(amount) || amount < 0) {
       const usageTip = isSetLevel ? '`&setlevel @user <level>` (e.g. `&setlevel @user 26`)' :
         isSetXp ? '`&setxp @user <xp>` (e.g. `&setxp @user 15000`)' :
         '`&addxp @user <amount>` (e.g. `&addxp @user 500`)';

@@ -43,7 +43,7 @@ module.exports = {
   category: 'admin',
   usage: '&synccmds',
 
-  async run(client, message, args) {
+  async run(message, args, client) {
     if (!KIKI.isServerOrBotOwner(message.guild, message.author.id) && !KIKI.isSafe(message.guild, message.author.id, client)) {
       return message.channel.send({
         embeds: [KikiEmbed.error('Access Denied 🔒', 'Sirf Server Owner ya Whitelisted members commands sync kar sakte hain!')]

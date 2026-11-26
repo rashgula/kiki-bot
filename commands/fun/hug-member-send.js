@@ -19,7 +19,7 @@ module.exports = {
   },
 
   async run(message, args, client) {
-    const target = (message.mentions?.users?.first ? message.mentions.users.first() : null);
+    const target = message.mentions?.users?.first?.() || null;
     const act = FunEngine.getAction('hug', message.author.username, target?.username || 'the shadows');
     const embed = KikiEmbed.purple('Gothic Embrace 🤗', act.text).setImage(act.gif);
     message.reply({ embeds: [embed] });

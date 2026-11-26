@@ -1,31 +1,35 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+
+const REV_MORSE = {
+  '.-': 'A', '-...': 'B', '-.-.': 'C', '-..': 'D', '.': 'E', '..-.': 'F', '--.': 'G', '....': 'H', '..': 'I', '.---': 'J',
+  '-.-': 'K', '.-..': 'L', '--': 'M', '-.': 'N', '---': 'O', '.--.': 'P', '--.-': 'Q', '.-.': 'R', '...': 'S', '-': 'T',
+  '..-': 'U', '...-': 'V', '.--': 'W', '-..-': 'X', '-.--': 'Y', '--..': 'Z',
+  '-----': '0', '.----': '1', '..---': '2', '...--': '3', '....-': '4', '.....': '5', '-....': '6', '--...': '7', '---..': '8', '----.': '9',
+  '/': ' '
+};
+
+function decodeMorse(code) {
+  return String(code || '').trim().split(/\s+/).map(t => REV_MORSE[t] ?? '').join('');
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('morse-decode-str')
-    .setDescription('📻 Decode morse code string to plain text')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('📡 Decode Morse code back to plain text')
+    .addStringOption(o => o.setName('morse').setDescription('Morse code separated by spaces').setRequired(true)),
 
-  async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('📻 MORSE-DECODE-STR',
-      '**Action:** Decode morse code string to plain text\n' +
-      '**Status:** Successfully processed\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    await interaction.reply({ embeds: [embed] });
-  },
+  aliases: ['k-morse-decode-str', 'morsedecodestr', 'morsedecode'],
   name: 'morse-decode-str',
-  aliases: ['k-morse-decode-str', 'morsedecodestr'],
-  async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('📻 MORSE-DECODE-STR',
-      '**Command:** `morse-decode-str`\n' +
-      '**Description:** Decode morse code string to plain text\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    message.reply({ embeds: [embed] });
+
+  async execute(interaction) {
+    const out = decodeMorse(interaction.options.getString('morse'));
+    await interaction.reply({ embeds: [KikiEmbed.purple('📡 Morse Decoded', `\`\`\`\n${(out || '[Invalid morse]').slice(0, 1900)}\n\`\`\``)] });
+  },
+
+  async run(message, args) {
+    if (!args.length) return message.reply({ embeds: [KikiEmbed.warn('Usage', '`&morsedecode ... --- ...`')] });
+    const out = decodeMorse(args.join(' '));
+    message.reply({ embeds: [KikiEmbed.purple('📡 Morse Decoded', `\`\`\`\n${(out || '[Invalid morse]').slice(0, 1900)}\n\`\`\``)] });
   }
 };

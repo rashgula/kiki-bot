@@ -203,7 +203,7 @@ module.exports = {
   },
 
   name: 'cmdpanel',
-  aliases: ['commandpanel', 'cmdaccess', 'publiccmds', 'cmdsetup', 'publiccommands', 'cmds'],
+  aliases: ['commandpanel', 'cmdaccess', 'publiccmds', 'cmdsetup', 'publiccommands'],
   async run(message, args, client) {
     if (!KIKI.isSafe(message.guild, message.author.id, client)) {
       return message.reply({
@@ -240,7 +240,7 @@ module.exports = {
       });
     }
 
-    if (sub === 'remove' || sub === 'del' && cmdArg) {
+    if ((sub === 'remove' || sub === 'del') && cmdArg) {
       cfg.public_commands = cfg.public_commands.filter(c => c !== cmdArg);
       KIKI.saveConfig(cfg);
       return message.reply({

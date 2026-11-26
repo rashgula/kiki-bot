@@ -14,24 +14,24 @@ module.exports = {
   async execute(interaction, client) {
     const amt = interaction.options.getInteger('amount');
     const res = Economy.slots(interaction.guildId, interaction.user.id, amt);
-    if (!res.success && (res.message.includes('Invalid') || res.message.includes('paas itne'))) {
-      return interaction.reply({ embeds: [KikiEmbed.error('Slot Error ⚠️', res.message)] });
+    if (!res.success || res.error) {
+      return interaction.reply({ embeds: [KikiEmbed.error('Slot Error ⚠️', res.message || res.error)] });
     }
-    const embed = res.win ?
-      KikiEmbed.success('JACKPOT! 🎰', `${res.display}\n\n${res.message}\n**New Wallet:** \`${res.balance.toLocaleString()} Coins\``) :
-      KikiEmbed.purple('Gothic Slots 🎰', `${res.display}\n\n${res.message}\n**Remaining Wallet:** \`${res.balance.toLocaleString()} Coins\``);
+    const embed = res.win
+      ? KikiEmbed.success('JACKPOT! 🎰', `${res.display}\n\n${res.message}\n**New Wallet:** \`${res.balance.toLocaleString()} Coins\``)
+      : KikiEmbed.purple('Gothic Slots 🎰', `${res.display}\n\n${res.message}\n**Remaining Wallet:** \`${res.balance.toLocaleString()} Coins\``);
     await interaction.reply({ embeds: [embed] });
   },
 
   async run(message, args, client) {
-    const amt = parseInt(args[0]) || 50;
+    const amt = args[0] === undefined ? 50 : parseInt(args[0], 10);
     const res = Economy.slots(message.guild.id, message.author.id, amt);
-    if (!res.success && (res.message.includes('Invalid') || res.message.includes('paas itne'))) {
-      return message.reply({ embeds: [KikiEmbed.error('Slot Error ⚠️', res.message)] });
+    if (!res.success || res.error) {
+      return message.reply({ embeds: [KikiEmbed.error('Slot Error ⚠️', res.message || res.error)] });
     }
-    const embed = res.win ?
-      KikiEmbed.success('JACKPOT! 🎰', `${res.display}\n\n${res.message}\n**New Wallet:** \`${res.balance.toLocaleString()} Coins\``) :
-      KikiEmbed.purple('Gothic Slots 🎰', `${res.display}\n\n${res.message}\n**Remaining Wallet:** \`${res.balance.toLocaleString()} Coins\``);
+    const embed = res.win
+      ? KikiEmbed.success('JACKPOT! 🎰', `${res.display}\n\n${res.message}\n**New Wallet:** \`${res.balance.toLocaleString()} Coins\``)
+      : KikiEmbed.purple('Gothic Slots 🎰', `${res.display}\n\n${res.message}\n**Remaining Wallet:** \`${res.balance.toLocaleString()} Coins\``);
     message.reply({ embeds: [embed] });
   }
 };

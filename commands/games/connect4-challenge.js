@@ -23,7 +23,7 @@ module.exports = {
   },
 
   async run(message, args, client) {
-    const opp = (message.mentions?.users?.first ? message.mentions.users.first() : null) || { username: 'KIKI Shadow AI' };
+    const opp = message.mentions?.users?.first?.() || { username: 'KIKI Shadow AI' };
     const res = GamesEngine.playConnect4(message.author.username, opp.username);
     const embed = KikiEmbed.purple('🔴 Connect 4: ' + res.p1 + ' vs ' + res.p2,
       '**Board State:**\n' + res.board + '\n\n' +

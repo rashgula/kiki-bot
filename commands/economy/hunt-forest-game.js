@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
 const Economy = require('../../utils/economy.js');
+const KIKI = require('../../utils/kiki.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -12,8 +13,9 @@ module.exports = {
 
   async execute(interaction, client) {
     const res = Economy.hunt(interaction.guildId, interaction.user.id);
-    if (!res.success) {
-      return interaction.reply({ embeds: [KikiEmbed.error('Cooldown ⏳', res.message)] });
+    if (res.cooldown) {
+      const wait = KIKI.formatDuration(res.remainingMs);
+      return interaction.reply({ embeds: [KikiEmbed.error('Cooldown ⏳', `Shikar se thak gaye hain! Wait: **${wait}**`)] });
     }
     const embed = KikiEmbed.purple('Misty Woods Hunt 🏹',
       `${res.message}\n\n**Reward:** \`+${res.payout} Coins\`\n**New Wallet:** \`${res.balance.toLocaleString()} Coins\``
@@ -23,8 +25,9 @@ module.exports = {
 
   async run(message, args, client) {
     const res = Economy.hunt(message.guild.id, message.author.id);
-    if (!res.success) {
-      return message.reply({ embeds: [KikiEmbed.error('Cooldown ⏳', res.message)] });
+    if (res.cooldown) {
+      const wait = KIKI.formatDuration(res.remainingMs);
+      return message.reply({ embeds: [KikiEmbed.error('Cooldown ⏳', `Shikar se thak gaye hain! Wait: **${wait}**`)] });
     }
     const embed = KikiEmbed.purple('Misty Woods Hunt 🏹',
       `${res.message}\n\n**Reward:** \`+${res.payout} Coins\`\n**New Wallet:** \`${res.balance.toLocaleString()} Coins\``

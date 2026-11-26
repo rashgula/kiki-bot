@@ -42,15 +42,23 @@ module.exports = {
   category: 'admin',
   usage: '&addinvites @user <amount>',
 
-  async run(client, message, args) {
+  async run(message, args, client) {
     if (!KIKI.isServerOrBotOwner(message.guild, message.author.id) && !KIKI.isSafe(message.guild, message.author.id, client)) {
       return message.channel.send({
         embeds: [KikiEmbed.error('Access Denied 🔒', 'Sirf Server Owner ya Whitelisted members hi bonus invites de sakte hain!')]
       });
     }
 
-    const targetUser = message.mentions.users.first() || (args[0] && await client.users.fetch(args[0]).catch(() => null));
-    const amount = parseInt(args[1], 10);
+    let targetUser = message.mentions?.users?.first?.() || null;
+    let amount = NaN;
+    for (const a of args) {
+      const clean = a.replace(/[<@!>]/g, '');
+      if (!targetUser && /^\d{17,20}$/.test(clean)) {
+        targetUser = await client.users.fetch(clean).catch(() => null);
+      } else if (/^-?\d+$/.test(a) && a.length < 10) {
+        amount = parseInt(a, 10);
+      }
+    }
 
     if (!targetUser || isNaN(amount)) {
       return message.channel.send({

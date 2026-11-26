@@ -126,27 +126,24 @@ const DeafMover = {
               `  💤 [DEAF MOVER] Moved ${member.user.tag} from #${oldVcName} to #${targetVc.name} (Deaf for ${durationMins}m)`
             ));
 
-            // Log event to voice log channel or security logs
-            const logChannelId = cfg.voice_log_channel_id || cfg.security_log_channel_id || cfg.log_channel_id;
-            if (logChannelId) {
-              const logCh = guild.channels.cache.get(logChannelId) ||
-                await guild.channels.fetch(logChannelId).catch(() => null);
+            // Log event to per-guild voice log channel or security logs
+            const logCh = KIKI.getGuildChannel(guild, 'voice_log_channel_id')
+              || KIKI.getGuildChannel(guild, 'security_log_channel_id')
+              || KIKI.getGuildChannel(guild, 'log_channel_id');
+            if (logCh && logCh.isTextBased()) {
+              const alertEmbed = KikiEmbed.build({
+                title: '💤 Member Moved to AFK Voice Channel',
+                description:
+                  `${member.user.toString()} (\`${member.user.tag}\`) ko auto-move kar diya gaya hai kyunki wo **10 minute se zyada deafened** baitha tha.\n\n` +
+                  `• 📤 **Purana VC:** \`#${oldVcName}\`\n` +
+                  `• 📥 **Naya AFK VC:** ${targetVc.toString()} (\`${targetVc.name}\`)\n` +
+                  `• ⏱️ **Deafened Time:** \`${durationMins} minutes\``,
+                color: config.COLORS.GOLD || 0xF1C40F,
+                thumbnail: member.user.displayAvatarURL({ dynamic: true }),
+                footer: { text: `Deaf AFK Mover Engine • KIKI v${config.BOT_VERSION}` }
+              });
 
-              if (logCh && logCh.isTextBased()) {
-                const alertEmbed = KikiEmbed.build({
-                  title: '💤 Member Moved to AFK Voice Channel',
-                  description:
-                    `${member.user.toString()} (\`${member.user.tag}\`) ko auto-move kar diya gaya hai kyunki wo **10 minute se zyada deafened** baitha tha.\n\n` +
-                    `• 📤 **Purana VC:** \`#${oldVcName}\`\n` +
-                    `• 📥 **Naya AFK VC:** ${targetVc.toString()} (\`${targetVc.name}\`)\n` +
-                    `• ⏱️ **Deafened Time:** \`${durationMins} minutes\``,
-                  color: config.COLORS.GOLD || 0xF1C40F,
-                  thumbnail: member.user.displayAvatarURL({ dynamic: true }),
-                  footer: { text: `Deaf AFK Mover Engine • KIKI v${config.BOT_VERSION}` }
-                });
-
-                await logCh.send({ embeds: [alertEmbed] }).catch(() => {});
-              }
+              await logCh.send({ embeds: [alertEmbed] }).catch(() => {});
             }
           } catch (err) {
             console.error(`[DEAF MOVER ERROR] Could not move ${member.user.tag}:`, err.message);

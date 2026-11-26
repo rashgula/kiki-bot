@@ -32,18 +32,13 @@ const KIKI = {
   },
 
   loadConfig() {
-    const p = path.join(__dirname, '../data/config.json');
-    if (!fs.existsSync(p)) return {};
-    try {
-      return JSON.parse(fs.readFileSync(p, 'utf-8'));
-    } catch {
-      return {};
-    }
+    const CloudSync = require('./cloudSync.js');
+    return CloudSync.readJsonSafe(CloudSync.getDataFile('config.json'), {});
   },
 
   saveConfig(data) {
-    const p = path.join(__dirname, '../data/config.json');
-    fs.writeFileSync(p, JSON.stringify(data, null, 2), 'utf-8');
+    const CloudSync = require('./cloudSync.js');
+    CloudSync.writeJsonAtomic(CloudSync.getDataFile('config.json'), data);
   },
 
   getGuildConfig(guildId, key, fallback = null) {

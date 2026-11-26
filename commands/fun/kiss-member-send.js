@@ -19,7 +19,8 @@ module.exports = {
   },
 
   async run(message, args, client) {
-    const target = message.mentions.users.first();
+    const cleanId = args[0]?.replace(/[<@!>]/g, '');
+    const target = message.mentions?.users?.first?.() || (cleanId && /^\d{17,20}$/.test(cleanId) ? message.guild?.members?.cache.get(cleanId)?.user : null);
     const act = FunEngine.getAction('kiss', message.author.username, target?.username || 'the air');
     const embed = KikiEmbed.purple('Gothic Kiss 💋', act.text).setImage(act.gif);
     message.reply({ embeds: [embed] });

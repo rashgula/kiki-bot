@@ -19,6 +19,37 @@ module.exports = {
       Leveling.addChatXp(message.guild, message.member, message.channel).catch(() => {});
     } catch {}
 
+    const prefix = KIKI.getGuildConfig(message.guild.id, 'prefix', config.PREFIX) || '&';
+
+    // ── AFK STATUS AUTO-CLEAR & MENTION NOTICES ───────────────────
+    try {
+      const AFK = require('../utils/afk.js');
+      const lowerContent = message.content.toLowerCase();
+      const isAfkCmd = lowerContent.startsWith(`${prefix}afk`);
+      if (!isAfkCmd) {
+        const prevAfk = AFK.clearAfk(message.guild.id, message.author.id);
+        if (prevAfk) {
+          const ago = KIKI.formatDuration(Date.now() - prevAfk.since);
+          message.reply({ content: `🌙 Welcome back ${message.author.toString()}! Aapka AFK status remove kar diya gaya hai *(AFK for ${ago})*.` })
+            .then(m => setTimeout(() => m.delete().catch(() => {}), 8000))
+            .catch(() => {});
+        }
+      }
+      if (message.mentions?.users?.size > 0) {
+        for (const [, mentioned] of message.mentions.users) {
+          if (mentioned.bot || mentioned.id === message.author.id) continue;
+          const info = AFK.getAfk(message.guild.id, mentioned.id);
+          if (info) {
+            const ago = KIKI.formatDuration(Date.now() - info.since);
+            message.reply({ content: `💤 **${mentioned.username}** abhi AFK hain (*${ago} ago*): **${info.reason}**` })
+              .then(m => setTimeout(() => m.delete().catch(() => {}), 10000))
+              .catch(() => {});
+            break;
+          }
+        }
+      }
+    } catch {}
+
     const cfg = KIKI.loadConfig();
     const isMasterOn = cfg.master_antinuke !== false && cfg.antinuke !== false;
 
@@ -65,7 +96,6 @@ module.exports = {
     }
 
     // ── PREFIX COMMANDS EXECUTION ────────────────────────────────
-    const prefix = cfg.prefix || config.PREFIX || '&';
     if (!message.content.startsWith(prefix)) return;
 
     const args = message.content.slice(prefix.length).trim().split(/ +/);

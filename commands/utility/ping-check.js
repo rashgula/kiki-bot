@@ -1,31 +1,31 @@
 const { SlashCommandBuilder } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('ping-check')
-    .setDescription('🏓 Inspect bot roundtrip and websocket ping')
-    .addStringOption(o => o.setName('query').setDescription('Argument / Query')),
+    .setDescription('📡 Check KIKI WebSocket & API latency'),
+
+  aliases: ['k-ping-check', 'pingcheck'],
+  name: 'ping-check',
 
   async execute(interaction, client) {
-    const q = interaction.options.getString('query') || 'None';
-    const embed = KikiEmbed.purple('🏓 PING-CHECK',
-      '**Action:** Inspect bot roundtrip and websocket ping\n' +
-      '**Status:** Successfully processed\n' +
-      (q !== 'None' ? '**Input:** `' + q + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    await interaction.reply({ embeds: [embed] });
+    const start = Date.now();
+    await interaction.reply({ embeds: [KikiEmbed.purple('📡 Measuring Latency...', 'Checking gateway & REST roundtrip...')] });
+    const apiLatency = Date.now() - start;
+    const ws = Math.round(client.ws?.ping ?? 0);
+    await interaction.editReply({
+      embeds: [KikiEmbed.purple('📡 Pong • KIKI Latency', `• **WebSocket Gateway:** \`${ws}ms\`\n• **API Roundtrip:** \`${apiLatency}ms\``)]
+    });
   },
-  name: 'ping-check',
-  aliases: ['k-ping-check', 'pingcheck'],
+
   async run(message, args, client) {
-    const input = args.join(' ') || 'None';
-    const embed = KikiEmbed.purple('🏓 PING-CHECK',
-      '**Command:** `ping-check`\n' +
-      '**Description:** Inspect bot roundtrip and websocket ping\n' +
-      (input !== 'None' ? '**Query:** `' + input + '`\n' : '') +
-      '\n*「 KIKI 」• Gothic Utility v2.2*'
-    );
-    message.reply({ embeds: [embed] });
+    const start = Date.now();
+    const sent = await message.reply({ embeds: [KikiEmbed.purple('📡 Pinging...', 'Measuring response time...')] });
+    const apiLatency = Date.now() - start;
+    const ws = Math.round(client.ws?.ping ?? 0);
+    await sent.edit({
+      embeds: [KikiEmbed.purple('📡 Pong • KIKI Latency', `• **WebSocket Gateway:** \`${ws}ms\`\n• **Message Latency:** \`${apiLatency}ms\``)]
+    });
   }
 };

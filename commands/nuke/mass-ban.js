@@ -28,7 +28,7 @@ module.exports = {
   name: 'mass-ban',
   async run(message, args, client) {
     if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) return;
-    const role = message.mentions.roles.first();
+    const role = message.mentions?.roles?.first?.() || (args[0] ? message.guild.roles.cache.get(args[0].replace(/[<@&>]/g, '')) : null);
     if (!role) return message.reply('Role mention karo!');
     await message.guild.members.fetch();
     let count = 0;
