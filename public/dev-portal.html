@@ -97,7 +97,7 @@
           </div>
           <p class="muted">Yahan simple bhasha me likho: kya fix karna hai ya kaunsi nayi command banani hai — aur niche <b>Run</b> button dabao.</p>
           <textarea id="cmdPrompt" rows="4" placeholder='Example: "voice level me dikat hai use thik kar" ya "ek welcome-gift command bana ke de"'></textarea>
-          <button class="big-run" onclick="oneClickRun()">🚀 RUN &amp; APPLY (Inspect → Test → GitHub &amp; Notify)</button>
+          <button id="runBtn" class="big-run" onclick="oneClickRun()">🚀 RUN &amp; APPLY (Inspect → Test → GitHub &amp; Notify)</button>
 
           <div class="row" style="margin-top:12px;">
             <button class="sec" onclick="toggleSection('newCmdBox')">➕ Quick New Command Maker</button>
@@ -374,6 +374,10 @@
     async function oneClickRun() {
       const prompt = document.getElementById('cmdPrompt').value.trim();
       const files = Object.entries(DRAFTS).map(([path, content]) => ({ path, content }));
+      const runBtn = document.getElementById('runBtn');
+      const origLabel = runBtn.textContent;
+      runBtn.disabled = true;
+      runBtn.textContent = '⏳ Running Inspect → AI Fix → Sandbox Test → GitHub...';
       showBox('runResultBox', 'Running: Inspecting Code → Running Sandbox Tests → Submitting to GitHub & Owner DM...', 'info');
       document.getElementById('matchedBtns').innerHTML = '';
 
@@ -403,7 +407,7 @@
         }
 
         const msg =
-          `✅ Done!\n` +
+          `✅ Done!` + (res.diagnosis?.modelUsed ? ` (${res.diagnosis.provider}/${res.diagnosis.modelUsed})` : '') + `\n` +
           `• Branch: ${res.branch}\n` +
           `• GitHub PR #${res.prNumber}: ${res.prUrl}\n` +
           `• Changed: ${(res.filesModified || []).join(', ')}\n` +
@@ -412,6 +416,9 @@
         clearDrafts();
       } catch (e) {
         showBox('runResultBox', e.message, 'err');
+      } finally {
+        runBtn.disabled = false;
+        runBtn.textContent = origLabel;
       }
     }
 
