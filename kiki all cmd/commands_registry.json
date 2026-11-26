@@ -1,8 +1,8 @@
 {
   "name": "kiki-commands-registry",
   "version": "2.2",
-  "updatedAt": 1795715432538,
-  "totalCommands": 1141,
+  "updatedAt": 1795716783702,
+  "totalCommands": 1142,
   "builtTogetherModules": [
     {
       "module": "Automated Level Roles System (5 - 50)",
@@ -678,6 +678,19 @@
           "deafmover",
           "deafpanel",
           "vcafkpanel"
+        ],
+        "isSlash": true,
+        "isPrefix": true
+      },
+      {
+        "name": "devaccess",
+        "file": "devaccess.js",
+        "category": "admin",
+        "description": "🔐 Sole Owner Exclusive: Manage Trusted Developer Portal Access",
+        "aliases": [
+          "devportal",
+          "devinvite",
+          "devrevoke"
         ],
         "isSlash": true,
         "isPrefix": true
@@ -14184,6 +14197,6 @@
         "isPrefix": true
       }
     ],
-    "_total": 1141
+    "_total": 1142
   }
 }

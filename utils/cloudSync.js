@@ -224,12 +224,34 @@ const CloudSync = {
         writeJsonAtomic(invFile, localInv);
       }
 
-      // 4. Merge Marriages, Social & Warnings
-      for (const [key, fname] of [['marriages', 'marriages.json'], ['social', 'social.json'], ['warnings', 'warnings.json']]) {
+      // 4. Merge Marriages, Social, Warnings & Dev Logs / Encrypted Auth State
+      for (const [key, fname] of [
+        ['marriages', 'marriages.json'],
+        ['social', 'social.json'],
+        ['warnings', 'warnings.json'],
+        ['devActivityLogs', 'dev_activity_logs.json']
+      ]) {
         if (snapshot[key] && typeof snapshot[key] === 'object') {
           const fp = getDataFile(fname);
           const localObj = readJsonSafe(fp, {});
-          writeJsonAtomic(fp, mergeGenericDict(localObj, snapshot[key]));
+          if (key === 'devActivityLogs' && Array.isArray(snapshot[key].entries)) {
+            const seen = new Set((localObj.entries || []).map(e => e.id));
+            const combined = [...(localObj.entries || [])];
+            for (const item of snapshot[key].entries) {
+              if (!seen.has(item.id)) combined.push(item);
+            }
+            combined.sort((a, b) => (b.epochMs || 0) - (a.epochMs || 0));
+            writeJsonAtomic(fp, { updatedAt: Date.now(), entries: combined.slice(0, 500) });
+          } else {
+            writeJsonAtomic(fp, mergeGenericDict(localObj, snapshot[key]));
+          }
+        }
+      }
+      if (snapshot.devAccess && typeof snapshot.devAccess === 'object') {
+        const daFile = getDataFile('dev_access.json');
+        const localDa = readJsonSafe(daFile, null);
+        if (!localDa || !localDa.version) {
+          writeJsonAtomic(daFile, snapshot.devAccess);
         }
       }
 
@@ -263,7 +285,9 @@ const CloudSync = {
         invites: readJsonSafe(getDataFile('invites.json'), { guilds: {} }),
         marriages: readJsonSafe(getDataFile('marriages.json'), {}),
         social: readJsonSafe(getDataFile('social.json'), {}),
-        warnings: readJsonSafe(getDataFile('warnings.json'), {})
+        warnings: readJsonSafe(getDataFile('warnings.json'), {}),
+        devAccess: readJsonSafe(getDataFile('dev_access.json'), null),
+        devActivityLogs: readJsonSafe(getDataFile('dev_activity_logs.json'), { entries: [] })
       };
 
       const buf = Buffer.from(JSON.stringify(snapshot), 'utf8');

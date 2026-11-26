@@ -6,6 +6,9 @@ package-lock.json
 .env
 .env.*
 !.env.example
+data/dev_access.json
+data/dev_activity_logs.json
+data/dev_runtime_errors.json
 
 # Logs
 *.log

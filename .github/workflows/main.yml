@@ -1,36 +1,67 @@
-# This is a basic workflow to help you get started with Actions
+name: Verify KIKI Bot
 
-name: CI
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "main" ]
+    branches: [ "main", "bot-maintenance", "bot-maintenance/**" ]
   pull_request:
     branches: [ "main" ]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  verify-kiki-bot:
+    name: verify-kiki-bot
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
-
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
-
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run syntax, handler, alias collision, and safety checks
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          node -e '
+            const fs = require("fs"), path = require("path"), vm = require("vm"), assert = require("assert");
+            const { Collection } = require("discord.js");
+            const files = [];
+            (function walk(d){
+              for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+                if (e.name === "node_modules" || e.name === ".git") continue;
+                const p = path.join(d, e.name);
+                if (e.isDirectory()) walk(p);
+                else if (e.name.endsWith(".js")) files.push(p);
+              }
+            })(".");
+            for (const f of files) {
+              const src = fs.readFileSync(f, "utf8").replace(/^#!.*$/m, "");
+              new vm.Script("(function(exports,require,module,__filename,__dirname){\n" + src + "\n})", { filename: f });
+            }
+            const client = {
+              user: { id: "999", tag: "KIKI#0001", displayAvatarURL: () => "" },
+              guilds: { cache: new Collection() },
+              ws: { ping: 1 }
+            };
+            const errs = [];
+            const origErr = console.error;
+            console.error = (...a) => errs.push(a.join(" "));
+            require("./handlers/commandHandler.js")(client);
+            console.error = origErr;
+            assert.strictEqual(errs.length, 0, "Load errors: " + errs.join("; "));
+            const seen = new Map();
+            for (const c of fs.readdirSync("commands")) {
+              const cp = path.join("commands", c);
+              if (!fs.statSync(cp).isDirectory()) continue;
+              for (const fn of fs.readdirSync(cp).filter(x => x.endsWith(".js"))) {
+                const rel = path.join("commands", c, fn);
+                const mod = require("./" + rel);
+                const names = new Set([mod.data?.name || mod.name, fn.replace(".js", ""), ...(mod.aliases || [])].filter(Boolean));
+                for (const n of names) {
+                  const k = n.toLowerCase();
+                  if (seen.has(k) && seen.get(k) !== rel) throw new Error("Alias collision: " + k + " (" + seen.get(k) + " <-> " + rel + ")");
+                  seen.set(k, rel);
+                }
+              }
+            }
+            console.log("Verified " + files.length + " JS files and " + client.totalCommands + " commands cleanly.");
+          '

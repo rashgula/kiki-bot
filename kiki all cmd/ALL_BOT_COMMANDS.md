@@ -1,12 +1,12 @@
-# 📜 KIKI • All Bot Commands Directory (1141+ Commands)
+# 📜 KIKI • All Bot Commands Directory (1142+ Commands)
 
 > Complete catalog of all commands loaded in KIKI Gothic Purple Bot.
 > Prefix: `&` | Slash: `/<command>`
-> Last Synchronized: 26/11/2026, 11:20:32 pm
+> Last Synchronized: 26/11/2026, 11:43:03 pm
 
 ═══════════════════════════════════════════════════════════════════
 
-## ⚙️ ADMIN (201 Commands)
+## ⚙️ ADMIN (202 Commands)
 
 | Command Name | Aliases | Type | Description |
 | :--- | :--- | :---: | :--- |
@@ -29,6 +29,7 @@
 | `chatlevelpanel` | `chatlevelsetup`, `chatlevels`, `clpanel`, `setchatlevels`, `chatpanel` | `Prefix (&) + Slash (/)` | 💬 Open Chat Leveling setup panel (Configure announce channel & alerts) |
 | `cmdpanel` | `commandpanel`, `cmdaccess`, `publiccmds`, `cmdsetup`, `publiccommands` | `Prefix (&) + Slash (/)` | 🎛️ Configure which commands members can use without being whitelisted |
 | `deafafkpanel` | `deafafk`, `vcafk`, `afkmover`, `deafmover`, `deafpanel`, `vcafkpanel` | `Prefix (&) + Slash (/)` | 💤 Open Deaf AFK Voice Mover panel (Auto-move 10+ min deaf members) |
+| `devaccess` | `devportal`, `devinvite`, `devrevoke` | `Prefix (&) + Slash (/)` | 🔐 Sole Owner Exclusive: Manage Trusted Developer Portal Access |
 | `embed-create-rich` | `k-embed-create-rich`, `embedcreaterich` | `Prefix (&) + Slash (/)` | 🖼️ Generate multi-field gothic purple embed |
 | `embed-create-simple` | `k-embed-create-simple`, `embedcreatesimple` | `Prefix (&) + Slash (/)` | 🖼️ Generate simple gothic purple embed message |
 | `giveaway-end-early` | `k-giveaway-end-early`, `giveawayendearly` | `Prefix (&) + Slash (/)` | 🎉 End active prize giveaway immediately |

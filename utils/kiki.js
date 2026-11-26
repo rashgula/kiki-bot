@@ -218,7 +218,8 @@ const KIKI = {
       'setuplogs', 'setuplevelroles', 'levelroles', 'setwelcome', 'setleave', 'prefix',
       'cmdpanel', 'commandpanel', 'chatlevelpanel', 'autorolepanel', 'autorole', 'setautorole', 'addxp', 'givexp', 'setxp', 'vctest',
       'deafafkpanel', 'deafafk', 'vcafk', 'afkmover', 'deafmover', 'deafpanel', 'vcafkpanel', 'backup', 'ticketsetup',
-      'savedcommands', 'savedcmds', 'autocmds', 'autoexec', 'savecmd', 'unsavecmd'
+      'savedcommands', 'savedcmds', 'autocmds', 'autoexec', 'savecmd', 'unsavecmd',
+      'devaccess', 'devportal', 'devinvite', 'devrevoke'
     ];
     if (blockedCommands.includes(cleanCmd)) return false;
 

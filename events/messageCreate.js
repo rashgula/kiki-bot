@@ -118,6 +118,16 @@ module.exports = {
 
     const cat = (command.category || '').toLowerCase();
 
+    // ── STRICT SOLE-OWNER-ONLY GUARD FOR TRUSTED DEV CONTROLS ──────
+    if (['devaccess', 'devportal', 'devinvite', 'devrevoke'].includes(commandName)) {
+      const DevAccess = require('../utils/devAccess.js');
+      if (!DevAccess.isSoleOwner(message.author.id)) {
+        return message.reply({
+          embeds: [KikiEmbed.error('Sole Owner Exclusive 🔒', 'Sirf **Sole Bot Owner** hi Trusted Developer access control kar sakte hain!')]
+        });
+      }
+    }
+
     // ── STRICT ANTINUKE & DESTRUCTIVE NUKE OWNERSHIP GUARD ───────────
     const isAntiNukeCmd = cat === 'antinuke' || cat === 'nuke' ||
       commandName === 'antinuke' || commandName === 'master-antinuke' ||

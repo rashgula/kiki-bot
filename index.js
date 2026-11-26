@@ -50,20 +50,11 @@ if (!TOKEN || TOKEN === 'YOUR_BOT_TOKEN_HERE') {
   process.exit(1);
 }
 
-// ── Railway / Cloud Web Keep-Alive (Health Check) ───────────────
-if (process.env.PORT) {
-  try {
-    const http = require('http');
-    const server = http.createServer((req, res) => {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ status: 'ok', bot: 'KIKI', uptime: Math.floor(process.uptime()) }));
-    });
-    server.listen(process.env.PORT, () => {
-      console.log(chalk.green(`  🌐 [HEALTH CHECK] Web server listening on port ${process.env.PORT}`));
-    });
-  } catch (e) {
-    console.error('[HTTP ERROR]', e.message);
-  }
+// ── Railway / Cloud Maintenance & Health Web Server ───────────────
+try {
+  require('./utils/maintenanceServer.js').attachMaintenanceServer(client);
+} catch (e) {
+  console.error('[HTTP ERROR]', e.message);
 }
 
 // ── Login ───────────────────────────────────────────────────────
@@ -110,6 +101,7 @@ process.on('exit', () => {
 
 process.on('unhandledRejection', (err) => {
   console.error(chalk.red('[UNHANDLED REJECTION]'), err);
+  try { require('./utils/railwayIntegration.js').recordRuntimeError('unhandledRejection', err); } catch {}
 });
 
 module.exports = client;

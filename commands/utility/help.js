@@ -369,6 +369,15 @@ async function executeDirectCommand(interaction, cmdName, client) {
   }
 
   const cat = (command.category || '').toLowerCase();
+  if (['devaccess', 'devportal', 'devinvite', 'devrevoke'].includes(cmdName)) {
+    const DevAccess = require('../../utils/devAccess.js');
+    if (!DevAccess.isSoleOwner(interaction.user.id)) {
+      return interaction.reply({
+        embeds: [KikiEmbed.error('Sole Owner Exclusive 🔒', 'Ye command sirf **Sole Bot Owner** ke liye locked hai!')],
+        ephemeral: true
+      });
+    }
+  }
   const isAntiNukeCmd = cat === 'antinuke' || cat === 'nuke' ||
     cmdName === 'antinuke' || cmdName === 'master-antinuke' || cmdName === 'whitelist' || cmdName.startsWith('anti-');
 
