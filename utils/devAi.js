@@ -109,8 +109,9 @@ function stripJsonFences(text) {
 }
 
 async function callGemini(key, promptText) {
-  const primary = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-  const models = primary === 'gemini-2.0-flash' ? [primary] : [primary, 'gemini-2.0-flash'];
+  const primary = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+  const fallbacks = ['gemini-3.8-flash', 'gemini-3-flash-preview', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'];
+  const models = Array.from(new Set([primary, ...fallbacks].filter(Boolean)));
   let lastErr;
   for (const model of models) {
     try {
@@ -118,8 +119,10 @@ async function callGemini(key, promptText) {
       const resp = await axios.post(url, {
         contents: [{ role: 'user', parts: [{ text: promptText }] }],
         generationConfig: { responseMimeType: 'application/json' }
-      }, { timeout: 30000 });
-      return resp.data?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+      }, { timeout: 60000 });
+      const parts = resp.data?.candidates?.[0]?.content?.parts || [];
+      const answerPart = [...parts].reverse().find(p => !p.thought && typeof p.text === 'string') || parts[0];
+      return answerPart?.text || '{}';
     } catch (err) {
       lastErr = err;
       const st = err.response?.status;
@@ -132,7 +135,7 @@ async function callGemini(key, promptText) {
 async function callOpenAiCompatible(provider, key, systemPrompt, userPrompt) {
   const endpoints = {
     groq: { url: 'https://api.groq.com/openai/v1/chat/completions', model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile' },
-    openrouter: { url: 'https://openrouter.ai/api/v1/chat/completions', model: process.env.OPENROUTER_MODEL || 'google/gemini-2.0-flash-001' },
+    openrouter: { url: 'https://openrouter.ai/api/v1/chat/completions', model: process.env.OPENROUTER_MODEL || 'google/gemini-3.8-flash' },
     openai: { url: 'https://api.openai.com/v1/chat/completions', model: process.env.OPENAI_MODEL || 'gpt-4o-mini' }
   };
   const cfg = endpoints[provider] || endpoints.openai;
@@ -185,9 +188,10 @@ async function analyzeAndGenerateFix({ prompt, targetPaths = [], client = null }
 
   const systemPrompt =
     'You are the KIKI Discord Bot AI maintenance engineer. ' +
-    'Given the developer issue/command request, recent runtime errors, and allowed source files, identify the root cause and return strict JSON ONLY with schema: ' +
+    'Given the developer issue/command request, recent runtime errors, and allowed source files, identify the root cause or create the requested command and return strict JSON ONLY with schema: ' +
     '{"rootCause":"short explanation","errorFixed":"concise 1-line summary","proposedEdits":[{"path":"relative/path.js","summary":"what changed","content":"FULL UPDATED FILE CONTENT"}]}. ' +
-    'Only modify files inside commands/, events/, or allowed utils/. NEVER include .env, tokens, child_process, fs.rm/unlink, or owner permission modifications.';
+    'For new commands inside commands/<category>/<name>.js (e.g. utility/fun/economy/social/games), export both slash (SlashCommandBuilder data + execute(interaction, client)) and prefix (name, aliases, run(message, args, client)) using KikiEmbed from "../../utils/embed.js". ' +
+    'Only modify/create files inside commands/, events/, or allowed utils/. NEVER include .env, tokens, child_process, fs.rm/unlink, or owner permission modifications.';
 
   const userPrompt = JSON.stringify({
     request: prompt,
