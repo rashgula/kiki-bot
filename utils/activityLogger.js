@@ -55,7 +55,7 @@ const ActivityLogger = {
     return loadLogs().slice(0, Math.min(Math.max(1, Number(limit) || 50), MAX_LOGS));
   },
 
-  async notifyOwnerDm(client, title, description) {
+  async notifyOwnerDm(client, title, description, components = []) {
     if (!client || !client.isReady?.()) return false;
     try {
       const config = require('../config.js');
@@ -63,9 +63,11 @@ const ActivityLogger = {
       const owner = await client.users.fetch(ownerId).catch(() => null);
       if (!owner) return false;
       const KikiEmbed = require('./embed.js');
-      await owner.send({
+      const payload = {
         embeds: [KikiEmbed.purple(title, DevSecrets.redactSecrets(description))]
-      }).catch(() => {});
+      };
+      if (Array.isArray(components) && components.length > 0) payload.components = components;
+      await owner.send(payload).catch(() => {});
       return true;
     } catch {
       return false;

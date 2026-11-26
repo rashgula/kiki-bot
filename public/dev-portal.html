@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KIKI • Trusted Developer Maintenance Portal</title>
+  <title>KIKI • Bot Command & Fix Studio</title>
   <style>
     :root {
       --bg: #0d0816;
@@ -13,39 +13,33 @@
       --accent-bright: #c58af9;
       --green: #2ecc71;
       --red: #e74c3c;
-      --gold: #f1c40f;
       --text: #eee6ff;
       --muted: #9f8ec4;
     }
     * { box-sizing: border-box; font-family: Inter, system-ui, -apple-system, sans-serif; }
-    body { margin: 0; background: radial-gradient(circle at top, #1f1238 0%, var(--bg) 60%); color: var(--text); min-height: 100vh; }
+    body { margin: 0; background: radial-gradient(circle at top, #21123d 0%, var(--bg) 62%); color: var(--text); min-height: 100vh; }
     header { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; background: rgba(16, 10, 30, 0.92); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 20; }
     .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; color: var(--accent-bright); }
-    .badge { font-size: 0.75rem; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border); background: #21153b; color: var(--text); }
-    .badge.owner { border-color: var(--gold); color: var(--gold); }
-    .badge.dev { border-color: var(--green); color: var(--green); }
-    .container { max-width: 1320px; margin: 22px auto; padding: 0 18px; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 18px; box-shadow: 0 8px 30px rgba(0,0,0,0.35); }
-    h2, h3 { margin: 0 0 12px; font-size: 1.05rem; color: var(--accent-bright); }
+    .badge { font-size: 0.75rem; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--green); background: #142a1e; color: var(--green); }
+    .container { max-width: 980px; margin: 26px auto; padding: 0 16px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 18px; box-shadow: 0 8px 30px rgba(0,0,0,0.35); }
+    h2, h3 { margin: 0 0 10px; font-size: 1.1rem; color: var(--accent-bright); }
     .muted { color: var(--muted); font-size: 0.88rem; }
-    .grid { display: grid; grid-template-columns: 310px 1fr; gap: 18px; }
-    @media (max-width: 960px) { .grid { grid-template-columns: 1fr; } }
-    input, textarea, select { width: 100%; background: #0d0718; color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 0.92rem; margin-bottom: 10px; }
-    textarea.code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; min-height: 330px; font-size: 0.84rem; line-height: 1.45; tab-size: 2; }
-    button { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 9px 15px; font-weight: 600; cursor: pointer; font-size: 0.88rem; transition: 0.15s; }
-    button:hover { opacity: 0.9; transform: translateY(-1px); }
+    input, textarea, select { width: 100%; background: #0d0718; color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 11px 13px; font-size: 0.94rem; margin-bottom: 12px; }
+    textarea.code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; min-height: 290px; font-size: 0.84rem; line-height: 1.45; }
+    button { background: linear-gradient(135deg, #8e44ad, #6c3483); color: white; border: none; border-radius: 10px; padding: 10px 16px; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: 0.15s; }
+    button:hover { opacity: 0.92; transform: translateY(-1px); }
+    button.big-run { width: 100%; padding: 14px; font-size: 1rem; background: linear-gradient(135deg, #27ae60, #1e8449); letter-spacing: 0.3px; }
     button.sec { background: #281947; border: 1px solid var(--border); }
-    button.ok { background: #1e8449; }
-    button.danger { background: #922b21; }
     .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
     .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
     .tab.active { background: var(--accent-bright); color: #160a2a; }
-    .file-list { max-height: 360px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 6px; background: #0f081c; }
+    .file-list { max-height: 240px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 6px; background: #0f081c; margin-bottom: 12px; }
     .file-item { padding: 6px 8px; border-radius: 6px; font-size: 0.82rem; font-family: monospace; cursor: pointer; word-break: break-all; }
     .file-item:hover { background: #271847; }
     .pill-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
     .pill { background: #261745; border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 0.8rem; }
-    .status-box { padding: 10px 12px; border-radius: 8px; margin-top: 10px; font-size: 0.86rem; white-space: pre-wrap; }
+    .status-box { padding: 12px 14px; border-radius: 10px; margin-top: 12px; font-size: 0.88rem; white-space: pre-wrap; line-height: 1.5; }
     .status-box.ok { background: rgba(46, 204, 113, 0.12); border: 1px solid var(--green); }
     .status-box.err { background: rgba(231, 76, 60, 0.14); border: 1px solid var(--red); }
     .status-box.info { background: rgba(155, 89, 182, 0.14); border: 1px solid var(--accent); }
@@ -55,7 +49,7 @@
 </head>
 <body>
   <header>
-    <div class="brand">🔮 KIKI • Maintenance Portal <span id="roleBadge" class="badge">Locked</span></div>
+    <div class="brand">🔮 KIKI • Maintenance Studio <span id="authBadge" class="badge hidden">Verified Developer</span></div>
     <div class="row">
       <span id="userLabel" class="muted"></span>
       <button id="logoutBtn" class="sec hidden" onclick="logout()">Sign Out</button>
@@ -63,203 +57,118 @@
   </header>
 
   <div class="container">
-    <!-- AUTH LOCK GATE -->
-    <div id="authGate" class="card" style="max-width:540px;margin:40px auto;">
-      <h2>🔐 Private Verified Developer Access</h2>
-      <p class="muted">Single-use invitation + verified Discord account required. No credentials or tokens are stored on the frontend.</p>
+    <!-- INVITE VERIFICATION GATE -->
+    <div id="authGate" class="card" style="max-width:500px;margin:48px auto;">
+      <h2>🔐 Private Maintenance Access</h2>
+      <p class="muted">Single-use invitation link aur verified Discord account zaroori hai.</p>
+      <div id="inviteMeta" class="status-box info hidden"></div>
 
-      <div class="tabs">
-        <button id="authTabDev" class="tab active" onclick="switchAuthTab('dev')">Developer Invite Login</button>
-        <button id="authTabOwner" class="tab sec" onclick="switchAuthTab('owner')">Sole Owner Login</button>
+      <label class="muted">Invite Token</label>
+      <input id="inviteTokenInput" placeholder="Paste private invite token..." />
+
+      <label class="muted">Your Discord User ID</label>
+      <input id="devDiscordIdInput" placeholder="e.g. 123456789012345678" />
+
+      <div class="row" style="margin-bottom:12px;">
+        <button onclick="sendInviteOtp()">1. Send Verification Code to Discord DM</button>
+        <button id="oauthDevBtn" class="sec hidden" onclick="startOAuth()">Login with Discord OAuth2</button>
       </div>
 
-      <div id="devAuthPane">
-        <div id="inviteMeta" class="status-box info hidden"></div>
-        <label class="muted">Private Invite Token (auto-filled from invite link)</label>
-        <input id="inviteTokenInput" placeholder="Paste single-use invite token..." />
-        <label class="muted">Your Discord User ID (must match authorized friend)</label>
-        <input id="devDiscordIdInput" placeholder="e.g. 123456789012345678" />
-        <div class="row">
-          <button onclick="sendInviteOtp()">1. Send 6-Digit Code to Discord DM</button>
-          <button id="oauthDevBtn" class="sec hidden" onclick="startOAuth('invite')">Login via Discord OAuth2</button>
-        </div>
-        <div style="margin-top:12px;">
-          <label class="muted">Enter 6-Digit DM Code</label>
-          <input id="devOtpInput" placeholder="6-digit code from KIKI DM" />
-          <button class="ok" onclick="verifyInviteOtp()">2. Verify & Unlock Workspace</button>
-        </div>
-      </div>
-
-      <div id="ownerAuthPane" class="hidden">
-        <label class="muted">Sole Owner Discord User ID</label>
-        <input id="ownerDiscordIdInput" placeholder="Sole Owner Discord ID" />
-        <div class="row">
-          <button onclick="sendOwnerOtp()">Send Owner 2FA Code to DM</button>
-          <button id="oauthOwnerBtn" class="sec hidden" onclick="startOAuth('owner')">Owner OAuth2 Login</button>
-        </div>
-        <div style="margin-top:12px;">
-          <label class="muted">Enter 6-Digit Owner DM Code</label>
-          <input id="ownerOtpInput" placeholder="6-digit code from KIKI DM" />
-          <button class="ok" onclick="verifyOwnerOtp()">Verify & Open Owner Console</button>
-        </div>
-      </div>
+      <label class="muted">6-Digit Discord DM Code</label>
+      <input id="devOtpInput" placeholder="Enter code from KIKI DM..." />
+      <button class="big-run" onclick="verifyInviteOtp()">2. Verify & Open Studio</button>
 
       <div id="authMsg" class="status-box hidden"></div>
     </div>
 
-    <!-- MAIN AUTHENTICATED PORTAL -->
+    <!-- MAIN SIMPLE 1-BOX STUDIO -->
     <div id="workspace" class="hidden">
       <div class="tabs">
-        <button id="tabBtnMaint" class="tab active" onclick="showTab('maint')">🛠️ Command & Fix Studio</button>
-        <button id="tabBtnLogs" class="tab sec" onclick="showTab('logs')">📜 Activity & Error Logs</button>
-        <button id="tabBtnStatus" class="tab sec" onclick="showTab('status')">🚀 GitHub & Railway Status</button>
-        <button id="tabBtnOwner" class="tab sec hidden" onclick="showTab('owner')">👑 Sole Owner Controls</button>
+        <button id="tabBtnStudio" class="tab active" onclick="showTab('studio')">⚡ Command & Fix Box</button>
+        <button id="tabBtnHistory" class="tab sec" onclick="showTab('history')">📜 Activity Logs</button>
+        <button id="tabBtnStatus" class="tab sec" onclick="showTab('status')">📡 Bot & Deploy Status</button>
       </div>
 
-      <!-- TAB 1: MAINTENANCE WORKFLOW -->
-      <div id="tabMaint" class="grid">
-        <div>
-          <div class="card">
-            <h3>📁 Allowed Bot Files</h3>
-            <p class="muted">Secrets, `.env`, owner auth & databases are locked.</p>
-            <input id="fileFilter" placeholder="Filter commands/events/utils..." oninput="renderFileList()" />
-            <div id="fileList" class="file-list"></div>
+      <div id="tabStudio">
+        <div class="card">
+          <h2>💬 CMD / Problem Box</h2>
+          <p class="muted">Yahan simple bhasha me likho: kya fix karna hai ya kaunsi nayi command banani hai — aur niche <b>Run</b> button dabao.</p>
+          <textarea id="cmdPrompt" rows="4" placeholder='Example: "voice level me dikat hai use thik kar" ya "ek welcome-gift command bana ke de"'></textarea>
+          <button class="big-run" onclick="oneClickRun()">🚀 RUN &amp; APPLY (Inspect → Test → GitHub &amp; Notify)</button>
+
+          <div class="row" style="margin-top:12px;">
+            <button class="sec" onclick="toggleSection('newCmdBox')">➕ Quick New Command Maker</button>
+            <button class="sec" onclick="toggleSection('advancedBox')">🛠️ Manual Code Editor (<span id="draftCount">0</span> Drafts)</button>
           </div>
-          <div class="card">
-            <h3>📦 Staged Changes (<span id="draftCount">0</span>)</h3>
-            <div id="draftList" class="pill-list"></div>
+
+          <div id="runResultBox" class="status-box hidden"></div>
+          <div id="matchedBtns" class="pill-list"></div>
+        </div>
+
+        <!-- QUICK NEW COMMAND BUILDER -->
+        <div id="newCmdBox" class="card hidden">
+          <h3>✨ New Command Form</h3>
+          <div class="row">
+            <input id="ncName" placeholder="command-name (e.g. server-rules)" style="flex:1;" />
+            <select id="ncCat" style="width:150px;">
+              <option value="utility">utility</option>
+              <option value="fun">fun</option>
+              <option value="economy">economy</option>
+              <option value="social">social</option>
+              <option value="games">games</option>
+            </select>
+          </div>
+          <input id="ncDesc" placeholder="Description (slash menu description)" />
+          <input id="ncResp" placeholder="Reply message text" />
+          <div class="row">
+            <button onclick="createCmdTemplate()">Load into Draft</button>
+            <button class="sec" onclick="toggleSection('newCmdBox')">Close</button>
+          </div>
+        </div>
+
+        <!-- OPTIONAL COLLAPSIBLE CODE EDITOR -->
+        <div id="advancedBox" class="card hidden">
+          <h3>🛠️ Manual File Editor &amp; Drafts</h3>
+          <input id="fileFilter" placeholder="Search allowed commands / events / utils..." oninput="renderFileList()" />
+          <div id="fileList" class="file-list"></div>
+          <div class="muted" style="margin-bottom:6px;">Opened File: <b id="currentFileLabel">None</b></div>
+          <textarea id="codeEditor" class="code" spellcheck="false" placeholder="// Click any file above to inspect or edit..."></textarea>
+          <div id="draftList" class="pill-list"></div>
+          <div class="row">
+            <button onclick="saveToDraft()">💾 Save to Drafts</button>
+            <button class="sec" onclick="runSandboxTests()">🧪 Run Sandbox Tests</button>
             <button class="sec" onclick="clearDrafts()">Clear Drafts</button>
           </div>
-        </div>
-
-        <div>
-          <div class="card">
-            <h2>1. Describe Command / Error in Simple Language</h2>
-            <textarea id="aiPrompt" rows="3" placeholder="Example: '&daily me cooldown galat dikh raha hai' ya 'welcome embed me border text improve karo'"></textarea>
-            <div class="row">
-              <button onclick="analyzeIssue()">🔍 Inspect Code & Generate Fix</button>
-              <button class="sec" onclick="toggleNewCmdBox()">➕ New Command Draft</button>
-              <button class="ok" onclick="runSandboxTests()">🧪 Run Sandbox Tests</button>
-            </div>
-            <div id="newCmdBox" class="card hidden" style="margin-top:12px;">
-              <h3>✨ Quick New Command Builder</h3>
-              <div class="row">
-                <input id="ncName" placeholder="command-name (e.g. server-rules)" style="flex:1;" />
-                <select id="ncCat" style="width:150px;">
-                  <option value="utility">utility</option>
-                  <option value="fun">fun</option>
-                  <option value="economy">economy</option>
-                  <option value="social">social</option>
-                  <option value="games">games</option>
-                </select>
-              </div>
-              <input id="ncDesc" placeholder="Short description (shown in slash menu)" />
-              <input id="ncResp" placeholder="Reply embed text / message" />
-              <button class="ok" onclick="createCmdTemplate()">Generate & Load into Editor</button>
-            </div>
-            <div id="aiResult" class="status-box info hidden"></div>
-            <div id="aiProposals" class="pill-list"></div>
-          </div>
-
-          <div class="card">
-            <h3>2. File Editor: <span id="currentFileLabel" class="muted">Select or search a file...</span></h3>
-            <textarea id="codeEditor" class="code" spellcheck="false" placeholder="// File source will appear here..."></textarea>
-            <div class="row">
-              <button onclick="saveToDraft()">💾 Save to Draft Changes</button>
-              <button class="sec" onclick="reloadOpenedFile()">↩️ Revert Unsaved</button>
-            </div>
-            <div id="testResultBox" class="status-box hidden"></div>
-          </div>
-
-          <div class="card">
-            <h3>3. Submit Pull Request to Protected Main Branch</h3>
-            <input id="prTitle" placeholder="Short PR Title (e.g. Fix daily cooldown embed)" />
-            <input id="prErrorFixed" placeholder="Summary of error fixed / feature updated" />
-            <div class="row">
-              <button class="ok" onclick="submitPr()">🚀 Test, Commit to bot-maintenance & Submit PR</button>
-              <label id="urgentLabel" class="muted hidden" style="display:flex;align-items:center;gap:6px;width:auto;">
-                <input id="urgentCheck" type="checkbox" style="width:auto;margin:0;" /> Urgent Auto-Deploy (Owner Authorized)
-              </label>
-            </div>
-            <div id="prResultBox" class="status-box hidden"></div>
-          </div>
+          <div id="testResultBox" class="status-box hidden"></div>
         </div>
       </div>
 
-      <!-- TAB 2: ACTIVITY & ERROR LOGS -->
-      <div id="tabLogs" class="card hidden">
+      <div id="tabHistory" class="card hidden">
         <div class="row" style="justify-content:space-between;">
-          <h2>📜 Audit & Activity Logs</h2>
+          <h2>📜 Change &amp; Fix Activity Logs</h2>
           <button class="sec" onclick="loadLogs()">🔄 Refresh</button>
         </div>
         <div id="logsContainer"></div>
       </div>
 
-      <!-- TAB 3: GITHUB & RAILWAY STATUS -->
       <div id="tabStatus" class="card hidden">
         <div class="row" style="justify-content:space-between;">
-          <h2>🚀 Bot, GitHub & Railway Health</h2>
+          <h2>📡 Live Bot, GitHub &amp; Railway Health</h2>
           <button class="sec" onclick="loadStatus()">🔄 Refresh</button>
         </div>
-        <div id="statusContent" class="status-box info">Loading status...</div>
-      </div>
-
-      <!-- TAB 4: SOLE OWNER CONTROLS -->
-      <div id="tabOwner" class="card hidden">
-        <h2>👑 Sole Owner Control Center (Exclusive)</h2>
-        <p class="muted">You are the sole owner. Only you can invite/revoke the trusted developer, approve PRs into main, trigger rollbacks, or configure integrations.</p>
-
-        <div class="card">
-          <h3>🎟️ Invite / Revoke Trusted Developer (Max 1 Active)</h3>
-          <div class="row">
-            <input id="invTargetId" placeholder="Friend's Verified Discord User ID" style="flex:1;" />
-            <input id="invTtl" type="number" value="30" placeholder="Minutes" style="width:120px;" />
-            <button onclick="createDevInvite()">Generate Single-Use Invite URL</button>
-            <button class="danger" onclick="revokeDev()">🛑 Revoke Developer Now</button>
-          </div>
-          <div id="ownerInvOut" class="status-box hidden"></div>
-        </div>
-
-        <div class="card">
-          <h3>📥 Pending Pull Requests & Deploy Controls</h3>
-          <div class="row" style="margin-bottom:10px;">
-            <button onclick="toggleAutoDeploy(true)">⚡ Enable Urgent Auto-Deploy</button>
-            <button class="sec" onclick="toggleAutoDeploy(false)">🔒 Require Manual Approval</button>
-            <button class="sec" onclick="applyBranchProtection()">🛡️ Apply Main Branch Protection</button>
-            <button class="ok" onclick="triggerRailwayDeploy()">🚂 Trigger Railway Redeploy</button>
-          </div>
-          <div id="ownerPrList"></div>
-          <div id="ownerDeployList" style="margin-top:12px;"></div>
-          <div id="ownerActionOut" class="status-box hidden"></div>
-        </div>
-
-        <div class="card">
-          <h3>🔑 Encrypted Integration Vault (Write-Only, AES-256-GCM)</h3>
-          <p class="muted">Values are encrypted at rest and never displayed back to the browser.</p>
-          <input id="vBaseUrl" placeholder="DASHBOARD_BASE_URL (e.g. https://kiki-bot.up.railway.app)" />
-          <input id="vGhRepo" placeholder="GITHUB_REPO (default: rashgula/kiki-bot)" />
-          <input id="vGhAppId" placeholder="GITHUB_APP_ID" />
-          <input id="vGhInstallId" placeholder="GITHUB_APP_INSTALLATION_ID" />
-          <textarea id="vGhPrivKey" rows="3" placeholder="GITHUB_PRIVATE_KEY (PEM, optional if using GITHUB_TOKEN)"></textarea>
-          <input id="vGhToken" type="password" placeholder="GITHUB_TOKEN (Scoped token fallback)" />
-          <input id="vRwToken" type="password" placeholder="RAILWAY_API_TOKEN" />
-          <input id="vRwProj" placeholder="RAILWAY_PROJECT_ID" />
-          <input id="vRwSvc" placeholder="RAILWAY_SERVICE_ID" />
-          <input id="vRwEnv" placeholder="RAILWAY_ENVIRONMENT_ID" />
-          <input id="vDiscordSec" type="password" placeholder="DISCORD_CLIENT_SECRET (optional for OAuth2)" />
-          <input id="vAiKey" type="password" placeholder="GEMINI_API_KEY or OPENAI_API_KEY (optional for auto code gen)" />
-          <button class="ok" onclick="saveVault()">💾 Encrypt & Save Settings</button>
-          <div id="vaultOut" class="status-box hidden"></div>
-        </div>
+        <div id="statusContent" class="status-box info">Loading...</div>
       </div>
     </div>
   </div>
 
   <script>
-    let ME = null;
     let ALL_FILES = [];
     let CURRENT_PATH = '';
     const DRAFTS = {};
+
+    function escHtml(str) {
+      return String(str ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    }
 
     async function api(url, opts = {}) {
       const res = await fetch(url, {
@@ -279,11 +188,8 @@
       el.classList.remove('hidden');
     }
 
-    function switchAuthTab(tab) {
-      document.getElementById('devAuthPane').classList.toggle('hidden', tab !== 'dev');
-      document.getElementById('ownerAuthPane').classList.toggle('hidden', tab !== 'owner');
-      document.getElementById('authTabDev').className = tab === 'dev' ? 'tab active' : 'tab sec';
-      document.getElementById('authTabOwner').className = tab === 'owner' ? 'tab active' : 'tab sec';
+    function toggleSection(id) {
+      document.getElementById(id).classList.toggle('hidden');
     }
 
     async function init() {
@@ -294,32 +200,25 @@
         try {
           const info = await api('/api/auth/invite/info?token=' + encodeURIComponent(urlInvite));
           if (info.valid) {
-            showBox('inviteMeta', `Valid single-use invite for Discord User ID: ${info.maskedTargetId}\nExpires: ${new Date(info.expiresAt).toLocaleString()}`, 'ok');
+            showBox('inviteMeta', `Valid invite for Discord ID: ${info.maskedTargetId}\nExpires: ${new Date(info.expiresAt).toLocaleString()}`, 'ok');
           } else {
             showBox('inviteMeta', 'Invite status: ' + info.reason, 'err');
           }
-          if (info.hasOAuth) {
-            document.getElementById('oauthDevBtn').classList.remove('hidden');
-            document.getElementById('oauthOwnerBtn').classList.remove('hidden');
-          }
+          if (info.hasOAuth) document.getElementById('oauthDevBtn').classList.remove('hidden');
         } catch {}
       }
 
       try {
-        ME = await api('/api/dev/me');
+        const me = await api('/api/dev/me');
         document.getElementById('authGate').classList.add('hidden');
         document.getElementById('workspace').classList.remove('hidden');
+        document.getElementById('authBadge').classList.remove('hidden');
         document.getElementById('logoutBtn').classList.remove('hidden');
-        const badge = document.getElementById('roleBadge');
-        badge.textContent = ME.session.role === 'owner' ? 'Sole Owner' : 'Trusted Developer';
-        badge.className = 'badge ' + (ME.session.role === 'owner' ? 'owner' : 'dev');
-        document.getElementById('userLabel').textContent = `${ME.session.discordTag} (${ME.session.discordId})`;
-        if (ME.session.role === 'owner') document.getElementById('tabBtnOwner').classList.remove('hidden');
-        if (ME.accessStatus?.settings?.urgentAutoDeploy) document.getElementById('urgentLabel').classList.remove('hidden');
-        await loadFiles();
-      } catch {
-        // Stay on Auth Lock screen
-      }
+        document.getElementById('userLabel').textContent = `${me.session.discordTag} (${me.session.discordId})`;
+        const fl = await api('/api/dev/files');
+        ALL_FILES = fl.files || [];
+        renderFileList();
+      } catch {}
     }
 
     async function sendInviteOtp() {
@@ -331,7 +230,7 @@
             discordId: document.getElementById('devDiscordIdInput').value.trim()
           })
         });
-        showBox('authMsg', `Verification code sent to Discord DM (${res.maskedTag}). Check your Discord DMs!`, 'ok');
+        showBox('authMsg', `6-digit code DM kar diya gaya (${res.maskedTag}). Discord DM check karo!`, 'ok');
       } catch (e) { showBox('authMsg', e.message, 'err'); }
     }
 
@@ -349,33 +248,10 @@
       } catch (e) { showBox('authMsg', e.message, 'err'); }
     }
 
-    async function sendOwnerOtp() {
-      try {
-        await api('/api/auth/owner/send-otp', {
-          method: 'POST',
-          body: JSON.stringify({ discordId: document.getElementById('ownerDiscordIdInput').value.trim() })
-        });
-        showBox('authMsg', 'Owner 2FA code sent to your Discord DM!', 'ok');
-      } catch (e) { showBox('authMsg', e.message, 'err'); }
-    }
-
-    async function verifyOwnerOtp() {
-      try {
-        await api('/api/auth/owner/verify-otp', {
-          method: 'POST',
-          body: JSON.stringify({
-            discordId: document.getElementById('ownerDiscordIdInput').value.trim(),
-            otp: document.getElementById('ownerOtpInput').value.trim()
-          })
-        });
-        location.href = '/dev';
-      } catch (e) { showBox('authMsg', e.message, 'err'); }
-    }
-
-    async function startOAuth(mode) {
+    async function startOAuth() {
       try {
         const tok = document.getElementById('inviteTokenInput').value.trim();
-        const res = await api('/api/auth/discord/url?mode=' + mode + '&token=' + encodeURIComponent(tok));
+        const res = await api('/api/auth/discord/url?token=' + encodeURIComponent(tok));
         location.href = res.url;
       } catch (e) { showBox('authMsg', e.message, 'err'); }
     }
@@ -386,23 +262,13 @@
     }
 
     function showTab(name) {
-      ['Maint', 'Logs', 'Status', 'Owner'].forEach(t => {
+      ['Studio', 'History', 'Status'].forEach(t => {
         document.getElementById('tab' + t).classList.toggle('hidden', t.toLowerCase() !== name);
         const btn = document.getElementById('tabBtn' + t);
         if (btn) btn.className = t.toLowerCase() === name ? 'tab active' : 'tab sec';
       });
-      if (name === 'logs') loadLogs();
-      if (name === 'status' || name === 'owner') loadStatus();
-    }
-
-    async function loadFiles() {
-      const data = await api('/api/dev/files');
-      ALL_FILES = data.files || [];
-      renderFileList();
-    }
-
-    function escHtml(str) {
-      return String(str ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+      if (name === 'history') loadLogs();
+      if (name === 'status') loadStatus();
     }
 
     function renderFileList() {
@@ -422,6 +288,7 @@
     async function openFile(filePath) {
       CURRENT_PATH = filePath;
       document.getElementById('currentFileLabel').textContent = filePath;
+      document.getElementById('advancedBox').classList.remove('hidden');
       if (DRAFTS[filePath] !== undefined) {
         document.getElementById('codeEditor').value = DRAFTS[filePath];
         return;
@@ -430,15 +297,8 @@
       document.getElementById('codeEditor').value = data.content || '';
     }
 
-    async function reloadOpenedFile() {
-      if (!CURRENT_PATH) return;
-      delete DRAFTS[CURRENT_PATH];
-      updateDraftUi();
-      await openFile(CURRENT_PATH);
-    }
-
     function saveToDraft() {
-      if (!CURRENT_PATH) return alert('Open a file first!');
+      if (!CURRENT_PATH) return alert('Pehle koi file select karein.');
       DRAFTS[CURRENT_PATH] = document.getElementById('codeEditor').value;
       updateDraftUi();
     }
@@ -461,10 +321,6 @@
       });
     }
 
-    function toggleNewCmdBox() {
-      document.getElementById('newCmdBox').classList.toggle('hidden');
-    }
-
     async function createCmdTemplate() {
       try {
         const res = await api('/api/dev/create-command', {
@@ -480,78 +336,58 @@
         CURRENT_PATH = res.path;
         document.getElementById('currentFileLabel').textContent = res.path;
         document.getElementById('codeEditor').value = res.content;
-        document.getElementById('prTitle').value = 'Add command ' + res.path;
+        document.getElementById('advancedBox').classList.remove('hidden');
+        document.getElementById('newCmdBox').classList.add('hidden');
         updateDraftUi();
-        toggleNewCmdBox();
-      } catch (e) { showBox('aiResult', e.message, 'err'); }
+        showBox('runResultBox', `Nayi command draft me load ho gayi (${res.path}). Ab upar "🚀 RUN & APPLY" dabao!`, 'ok');
+      } catch (e) { showBox('runResultBox', e.message, 'err'); }
     }
 
-    async function analyzeIssue() {
-      const prompt = document.getElementById('aiPrompt').value.trim();
-      if (!prompt) return;
-      showBox('aiResult', 'Inspecting bot codebase & recent errors...', 'info');
-      try {
-        const res = await api('/api/dev/analyze', {
-          method: 'POST',
-          body: JSON.stringify({ prompt, targetPaths: CURRENT_PATH ? [CURRENT_PATH] : [] })
-        });
-        let msg = `Diagnosis (${res.aiPowered ? 'AI: ' + res.provider : 'Code Diagnostics'}):\n${res.rootCause}`;
-        if (res.matchedFiles?.length) msg += '\n\nMatched Files: ' + res.matchedFiles.map(f => f.path).join(', ');
-        showBox('aiResult', msg, 'info');
+    async function oneClickRun() {
+      const prompt = document.getElementById('cmdPrompt').value.trim();
+      const files = Object.entries(DRAFTS).map(([path, content]) => ({ path, content }));
+      showBox('runResultBox', 'Running: Inspecting Code → Running Sandbox Tests → Submitting to GitHub & Owner DM...', 'info');
+      document.getElementById('matchedBtns').innerHTML = '';
 
-        const propEl = document.getElementById('aiProposals');
-        propEl.innerHTML = '';
-        (res.matchedFiles || []).forEach(f => {
-          const b = document.createElement('button');
-          b.className = 'sec';
-          b.textContent = 'Open ' + f.path;
-          b.onclick = () => openFile(f.path);
-          propEl.appendChild(b);
+      try {
+        const res = await api('/api/dev/one-click-run', {
+          method: 'POST',
+          body: JSON.stringify({ prompt, files, targetPaths: CURRENT_PATH ? [CURRENT_PATH] : [] })
         });
-        (res.proposedEdits || []).forEach(ed => {
-          const b = document.createElement('button');
-          b.className = 'ok';
-          b.textContent = '✨ Load AI Fix: ' + ed.path;
-          b.onclick = () => {
-            DRAFTS[ed.path] = ed.content;
-            CURRENT_PATH = ed.path;
-            document.getElementById('currentFileLabel').textContent = ed.path;
-            document.getElementById('codeEditor').value = ed.content;
-            if (!document.getElementById('prTitle').value) document.getElementById('prTitle').value = ed.summary || prompt.slice(0, 60);
-            if (!document.getElementById('prErrorFixed').value) document.getElementById('prErrorFixed').value = res.errorFixed || ed.summary;
-            updateDraftUi();
-          };
-          propEl.appendChild(b);
-        });
-      } catch (e) { showBox('aiResult', e.message, 'err'); }
+
+        if (res.stage === 'needs_edit') {
+          showBox('runResultBox', `${res.rootCause}\n\n${res.message}`, 'info');
+          const box = document.getElementById('matchedBtns');
+          (res.matchedFiles || []).forEach(f => {
+            const b = document.createElement('button');
+            b.className = 'sec';
+            b.textContent = '📝 Edit ' + f.path;
+            b.onclick = () => openFile(f.path);
+            box.appendChild(b);
+          });
+          return;
+        }
+
+        const msg =
+          `✅ Done!\n` +
+          `• Branch: ${res.branch}\n` +
+          `• GitHub PR #${res.prNumber}: ${res.prUrl}\n` +
+          `• Changed: ${(res.filesModified || []).join(', ')}\n` +
+          `• Status: ${res.deployStatus || (res.autoDeployed ? 'Auto-Deployed Live' : 'Owner DM Sent with 1-Click Approve Button')}`;
+        showBox('runResultBox', msg, 'ok');
+        clearDrafts();
+      } catch (e) {
+        showBox('runResultBox', e.message, 'err');
+      }
     }
 
     async function runSandboxTests() {
       const files = Object.entries(DRAFTS).map(([path, content]) => ({ path, content }));
-      showBox('testResultBox', 'Running isolated sandbox syntax, command loader & security policy checks...', 'info');
+      showBox('testResultBox', 'Running isolated sandbox verification...', 'info');
       try {
         const res = await api('/api/dev/test', { method: 'POST', body: JSON.stringify({ files }) });
-        const summary = (res.results || []).map(r => `${r.passed ? '✅' : '❌'} ${r.step}: ${r.detail}`).join('\n');
-        showBox('testResultBox', summary, res.passed ? 'ok' : 'err');
+        showBox('testResultBox', (res.results || []).map(r => `${r.passed ? '✅' : '❌'} ${r.step}: ${r.detail}`).join('\n'), res.passed ? 'ok' : 'err');
       } catch (e) { showBox('testResultBox', e.message, 'err'); }
-    }
-
-    async function submitPr() {
-      const files = Object.entries(DRAFTS).map(([path, content]) => ({ path, content }));
-      if (!files.length) return showBox('prResultBox', 'Save at least one modified file to Draft Changes first.', 'err');
-      showBox('prResultBox', 'Running sandbox verification and opening PR on bot-maintenance...', 'info');
-      try {
-        const res = await api('/api/dev/submit-pr', {
-          method: 'POST',
-          body: JSON.stringify({
-            files,
-            title: document.getElementById('prTitle').value.trim() || 'Maintenance fix',
-            errorFixed: document.getElementById('prErrorFixed').value.trim(),
-            urgent: document.getElementById('urgentCheck')?.checked || false
-          })
-        });
-        showBox('prResultBox', `✅ Pull Request #${res.prNumber} Created!\nBranch: ${res.branch}\nURL: ${res.prUrl}\nAuto-Deployed: ${res.autoDeployed ? 'YES' : 'Awaiting Sole Owner Approval'}`, 'ok');
-      } catch (e) { showBox('prResultBox', e.message, 'err'); }
     }
 
     async function loadLogs() {
@@ -561,7 +397,7 @@
       if (!(data.logs || []).length) {
         const p = document.createElement('p');
         p.className = 'muted';
-        p.textContent = 'No activity recorded yet.';
+        p.textContent = 'Abhi koi activity log nahi hai.';
         el.appendChild(p);
         return;
       }
@@ -569,7 +405,7 @@
         const row = document.createElement('div');
         row.className = 'log-row';
         const safeUrl = l.github?.prUrl && /^https:\/\/github\.com\//.test(l.github.prUrl) ? escHtml(l.github.prUrl) : '';
-        row.innerHTML = `<strong>${escHtml(l.action)}</strong> • <span class="muted">${escHtml(new Date(l.epochMs).toLocaleString())}</span> • By <b>${escHtml(l.actorTag)}</b> (${escHtml(l.actorRole)})<br/>${escHtml(l.summary)}` +
+        row.innerHTML = `<strong>${escHtml(l.action)}</strong> • <span class="muted">${escHtml(new Date(l.epochMs).toLocaleString())}</span> • By <b>${escHtml(l.actorTag)}</b><br/>${escHtml(l.summary)}` +
           (l.filesModified?.length ? `<br/><span class="muted">Files: ${escHtml(l.filesModified.join(', '))}</span>` : '') +
           (safeUrl ? ` • <a style="color:var(--accent-bright)" target="_blank" rel="noopener" href="${safeUrl}">PR #${escHtml(l.github.prNumber)}</a>` : '');
         el.appendChild(row);
@@ -578,128 +414,7 @@
 
     async function loadStatus() {
       const s = await api('/api/dev/status');
-      document.getElementById('statusContent').textContent = JSON.stringify({
-        discordBot: s.bot,
-        github: s.github,
-        railway: { configured: s.railway.configured, service: s.railway.serviceName, deployments: s.railway.deployments },
-        access: s.access
-      }, null, 2);
-
-      if (ME?.session?.role === 'owner') {
-        const prEl = document.getElementById('ownerPrList');
-        prEl.innerHTML = '';
-        if (!(s.github.openPullRequests || []).length) {
-          const p = document.createElement('p');
-          p.className = 'muted';
-          p.textContent = 'No open pull requests.';
-          prEl.appendChild(p);
-        } else {
-          s.github.openPullRequests.forEach(p => {
-            const row = document.createElement('div');
-            row.className = 'log-row';
-            const b = document.createElement('button');
-            b.className = 'ok';
-            b.textContent = '✅ Approve, Merge & Deploy';
-            b.onclick = () => approvePr(p.number);
-            row.innerHTML = `<b>PR #${escHtml(p.number)}:</b> ${escHtml(p.title)} (${escHtml(p.head)} → ${escHtml(p.base)}) `;
-            row.appendChild(b);
-            prEl.appendChild(row);
-          });
-        }
-
-        const rwEl = document.getElementById('ownerDeployList');
-        rwEl.innerHTML = '';
-        (s.railway.deployments || []).forEach(d => {
-          const row = document.createElement('div');
-          row.className = 'log-row';
-          row.innerHTML = `<b>${escHtml(d.status)}</b> • ${escHtml(String(d.id).slice(0, 10))} (${escHtml(new Date(d.createdAt).toLocaleString())}) `;
-          if (d.status === 'SUCCESS') {
-            const b = document.createElement('button');
-            b.className = 'sec';
-            b.textContent = '⏪ Rollback Here';
-            b.onclick = () => rollbackDeploy(d.id);
-            row.appendChild(b);
-          }
-          rwEl.appendChild(row);
-        });
-      }
-    }
-
-    async function createDevInvite() {
-      try {
-        const res = await api('/api/owner/invite', {
-          method: 'POST',
-          body: JSON.stringify({
-            targetDiscordId: document.getElementById('invTargetId').value.trim(),
-            ttlMinutes: Number(document.getElementById('invTtl').value) || 30
-          })
-        });
-        showBox('ownerInvOut', `Single-Use Private Invitation URL (Share ONLY with your friend):\n${res.inviteUrl}\nExpires: ${new Date(res.expiresAt).toLocaleString()}`, 'ok');
-      } catch (e) { showBox('ownerInvOut', e.message, 'err'); }
-    }
-
-    async function revokeDev() {
-      try {
-        await api('/api/owner/revoke', { method: 'POST', body: JSON.stringify({ reason: 'Revoked by Owner' }) });
-        showBox('ownerInvOut', 'Trusted Developer access revoked & all active dev sessions terminated immediately.', 'ok');
-      } catch (e) { showBox('ownerInvOut', e.message, 'err'); }
-    }
-
-    async function toggleAutoDeploy(enabled) {
-      const res = await api('/api/owner/auto-deploy', { method: 'POST', body: JSON.stringify({ enabled }) });
-      showBox('ownerActionOut', `Urgent Auto-Deploy is now ${res.settings.urgentAutoDeploy ? 'ENABLED' : 'DISABLED'}.`, 'info');
-    }
-
-    async function approvePr(prNumber) {
-      try {
-        const res = await api('/api/owner/pr/approve', { method: 'POST', body: JSON.stringify({ prNumber, triggerDeploy: true }) });
-        showBox('ownerActionOut', `PR #${prNumber} approved & merged (${res.sha}).`, 'ok');
-        loadStatus();
-      } catch (e) { showBox('ownerActionOut', e.message, 'err'); }
-    }
-
-    async function applyBranchProtection() {
-      try {
-        await api('/api/owner/github/protect', { method: 'POST', body: '{}' });
-        showBox('ownerActionOut', 'Applied GitHub branch protection rules on main.', 'ok');
-      } catch (e) { showBox('ownerActionOut', e.message, 'err'); }
-    }
-
-    async function triggerRailwayDeploy() {
-      try {
-        const res = await api('/api/owner/railway/deploy', { method: 'POST', body: '{}' });
-        showBox('ownerActionOut', res.message, 'ok');
-      } catch (e) { showBox('ownerActionOut', e.message, 'err'); }
-    }
-
-    async function rollbackDeploy(deploymentId) {
-      try {
-        await api('/api/owner/railway/rollback', { method: 'POST', body: JSON.stringify({ deploymentId }) });
-        showBox('ownerActionOut', 'Rollback initiated cleanly to deployment ' + deploymentId, 'ok');
-      } catch (e) { showBox('ownerActionOut', e.message, 'err'); }
-    }
-
-    async function saveVault() {
-      try {
-        await api('/api/owner/integrations', {
-          method: 'POST',
-          body: JSON.stringify({
-            dashboardBaseUrl: document.getElementById('vBaseUrl').value,
-            githubRepo: document.getElementById('vGhRepo').value,
-            githubAppId: document.getElementById('vGhAppId').value,
-            githubInstallationId: document.getElementById('vGhInstallId').value,
-            githubPrivateKey: document.getElementById('vGhPrivKey').value,
-            githubToken: document.getElementById('vGhToken').value,
-            railwayToken: document.getElementById('vRwToken').value,
-            railwayProjectId: document.getElementById('vRwProj').value,
-            railwayServiceId: document.getElementById('vRwSvc').value,
-            railwayEnvironmentId: document.getElementById('vRwEnv').value,
-            discordClientSecret: document.getElementById('vDiscordSec').value,
-            aiApiKey: document.getElementById('vAiKey').value
-          })
-        });
-        showBox('vaultOut', 'Settings encrypted with AES-256-GCM and saved securely.', 'ok');
-      } catch (e) { showBox('vaultOut', e.message, 'err'); }
+      document.getElementById('statusContent').textContent = JSON.stringify(s, null, 2);
     }
 
     init();

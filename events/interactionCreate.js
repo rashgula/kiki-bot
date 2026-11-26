@@ -101,6 +101,15 @@ module.exports = {
       }
     }
 
+    // ── Sole Owner Trusted Dev Approval Buttons (DM & Guild) ────
+    if (interaction.customId && interaction.customId.startsWith('devacc_')) {
+      const devHandler = require('../commands/admin/devaccess.js');
+      if (devHandler.handleButton) {
+        await devHandler.handleButton(interaction, client);
+        return;
+      }
+    }
+
     // ── Voice Master Panel Interactions (Buttons & Modals) ───────
     if (interaction.customId && interaction.customId.startsWith('vm_')) {
       const VoiceMaster = require('../utils/voiceMaster.js');

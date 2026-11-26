@@ -1,5 +1,5 @@
-// KIKI Bot - Sole Owner Exclusive Trusted Developer Access Manager Command
-// Strictly restricted ONLY to primary Bot Owner (OWNER_IDS). Never accessible to developers, co-owners, or admins.
+// KIKI Bot - Sole Owner Exclusive Trusted Developer Access Manager Command (Discord Only)
+// Strictly restricted ONLY to primary Bot Owner (OWNER_IDS). Never accessible from website UI, developers, co-owners, or admins.
 
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const KikiEmbed = require('../../utils/embed.js');
@@ -20,17 +20,36 @@ module.exports = {
         .addIntegerOption(o => o.setName('minutes').setDescription('Expiry in minutes (5-1440)').setMinValue(5).setMaxValue(1440))
     )
     .addSubcommand(s => s.setName('revoke').setDescription('Immediately revoke Trusted Developer access and terminate sessions'))
-    .addSubcommand(s => s.setName('ownerlogin').setDescription('Get a 1-time private login link for the Sole Owner Console'))
     .addSubcommand(s => s.setName('status').setDescription('View Developer, GitHub PR & Railway deployment status'))
     .addSubcommand(s =>
       s.setName('approve')
-        .setDescription('Approve and merge a maintenance PR into main')
+        .setDescription('Approve, merge into main & trigger deploy for a maintenance PR')
+        .addIntegerOption(o => o.setName('pr').setDescription('GitHub PR number').setRequired(true))
+    )
+    .addSubcommand(s =>
+      s.setName('reject')
+        .setDescription('Close/reject a maintenance PR without merging')
         .addIntegerOption(o => o.setName('pr').setDescription('GitHub PR number').setRequired(true))
     )
     .addSubcommand(s =>
       s.setName('autodeploy')
         .setDescription('Enable or disable Owner-authorized Urgent Auto-Deploy')
         .addBooleanOption(o => o.setName('enabled').setDescription('Allow auto-merge on passing tests').setRequired(true))
+    )
+    .addSubcommand(s =>
+      s.setName('setkey')
+        .setDescription('Privately save encrypted GitHub / AI / Railway integration setting')
+        .addStringOption(o => o.setName('key').setDescription('Setting name').setRequired(true).addChoices(
+          { name: 'GITHUB_TOKEN', value: 'githubToken' },
+          { name: 'GEMINI_API_KEY', value: 'aiApiKey' },
+          { name: 'DASHBOARD_BASE_URL', value: 'dashboardBaseUrl' },
+          { name: 'RAILWAY_API_TOKEN', value: 'railwayToken' },
+          { name: 'RAILWAY_PROJECT_ID', value: 'railwayProjectId' },
+          { name: 'RAILWAY_SERVICE_ID', value: 'railwayServiceId' },
+          { name: 'RAILWAY_ENVIRONMENT_ID', value: 'railwayEnvironmentId' },
+          { name: 'DISCORD_CLIENT_SECRET', value: 'discordClientSecret' }
+        ))
+        .addStringOption(o => o.setName('value').setDescription('Secret or config value').setRequired(true))
     )
     .addSubcommand(s => s.setName('deploy').setDescription('Trigger Railway service redeploy'))
     .addSubcommand(s =>
@@ -41,10 +60,60 @@ module.exports = {
     .addSubcommand(s => s.setName('protect').setDescription('Apply branch protection rules on GitHub main branch'))
     .addSubcommand(s => s.setName('logs').setDescription('View recent Trusted Developer activity logs')),
 
+  async handleButton(interaction, client) {
+    if (!DevAccess.isSoleOwner(interaction.user.id)) {
+      return interaction.reply({
+        embeds: [KikiEmbed.error('Sole Owner Exclusive 🔒', 'Sirf **Sole Bot Owner** ye action approve ya revoke kar sakta hai!')],
+        ephemeral: true
+      });
+    }
+
+    const cid = interaction.customId;
+    if (cid === 'devacc_revoke') {
+      const out = DevAccess.revokeDeveloper(interaction.user.id, 'Revoked via Discord DM button');
+      return interaction.update({
+        embeds: [KikiEmbed.error('🛑 Trusted Developer Access Revoked', `Access revoked for \`${out.previousDeveloper?.discordTag || 'active developer'}\`. All web sessions invalidated!`)],
+        components: []
+      });
+    }
+
+    if (cid.startsWith('devacc_approve_')) {
+      const prNum = parseInt(cid.replace('devacc_approve_', ''), 10);
+      await interaction.deferUpdate();
+      const mergeRes = await GitHubIntegration.approveAndMergePullRequest(interaction.user.id, prNum, false);
+      if (!mergeRes.success) {
+        return interaction.followUp({ embeds: [KikiEmbed.error('Merge Failed', mergeRes.error)], ephemeral: true });
+      }
+      const rwRes = await RailwayIntegration.triggerRedeploy({ role: 'owner', discordId: interaction.user.id, discordTag: interaction.user.tag }).catch(() => ({ success: false }));
+      return interaction.editReply({
+        embeds: [KikiEmbed.success(
+          `✅ Approved, Merged & Live Deploying (PR #${prNum})`,
+          `• **Merged to:** \`main\` (\`${String(mergeRes.sha || '').slice(0, 7)}\`)\n` +
+          `• **Railway:** ${rwRes.success ? 'Redeploy Triggered 🚀' : 'GitHub main updated (Railway auto-deploy follows)'}\n` +
+          `• **PC Sync:** \`scripts/pc-sync.js\` agle ~20s me \`main\` aapke PC par pull kar lega!`
+        )],
+        components: []
+      });
+    }
+
+    if (cid.startsWith('devacc_reject_')) {
+      const prNum = parseInt(cid.replace('devacc_reject_', ''), 10);
+      await interaction.deferUpdate();
+      const res = await GitHubIntegration.closePullRequest(interaction.user.id, prNum);
+      if (!res.success) {
+        return interaction.followUp({ embeds: [KikiEmbed.error('Reject Failed', res.error)], ephemeral: true });
+      }
+      return interaction.editReply({
+        embeds: [KikiEmbed.warn(`❌ PR #${prNum} Rejected`, 'Pull request close kar di gayi hai. `main` branch me koi change nahi hua.')],
+        components: []
+      });
+    }
+  },
+
   async execute(interaction, client) {
     if (!DevAccess.isSoleOwner(interaction.user.id)) {
       return interaction.reply({
-        embeds: [KikiEmbed.error('Sole Owner Exclusive 🔒', 'Ye command sirf **Sole Bot Owner** use kar sakta hai! Trusted Developer ya Server Admins ko access nahi hai.')],
+        embeds: [KikiEmbed.error('Sole Owner Exclusive 🔒', 'Ye command sirf **Sole Bot Owner** use kar sakta hai! Trusted Developer ya Admins ko access nahi hai.')],
         ephemeral: true
       });
     }
@@ -61,8 +130,8 @@ module.exports = {
             '🎟️ Single-Use Developer Invite Created',
             `**Bound Friend:** ${friend.toString()} (\`${friend.tag}\` • \`${friend.id}\`)\n` +
             `**Expires:** <t:${Math.floor(inv.expiresAt / 1000)}:R> *(Single-use)*\n\n` +
-            `**Private Invite URL (Copy & DM privately to your friend):**\n\`${inv.inviteUrl}\`\n\n` +
-            `• Friend must verify via **Discord Bot DM 2FA** (or OAuth2 if configured) with their exact Discord account \`${friend.id}\`.\n` +
+            `**Private Invite URL (Sirf friend ko bhejein):**\n\`${inv.inviteUrl}\`\n\n` +
+            `• Website par kisi ko ownership section nahi dikhega.\n` +
             `• Revoke anytime via \`/devaccess revoke\`.`
           )],
           ephemeral: true
@@ -72,10 +141,12 @@ module.exports = {
       }
     }
 
-    if (sub === 'ownerlogin') {
-      const url = await DevAccess.createOwnerOneTimeLink(interaction.user.id);
+    if (sub === 'setkey') {
+      const key = interaction.options.getString('key');
+      const val = interaction.options.getString('value');
+      DevAccess.saveOwnerIntegrations(interaction.user.id, { [key]: val });
       return interaction.reply({
-        embeds: [KikiEmbed.purple('👑 One-Time Sole Owner Console Link', `Valid for **10 minutes** (single-use):\n\`${url}\``)],
+        embeds: [KikiEmbed.success('Encrypted Setting Saved 🔐', `Key \`${key}\` AES-256-GCM encryption ke sath save ho gayi hai!`)],
         ephemeral: true
       });
     }
@@ -106,6 +177,13 @@ module.exports = {
       return interaction.editReply({ embeds: [KikiEmbed.success('PR Approved & Merged ✅', `PR #${pr} merged into \`main\` and Railway deploy triggered!`)] });
     }
 
+    if (sub === 'reject') {
+      await interaction.deferReply({ ephemeral: true });
+      const pr = interaction.options.getInteger('pr');
+      const res = await GitHubIntegration.closePullRequest(interaction.user.id, pr);
+      return interaction.editReply({ embeds: [res.success ? KikiEmbed.warn(`PR #${pr} Closed ❌`, 'Closed without merging.') : KikiEmbed.error('Reject Failed', res.error)] });
+    }
+
     if (sub === 'deploy') {
       await interaction.deferReply({ ephemeral: true });
       const res = await RailwayIntegration.triggerRedeploy({ role: 'owner', discordId: interaction.user.id, discordTag: interaction.user.tag });
@@ -133,7 +211,6 @@ module.exports = {
       return interaction.reply({ embeds: [KikiEmbed.purple('📜 Recent Maintenance Logs', desc.slice(0, 3900))], ephemeral: true });
     }
 
-    // Default: status
     await interaction.deferReply({ ephemeral: true });
     const [st, gh, rw] = await Promise.all([
       Promise.resolve(DevAccess.getPublicSafeStatus()),
@@ -188,15 +265,6 @@ module.exports = {
       }
     }
 
-    if (sub === 'ownerlogin' || sub === 'login') {
-      const url = await DevAccess.createOwnerOneTimeLink(message.author.id);
-      await message.delete().catch(() => {});
-      await message.author.send({
-        embeds: [KikiEmbed.purple('👑 One-Time Owner Console Link', `Valid 10 minutes (single-use):\n${url}`)]
-      }).catch(() => {});
-      return message.channel.send({ embeds: [KikiEmbed.success('Owner Login Sent 📩', '1-time Owner Console link aapke DM me bhej diya gaya hai!')] });
-    }
-
     if (sub === 'revoke') {
       const out = DevAccess.revokeDeveloper(message.author.id, 'Revoked via &devaccess revoke');
       return message.reply({
@@ -216,6 +284,12 @@ module.exports = {
       if (!res.success) return message.reply({ embeds: [KikiEmbed.error('Merge Error', res.error)] });
       await RailwayIntegration.triggerRedeploy({ role: 'owner', discordId: message.author.id, discordTag: message.author.tag }).catch(() => {});
       return message.reply({ embeds: [KikiEmbed.success('PR Merged & Deployed ✅', `PR #${pr} merged into \`main\`!`)] });
+    }
+
+    if (sub === 'reject' && args[1]) {
+      const pr = parseInt(args[1], 10);
+      const res = await GitHubIntegration.closePullRequest(message.author.id, pr);
+      return message.reply({ embeds: [res.success ? KikiEmbed.warn(`PR #${pr} Closed ❌`, 'Rejected without merging.') : KikiEmbed.error('Reject Error', res.error)] });
     }
 
     if (sub === 'deploy') {
@@ -242,7 +316,7 @@ module.exports = {
         `👑 **Sole Owner:** ${st.soleOwnerIds.map(id => `<@${id}>`).join(', ')}\n` +
         `👨‍💻 **Developer:** ${st.developer ? `\`${st.developer.discordTag}\` (${st.developer.status})` : '`None Active`'}\n` +
         `🌐 **Portal:** \`${st.dashboardBaseUrl}/dev\`\n\n` +
-        `**Owner Commands:** \`&devaccess invite @friend\`, \`&devaccess revoke\`, \`&devaccess ownerlogin\`, \`&devaccess approve <pr>\`, \`&devaccess logs\``
+        `**Owner Discord Commands:** \`&devaccess invite @friend\`, \`&devaccess revoke\`, \`&devaccess approve <pr>\`, \`&devaccess reject <pr>\`, \`&devaccess autodeploy on|off\`, \`&devaccess logs\``
       )]
     });
   }

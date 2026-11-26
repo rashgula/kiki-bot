@@ -1,11 +1,13 @@
-// KIKI Bot - Authenticated Maintenance Dashboard & API Server
-// Preserves health checks on / and /health while securing /dev, /api/dev/*, and /api/owner/* behind verified sessions.
+// KIKI Bot - Authenticated Maintenance Website & API Server
+// Zero Ownership UI or owner endpoints exposed on web — Owner controls live exclusively in Discord (&devaccess + DM buttons).
+// Preserves health checks on / and /health while locking /dev and /api/dev/* behind verified friend sessions.
 
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const { URL } = require('url');
 const chalk = require('chalk');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const DevAccess = require('./devAccess.js');
 const DevPolicy = require('./devPolicy.js');
 const DevTests = require('./devTests.js');
@@ -104,6 +106,69 @@ function buildClearCookie() {
   return `${COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
 }
 
+function buildOwnerPrDmButtons(prNumber) {
+  return [
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId(`devacc_approve_${prNumber}`).setLabel(`Approve & Deploy PR #${prNumber}`).setStyle(ButtonStyle.Success),
+      new ButtonBuilder().setCustomId(`devacc_reject_${prNumber}`).setLabel('Reject PR').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId('devacc_revoke').setLabel('Revoke Developer').setStyle(ButtonStyle.Danger)
+    )
+  ];
+}
+
+function extractCommandNames(files) {
+  const cmds = [];
+  for (const f of files || []) {
+    const m = String(f.path || f).match(/^commands\/([^/]+)\/([^/]+)\.js$/i);
+    if (m) cmds.push(`&${m[2]} (${m[1]})`);
+  }
+  return cmds;
+}
+
+async function notifyOwnerPrAndMaybeAutoDeploy(client, session, prRes, promptText, summaryText) {
+  const cmdNames = extractCommandNames(prRes.filesModified);
+  const state = DevAccess.loadState();
+  let autoDeployed = false;
+  let deployStatus = 'Awaiting Owner Approval (Click button below)';
+
+  if (state.settings?.urgentAutoDeploy) {
+    const mergeOut = await GitHubIntegration.approveAndMergePullRequest(
+      DevAccess.getSoleOwnerIds()[0],
+      prRes.prNumber,
+      true
+    );
+    if (mergeOut.success) {
+      const rwRes = await RailwayIntegration.triggerRedeploy({ role: 'system', discordTag: 'Urgent Auto-Deploy (Owner Authorized)' }).catch(() => ({ success: false }));
+      autoDeployed = true;
+      deployStatus = rwRes.success
+        ? 'Merged to `main` & Railway Redeploy Triggered ✅'
+        : 'Merged to `main` ✅ (GitHub/Railway auto-deploy follows)';
+    }
+  }
+
+  const dmBody =
+    `👨‍💻 **Kisne Kiya (Developer):** <@${session.discordId}> (\`${session.discordTag}\` • \`${session.discordId}\`)\n` +
+    `💬 **Prompt / Command Request:** \`${String(promptText || summaryText || '').slice(0, 220)}\`\n` +
+    `🛠️ **Command / Files Changed:** ${cmdNames.length ? cmdNames.map(c => `\`${c}\``).join(', ') : prRes.filesModified.map(f => `\`${f}\``).join(', ')}\n` +
+    `📄 **Files Modified:** ${prRes.filesModified.map(f => `\`${f}\``).join(', ')}\n` +
+    `🧪 **Sandbox Tests:** \`PASSED ✅\`\n` +
+    `🐙 **GitHub PR:** [#${prRes.prNumber}](${prRes.prUrl}) (\`${prRes.branch}\` → \`main\`)\n` +
+    `🚂 **Status:** ${deployStatus}`;
+
+  const components = autoDeployed
+    ? [new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('devacc_revoke').setLabel('Revoke Developer').setStyle(ButtonStyle.Danger))]
+    : buildOwnerPrDmButtons(prRes.prNumber);
+
+  await ActivityLogger.notifyOwnerDm(
+    client,
+    autoDeployed ? `🚀 Maintenance Change Live (PR #${prRes.prNumber})` : `🔧 Maintenance PR #${prRes.prNumber} Approval Needed`,
+    dmBody,
+    components
+  ).catch(() => {});
+
+  return { autoDeployed, deployStatus, cmdNames };
+}
+
 async function handleRequest(req, res, client) {
   const reqUrl = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
   const pathname = reqUrl.pathname;
@@ -120,7 +185,7 @@ async function handleRequest(req, res, client) {
     });
   }
 
-  // ── 2. Maintenance Portal HTML ───────────────────────────────────
+  // ── 2. Private Maintenance Portal HTML (Developer UI Only) ───────
   if (method === 'GET' && (pathname === '/dev' || pathname === '/dev/')) {
     const htmlPath = path.join(__dirname, '..', 'public', 'dev-portal.html');
     if (!fs.existsSync(htmlPath)) return sendJson(res, 404, { error: 'Portal UI missing' });
@@ -134,7 +199,7 @@ async function handleRequest(req, res, client) {
     return res.end(html);
   }
 
-  // ── 3. Public Auth Endpoints (Rate Limited) ──────────────────────
+  // ── 3. Invite Claim Auth Endpoints Only (Zero Owner Web Auth) ────
   if (pathname.startsWith('/api/auth/')) {
     if (isRateLimited(ip, 30, 60000)) {
       return sendJson(res, 429, { error: 'Too many authentication attempts. Wait a minute.' });
@@ -149,7 +214,6 @@ async function handleRequest(req, res, client) {
       return sendJson(res, 200, {
         valid: true,
         maskedTargetId: maskedId,
-        targetTag: check.invite.targetTag || maskedId,
         expiresAt: check.invite.expiresAt,
         hasOAuth: DevAccess.hasOAuthConfigured()
       });
@@ -167,46 +231,13 @@ async function handleRequest(req, res, client) {
       if (!out.success) return sendJson(res, 401, out);
       return sendJson(res, 200, {
         success: true,
-        role: out.role,
-        discordId: out.discordId,
         discordTag: out.discordTag
       }, { 'Set-Cookie': buildSetCookie(req, out.cookieValue, out.maxAgeSec) });
-    }
-
-    if (method === 'POST' && pathname === '/api/auth/owner/send-otp') {
-      const body = await readJsonBody(req);
-      const out = await DevAccess.sendOwnerDmOtp(client, body.discordId);
-      return sendJson(res, out.success ? 200 : 403, out);
-    }
-
-    if (method === 'POST' && pathname === '/api/auth/owner/verify-otp') {
-      const body = await readJsonBody(req);
-      const out = await DevAccess.verifyOwnerDmOtp(client, body.discordId, body.otp);
-      if (!out.success) return sendJson(res, 401, out);
-      return sendJson(res, 200, {
-        success: true,
-        role: out.role,
-        discordId: out.discordId,
-        discordTag: out.discordTag
-      }, { 'Set-Cookie': buildSetCookie(req, out.cookieValue, out.maxAgeSec) });
-    }
-
-    if (method === 'GET' && pathname === '/api/auth/owner-claim') {
-      const token = reqUrl.searchParams.get('token') || '';
-      const out = DevAccess.claimOwnerOneTimeLink(token);
-      if (!out.success) return sendJson(res, 401, out);
-      res.writeHead(302, {
-        Location: '/dev',
-        'Set-Cookie': buildSetCookie(req, out.cookieValue, out.maxAgeSec),
-        'Cache-Control': 'no-store'
-      });
-      return res.end();
     }
 
     if (method === 'GET' && pathname === '/api/auth/discord/url') {
-      const mode = reqUrl.searchParams.get('mode') === 'owner' ? 'owner' : 'invite';
       const token = reqUrl.searchParams.get('token') || '';
-      const url = DevAccess.buildDiscordOAuthAuthorizeUrl(token, mode, req);
+      const url = DevAccess.buildDiscordOAuthAuthorizeUrl(token, 'invite', req);
       if (!url) return sendJson(res, 400, { error: 'Discord OAuth2 secret is not configured.' });
       return sendJson(res, 200, { url });
     }
@@ -234,35 +265,33 @@ async function handleRequest(req, res, client) {
       DevAccess.logoutSession(cookies[COOKIE_NAME]);
       return sendJson(res, 200, { success: true }, { 'Set-Cookie': buildClearCookie() });
     }
+
+    return sendJson(res, 404, { error: 'Auth endpoint not found' });
   }
 
-  // ── 4. Protected Auth Middleware for /api/dev/* & /api/owner/* ───
+  // ── 4. Protected Session Verification for /api/dev/* ──────────────
   const cookies = parseCookies(req);
   const session = DevAccess.authenticateCookie(cookies[COOKIE_NAME]);
   if (!session) {
-    return sendJson(res, 401, { error: 'Authentication required. Your session may have expired or been revoked by the Owner.' });
+    return sendJson(res, 401, { error: 'Authentication required. Your invite or session has expired or been revoked.' });
   }
 
-  // ── 5. Developer + Owner Shared Maintenance Routes (/api/dev/*) ───
+  if (pathname.startsWith('/api/owner/')) {
+    return sendJson(res, 403, { error: 'Ownership controls are exclusive to Discord (&devaccess).' });
+  }
+
+  // ── 5. Maintenance Studio Endpoints (/api/dev/*) ─────────────────
   if (method === 'GET' && pathname === '/api/dev/me') {
-    const publicStatus = DevAccess.getPublicSafeStatus(req);
     return sendJson(res, 200, {
       authenticated: true,
-      session: { role: session.role, discordId: session.discordId, discordTag: session.discordTag, expiresAt: session.expiresAt },
-      permissions: session.role === 'owner'
-        ? ['ALL_OWNER_CONTROLS', 'MANAGE_DEVELOPER', 'APPROVE_PR', 'RAILWAY_ROLLBACK', 'EDIT_CONFIG']
-        : ['VIEW_EDIT_COMMANDS_AND_FEATURES', 'RUN_AI_DIAGNOSTICS', 'RUN_SANDBOX_TESTS', 'OPEN_MAINTENANCE_PR', 'VIEW_DEPLOY_AND_LOGS'],
-      restrictions: session.role === 'developer'
-        ? ['CANNOT_DELETE_REPO_FILES_OR_BRANCHES', 'CANNOT_COMMIT_DIRECTLY_TO_MAIN', 'CANNOT_DELETE_RAILWAY_OR_DB', 'CANNOT_EDIT_SECRETS_OR_OWNER_PERMS', 'CANNOT_REVOKE_OR_INVITE']
-        : [],
-      accessStatus: publicStatus,
-      aiConfigured: Boolean(DevAi.getAiProviderConfig())
+      session: { discordId: session.discordId, discordTag: session.discordTag, expiresAt: session.expiresAt },
+      aiConfigured: Boolean(DevAi.getAiProviderConfig()),
+      githubConfigured: GitHubIntegration.getConfigSummary().connected
     });
   }
 
   if (method === 'GET' && pathname === '/api/dev/files') {
-    const files = DevAi.listEditableFiles(2000);
-    return sendJson(res, 200, { files });
+    return sendJson(res, 200, { files: DevAi.listEditableFiles(2000) });
   }
 
   if (method === 'GET' && pathname === '/api/dev/file') {
@@ -272,11 +301,7 @@ async function handleRequest(req, res, client) {
     }
     const full = path.join(DevPolicy.REPO_ROOT, rel);
     if (!fs.existsSync(full)) return sendJson(res, 404, { error: 'File not found' });
-    return sendJson(res, 200, {
-      path: rel,
-      editable: DevPolicy.isEditablePath(rel),
-      content: fs.readFileSync(full, 'utf8')
-    });
+    return sendJson(res, 200, { path: rel, editable: DevPolicy.isEditablePath(rel), content: fs.readFileSync(full, 'utf8') });
   }
 
   if (method === 'POST' && pathname === '/api/dev/analyze') {
@@ -331,6 +356,76 @@ module.exports = {
     return sendJson(res, 200, { path: scan.normalizedPath, content: template });
   }
 
+  // Unified 1-Click Pipeline: Prompt/Draft -> AI Fix -> Sandbox Test -> GitHub PR -> Owner DM Notification (+ Deploy if autoDeploy enabled)
+  if (method === 'POST' && pathname === '/api/dev/one-click-run') {
+    const body = await readJsonBody(req, 2 * 1024 * 1024);
+    const prompt = String(body.prompt || '').trim();
+    let draftFiles = Array.isArray(body.files) ? body.files : [];
+    let diagnosis = null;
+
+    if (draftFiles.length === 0) {
+      if (!prompt) return sendJson(res, 400, { error: 'CMD / problem box me kuch likhein ya file edit save karein.' });
+      diagnosis = await DevAi.analyzeAndGenerateFix({
+        prompt,
+        targetPaths: Array.isArray(body.targetPaths) ? body.targetPaths : [],
+        client
+      });
+      if (diagnosis.proposedEdits && diagnosis.proposedEdits.length > 0) {
+        draftFiles = diagnosis.proposedEdits.map(e => ({ path: e.path, content: e.content, summary: e.summary }));
+      } else {
+        return sendJson(res, 200, {
+          stage: 'needs_edit',
+          aiPowered: diagnosis.aiPowered,
+          rootCause: diagnosis.rootCause,
+          matchedFiles: diagnosis.matchedFiles || [],
+          recentErrors: diagnosis.recentErrors || [],
+          message: diagnosis.aiPowered
+            ? 'AI ne koi automatic file edit propose nahi kiya. Niche editor se file kholkar edit karein aur dubara Run dabayein.'
+            : 'GEMINI_API_KEY set nahi hai, isliye auto-code generation off hai — niche matched file kholkar edit karein ya New Command Draft banayein aur dubara Run dabayein.'
+        });
+      }
+    }
+
+    const testRes = await DevTests.runVerificationSuite({ actor: session, draftFiles });
+    if (!testRes.passed) {
+      return sendJson(res, 400, {
+        stage: 'test_failed',
+        error: 'Sandbox tests failed. Fix error before submitting.',
+        diagnosis,
+        testResults: testRes.results,
+        proposedEdits: draftFiles
+      });
+    }
+
+    const prRes = await GitHubIntegration.commitAndOpenPullRequest({
+      actor: session,
+      files: draftFiles,
+      title: body.title || diagnosis?.errorFixed || prompt.slice(0, 60) || 'Maintenance update',
+      description: prompt,
+      errorFixed: diagnosis?.errorFixed || prompt || 'Code update'
+    });
+
+    if (!prRes.success) {
+      return sendJson(res, 400, {
+        stage: 'github_failed',
+        error: prRes.error,
+        diagnosis,
+        testResults: testRes.results,
+        proposedEdits: draftFiles
+      });
+    }
+
+    const notifyOut = await notifyOwnerPrAndMaybeAutoDeploy(client, session, prRes, prompt, diagnosis?.errorFixed);
+    return sendJson(res, 200, {
+      stage: 'completed',
+      success: true,
+      diagnosis,
+      testResults: testRes.results,
+      ...prRes,
+      ...notifyOut
+    });
+  }
+
   if (method === 'POST' && pathname === '/api/dev/test') {
     const body = await readJsonBody(req, 2 * 1024 * 1024);
     const result = await DevTests.runVerificationSuite({
@@ -345,13 +440,9 @@ module.exports = {
     const draftFiles = Array.isArray(body.files) ? body.files : [];
     if (draftFiles.length === 0) return sendJson(res, 400, { error: 'At least one edited file is required.' });
 
-    // Run mandatory sandbox verification BEFORE pushing any maintenance commit/PR
     const testRes = await DevTests.runVerificationSuite({ actor: session, draftFiles });
     if (!testRes.passed) {
-      return sendJson(res, 400, {
-        error: 'Sandbox tests failed. Fix errors before creating a Pull Request.',
-        testResults: testRes.results
-      });
+      return sendJson(res, 400, { error: 'Sandbox tests failed. Fix errors before submitting PR.', testResults: testRes.results });
     }
 
     const prRes = await GitHubIntegration.commitAndOpenPullRequest({
@@ -361,121 +452,26 @@ module.exports = {
       description: body.description || '',
       errorFixed: body.errorFixed || body.description || body.title || ''
     });
-
     if (!prRes.success) return sendJson(res, 400, prRes);
 
-    // Notify Sole Owner via Discord DM cleanly
-    ActivityLogger.notifyOwnerDm(
-      client,
-      `🔧 New Maintenance PR #${prRes.prNumber} Ready for Review`,
-      `**Submitted By:** \`${session.discordTag}\` (${session.role})\n` +
-      `**Branch:** \`${prRes.branch}\` → \`main\`\n` +
-      `**Files:** ${prRes.filesModified.map(f => `\`${f}\``).join(', ')}\n` +
-      `**Error Fixed:** ${body.errorFixed || body.title}\n` +
-      `**PR Link:** ${prRes.prUrl}\n\n` +
-      `*Approve with \`&devaccess approve ${prRes.prNumber}\` or via the Owner Console.*`
-    ).catch(() => {});
-
-    // Urgent auto-deploy ONLY if Owner explicitly enabled it AND tests passed
-    let autoDeployed = false;
-    const state = DevAccess.loadState();
-    if (state.settings?.urgentAutoDeploy && body.urgent === true) {
-      const mergeOut = await GitHubIntegration.approveAndMergePullRequest(
-        DevAccess.getSoleOwnerIds()[0],
-        prRes.prNumber,
-        true
-      );
-      if (mergeOut.success) {
-        autoDeployed = true;
-        await RailwayIntegration.triggerRedeploy({ role: 'system', discordTag: 'Urgent Auto-Deploy (Owner Authorized)' });
-      }
-    }
-
-    return sendJson(res, 200, { ...prRes, testsPassed: true, testResults: testRes.results, autoDeployed });
+    const notifyOut = await notifyOwnerPrAndMaybeAutoDeploy(client, session, prRes, body.description, body.errorFixed || body.title);
+    return sendJson(res, 200, { ...prRes, testsPassed: true, testResults: testRes.results, ...notifyOut });
   }
 
   if (method === 'GET' && pathname === '/api/dev/status') {
     const [ghStatus, rwStatus] = await Promise.all([
       GitHubIntegration.getStatus(),
-      RailwayIntegration.getDeployments(6)
+      RailwayIntegration.getDeployments(5)
     ]);
     return sendJson(res, 200, {
       bot: RailwayIntegration.getBotLiveHealth(client),
-      github: ghStatus,
-      railway: rwStatus,
-      access: DevAccess.getPublicSafeStatus(req)
+      github: { connected: ghStatus.connected, repo: ghStatus.repo, mainBranch: ghStatus.mainBranch, maintenanceBranch: ghStatus.maintenanceBranch, openPullRequests: ghStatus.openPullRequests },
+      railway: { configured: rwStatus.configured, service: rwStatus.serviceName, deployments: rwStatus.deployments }
     });
   }
 
   if (method === 'GET' && pathname === '/api/dev/logs') {
-    return sendJson(res, 200, { logs: ActivityLogger.getRecent(60) });
-  }
-
-  // ── 6. Strict Sole Owner-Only Routes (/api/owner/*) ──────────────
-  if (pathname.startsWith('/api/owner/')) {
-    if (session.role !== 'owner' || !DevAccess.isSoleOwner(session.discordId)) {
-      ActivityLogger.record({
-        actorRole: session.role,
-        actorId: session.discordId,
-        actorTag: session.discordTag,
-        action: 'POLICY_BLOCKED',
-        summary: `Developer attempted Owner-only endpoint ${pathname}`
-      });
-      return sendJson(res, 403, { error: 'Forbidden: Only the Sole Bot Owner can perform this action.' });
-    }
-
-    if (method === 'POST' && pathname === '/api/owner/invite') {
-      const body = await readJsonBody(req);
-      try {
-        const inv = DevAccess.createInvite(session.discordId, body.targetDiscordId, body.targetTag, body.ttlMinutes || 30, req);
-        return sendJson(res, 200, { success: true, ...inv });
-      } catch (e) {
-        return sendJson(res, 400, { error: e.message });
-      }
-    }
-
-    if (method === 'POST' && pathname === '/api/owner/revoke') {
-      const body = await readJsonBody(req);
-      const out = DevAccess.revokeDeveloper(session.discordId, body.reason || 'Revoked from Owner Console');
-      return sendJson(res, 200, out);
-    }
-
-    if (method === 'POST' && pathname === '/api/owner/auto-deploy') {
-      const body = await readJsonBody(req);
-      const settings = DevAccess.setUrgentAutoDeploy(session.discordId, Boolean(body.enabled));
-      return sendJson(res, 200, { success: true, settings });
-    }
-
-    if (method === 'POST' && pathname === '/api/owner/pr/approve') {
-      const body = await readJsonBody(req);
-      const out = await GitHubIntegration.approveAndMergePullRequest(session.discordId, body.prNumber, false);
-      if (out.success && body.triggerDeploy !== false) {
-        await RailwayIntegration.triggerRedeploy(session).catch(() => {});
-      }
-      return sendJson(res, out.success ? 200 : 400, out);
-    }
-
-    if (method === 'POST' && pathname === '/api/owner/github/protect') {
-      const out = await GitHubIntegration.applyMainBranchProtection(session.discordId);
-      return sendJson(res, out.success ? 200 : 400, out);
-    }
-
-    if (method === 'POST' && pathname === '/api/owner/railway/deploy') {
-      const out = await RailwayIntegration.triggerRedeploy(session);
-      return sendJson(res, out.success ? 200 : 400, out);
-    }
-
-    if (method === 'POST' && pathname === '/api/owner/railway/rollback') {
-      const body = await readJsonBody(req);
-      const out = await RailwayIntegration.rollbackDeployment(session.discordId, body.deploymentId);
-      return sendJson(res, out.success ? 200 : 400, out);
-    }
-
-    if (method === 'POST' && pathname === '/api/owner/integrations') {
-      const body = await readJsonBody(req);
-      DevAccess.saveOwnerIntegrations(session.discordId, body);
-      return sendJson(res, 200, { success: true });
-    }
+    return sendJson(res, 200, { logs: ActivityLogger.getRecent(50) });
   }
 
   return sendJson(res, 404, { error: 'Endpoint not found' });
@@ -493,7 +489,7 @@ function attachMaintenanceServer(client) {
   });
 
   server.listen(port, () => {
-    console.log(chalk.green(`  🌐 [MAINTENANCE & HEALTH SERVER] Listening on port ${port} (/health & protected /dev)`));
+    console.log(chalk.green(`  🌐 [MAINTENANCE & HEALTH SERVER] Listening on port ${port} (/health & /dev)`));
   });
   return server;
 }

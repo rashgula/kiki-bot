@@ -334,6 +334,33 @@ const GitHubIntegration = {
     }
   },
 
+  async closePullRequest(ownerUserId, prNumber) {
+    if (!DevAccess.isSoleOwner(ownerUserId)) {
+      return { success: false, error: 'Only Sole Owner can reject/close PRs.' };
+    }
+    const auth = await getAuthHeaders();
+    if (!auth) return { success: false, error: 'GitHub credentials not configured.' };
+    const summary = this.getConfigSummary();
+    try {
+      await axios.patch(
+        `${API_BASE}/repos/${summary.repo}/pulls/${prNumber}`,
+        { state: 'closed' },
+        { headers: auth.headers, timeout: 10000 }
+      );
+      ActivityLogger.record({
+        actorRole: 'owner',
+        actorId: String(ownerUserId),
+        actorTag: 'Sole Owner',
+        action: 'OWNER_PR_REJECTED',
+        summary: `Closed PR #${prNumber} without merging into ${summary.mainBranch}.`,
+        github: { prNumber: Number(prNumber) }
+      });
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.response?.data?.message || err.message };
+    }
+  },
+
   // Configure GitHub branch protection rules on main (requires admin permissions on repo token once)
   async applyMainBranchProtection(ownerUserId) {
     if (!DevAccess.isSoleOwner(ownerUserId)) {
