@@ -116,10 +116,104 @@ function getAiProviderConfig() {
   return getAllConfiguredProviders()[0] || null;
 }
 
-function stripJsonFences(text) {
-  const s = String(text || '').trim();
-  const m = s.match(/^```(?:json)?\s*([\s\S]*?)```$/i);
-  return m ? m[1].trim() : s;
+function stripOuterCodeFence(text) {
+  let s = String(text || '').trim();
+  const openMatch = s.match(/^```[a-zA-Z0-9_-]*\r?\n/);
+  if (openMatch && s.endsWith('```')) {
+    s = s.slice(openMatch[0].length, -3);
+  }
+  return s.replace(/^\r?\n|\r?\n$/g, '') + '\n';
+}
+
+function repairInvalidJsonEscapes(raw) {
+  let s = String(raw || '').trim();
+  s = s.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+  const firstBrace = s.indexOf('{');
+  const lastBrace = s.lastIndexOf('}');
+  if (firstBrace >= 0 && lastBrace > firstBrace) s = s.slice(firstBrace, lastBrace + 1);
+
+  let out = '';
+  let inStr = false;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (!inStr) {
+      if (ch === '"') inStr = true;
+      out += ch;
+      continue;
+    }
+    if (ch === '"') {
+      inStr = false;
+      out += ch;
+      continue;
+    }
+    if (ch === '\n') { out += '\\n'; continue; }
+    if (ch === '\r') { out += '\\r'; continue; }
+    if (ch === '\t') { out += '\\t'; continue; }
+    if (ch === '\\') {
+      const nxt = s[i + 1];
+      if (nxt === undefined) { out += '\\\\'; continue; }
+      if (nxt === '"' || nxt === '\\' || nxt === '/' || nxt === 'b' || nxt === 'f' || nxt === 'n' || nxt === 'r' || nxt === 't') {
+        out += '\\' + nxt;
+        i++;
+        continue;
+      }
+      if (nxt === 'u' && /^[0-9a-fA-F]{4}/.test(s.slice(i + 2, i + 6))) {
+        out += '\\u' + s.slice(i + 2, i + 6);
+        i += 5;
+        continue;
+      }
+      // Invalid escape (like \d, \s, \w, \., \' inside JS regex/strings) -> double-escape backslash
+      out += '\\\\';
+      continue;
+    }
+    out += ch;
+  }
+  return out;
+}
+
+function parseTaggedAiResponse(raw) {
+  const s = String(raw || '');
+  if (!/===FILE:|===ROOT_CAUSE===/i.test(s)) return null;
+
+  const rootMatch = s.match(/===ROOT_CAUSE===\s*([\s\S]*?)(?====(?:ERROR_FIXED|FILE:|END_FILE)|$)/i);
+  const fixMatch = s.match(/===ERROR_FIXED===\s*([\s\S]*?)(?====(?:ROOT_CAUSE|FILE:|END_FILE)|$)/i);
+  const proposedEdits = [];
+
+  const fileRegex = /===FILE:\s*([^\r\n=]+?)\s*===\s*([\s\S]*?)(?=(?:===END_FILE===|(?====FILE:)|$))/gi;
+  let m;
+  while ((m = fileRegex.exec(s)) !== null) {
+    const filePath = String(m[1] || '').trim();
+    let body = String(m[2] || '').trim();
+    let summary = 'AI generated update';
+    const sumMatch = body.match(/^===SUMMARY:\s*([^\r\n=]+?)\s*===\s*/i);
+    if (sumMatch) {
+      summary = sumMatch[1].trim();
+      body = body.slice(sumMatch[0].length).trim();
+    }
+    const content = stripOuterCodeFence(body);
+    if (filePath && content.trim()) {
+      proposedEdits.push({ path: filePath, summary, content });
+    }
+  }
+
+  return {
+    rootCause: rootMatch ? rootMatch[1].trim() : 'Diagnosis complete.',
+    errorFixed: fixMatch ? fixMatch[1].trim() : '',
+    proposedEdits
+  };
+}
+
+function parseAiResponseText(rawText) {
+  const tagged = parseTaggedAiResponse(rawText);
+  if (tagged) return tagged;
+
+  const stripped = String(rawText || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+  try {
+    return JSON.parse(stripped);
+  } catch (err) {
+    const repaired = repairInvalidJsonEscapes(rawText);
+    return JSON.parse(repaired);
+  }
 }
 
 function sleep(ms) {
@@ -139,11 +233,10 @@ async function fetchAvailableGeminiModels(key) {
     const models = (res.data?.models || [])
       .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
       .map(m => String(m.name || '').replace(/^models\//, ''))
-      .filter(id => id.startsWith('gemini-') && !/embedding|imagen|veo|tts|audio|live|aqa|robotics/i.test(id));
+      .filter(id => (id.startsWith('gemini-') || id.startsWith('gemma-3')) && !/embedding|imagen|veo|tts|audio|live|aqa|robotics/i.test(id));
     models.sort((a, b) => {
-      const af = a.includes('flash') ? 0 : 1;
-      const bf = b.includes('flash') ? 0 : 1;
-      return af - bf || b.localeCompare(a);
+      const score = (id) => (id.startsWith('gemini-') && id.includes('flash') ? 0 : id.startsWith('gemini-') ? 1 : 2);
+      return score(a) - score(b) || b.localeCompare(a);
     });
     return models;
   } catch {
@@ -155,11 +248,11 @@ async function postGeminiSingle(key, model, promptText) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
   const resp = await axios.post(url, {
     contents: [{ role: 'user', parts: [{ text: promptText }] }],
-    generationConfig: { responseMimeType: 'application/json' }
-  }, { timeout: 35000 });
+    generationConfig: { temperature: 0.2 }
+  }, { timeout: 45000 });
   const parts = resp.data?.candidates?.[0]?.content?.parts || [];
   const answerPart = [...parts].reverse().find(p => !p.thought && typeof p.text === 'string') || parts[0];
-  return { text: answerPart?.text || '{}', modelUsed: model };
+  return { text: answerPart?.text || '', modelUsed: model };
 }
 
 async function callGemini(key, promptText) {
@@ -247,10 +340,11 @@ async function analyzeAndGenerateFix({ prompt, targetPaths = [], client = null }
   }
   matched = matched.slice(0, 4);
 
-  const fileContexts = matched.map(m => {
+  const fileContexts = matched.map((m, idx) => {
     const full = path.join(DevPolicy.REPO_ROOT, m.path);
+    const maxLen = idx === 0 ? 32000 : 10000;
     const content = fs.existsSync(full) ? fs.readFileSync(full, 'utf8') : '';
-    return { path: m.path, reason: m.reason, content: content.slice(0, 9000) };
+    return { path: m.path, reason: m.reason, truncated: content.length > maxLen, content: content.slice(0, maxLen) };
   });
 
   const providers = getAllConfiguredProviders();
@@ -267,7 +361,22 @@ async function analyzeAndGenerateFix({ prompt, targetPaths = [], client = null }
     };
   }
 
-  const systemPrompt =
+  const taggedSystemPrompt =
+    'You are the KIKI Discord Bot AI maintenance engineer. ' +
+    'Given the developer issue/command request, recent runtime errors, and allowed source files, identify the root cause or create the requested command.\n' +
+    'Return your answer using EXACTLY these markers (never put raw JavaScript inside JSON strings):\n' +
+    '===ROOT_CAUSE===\n<short explanation>\n' +
+    '===ERROR_FIXED===\n<concise 1-line summary>\n' +
+    'For each file you create or update, output:\n' +
+    '===FILE: relative/path.js===\n' +
+    '===SUMMARY: what changed===\n' +
+    '```js\n<FULL COMPLETE FILE CONTENT>\n```\n' +
+    '===END_FILE===\n\n' +
+    'Rules:\n' +
+    '- For new commands inside commands/<category>/<name>.js (utility/fun/economy/social/games/moderation/admin), export BOTH slash (SlashCommandBuilder data + execute(interaction, client)) AND prefix (name, aliases, run(message, args, client)) using KikiEmbed from "../../utils/embed.js".\n' +
+    '- Only modify/create files inside commands/, events/, or allowed utils/. NEVER include .env, tokens, child_process, fs.rm/unlink, or owner permission modifications.';
+
+  const jsonSystemPrompt =
     'You are the KIKI Discord Bot AI maintenance engineer. ' +
     'Given the developer issue/command request, recent runtime errors, and allowed source files, identify the root cause or create the requested command and return strict JSON ONLY with schema: ' +
     '{"rootCause":"short explanation","errorFixed":"concise 1-line summary","proposedEdits":[{"path":"relative/path.js","summary":"what changed","content":"FULL UPDATED FILE CONTENT"}]}. ' +
@@ -277,7 +386,7 @@ async function analyzeAndGenerateFix({ prompt, targetPaths = [], client = null }
   const userPrompt = JSON.stringify({
     request: prompt,
     recentErrors,
-    files: fileContexts.map(f => ({ path: f.path, content: f.content }))
+    files: fileContexts.map(f => ({ path: f.path, truncated: f.truncated, content: f.content }))
   });
 
   let lastErr = null;
@@ -286,10 +395,10 @@ async function analyzeAndGenerateFix({ prompt, targetPaths = [], client = null }
     lastProvider = aiCfg.provider;
     try {
       const aiRes = aiCfg.provider === 'gemini'
-        ? await callGemini(aiCfg.key, `${systemPrompt}\n\n${userPrompt}`)
-        : await callOpenAiCompatible(aiCfg.provider, aiCfg.key, systemPrompt, userPrompt);
+        ? await callGemini(aiCfg.key, `${taggedSystemPrompt}\n\n${userPrompt}`)
+        : await callOpenAiCompatible(aiCfg.provider, aiCfg.key, jsonSystemPrompt, userPrompt);
 
-      const parsed = JSON.parse(stripJsonFences(aiRes.text));
+      const parsed = parseAiResponseText(aiRes.text);
       const safeEdits = [];
       const blocked = [];
 
@@ -337,5 +446,6 @@ module.exports = {
   listEditableFiles,
   findRelevantFiles,
   getAiProviderConfig,
+  parseAiResponseText,
   analyzeAndGenerateFix
 };
