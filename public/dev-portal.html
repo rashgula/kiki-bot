@@ -406,11 +406,13 @@
           return;
         }
 
+        const cmdList = (res.cmdNames || []).length ? `\n• 🎮 Discord Command: ${(res.cmdNames || []).join(', ')} 👈 Ye command Discord me run karein!` : '';
         const msg =
           `✅ Done!` + (res.diagnosis?.modelUsed ? ` (${res.diagnosis.provider}/${res.diagnosis.modelUsed})` : '') + `\n` +
           `• Branch: ${res.branch}\n` +
           `• GitHub PR #${res.prNumber}: ${res.prUrl}\n` +
-          `• Changed: ${(res.filesModified || []).join(', ')}\n` +
+          `• Changed: ${(res.filesModified || []).join(', ')}` +
+          cmdList + `\n` +
           `• Status: ${res.deployStatus || (res.autoDeployed ? 'Auto-Deployed Live' : 'Owner DM Sent with 1-Click Approve Button')}`;
         showBox('runResultBox', msg, 'ok');
         clearDrafts();
