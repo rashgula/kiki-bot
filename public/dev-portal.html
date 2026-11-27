@@ -406,12 +406,14 @@
           return;
         }
 
-        const cmdList = (res.cmdNames || []).length ? `\n• 🎮 Discord Command: ${(res.cmdNames || []).join(', ')} 👈 Ye command Discord me run karein!` : '';
+        const liveSection = res.liveAction?.summary ? `\n• ⚡ Live Discord Action: ${res.liveAction.summary}` : '';
+        const cmdList = (res.cmdNames || []).length ? `\n• 🎮 Code Command: ${(res.cmdNames || []).join(', ')}` : '';
         const msg =
           `✅ Done!` + (res.diagnosis?.modelUsed ? ` (${res.diagnosis.provider}/${res.diagnosis.modelUsed})` : '') + `\n` +
           `• Branch: ${res.branch}\n` +
           `• GitHub PR #${res.prNumber}: ${res.prUrl}\n` +
           `• Changed: ${(res.filesModified || []).join(', ')}` +
+          liveSection +
           cmdList + `\n` +
           `• Status: ${res.deployStatus || (res.autoDeployed ? 'Auto-Deployed Live' : 'Owner DM Sent with 1-Click Approve Button')}`;
         showBox('runResultBox', msg, 'ok');

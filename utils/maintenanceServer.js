@@ -12,6 +12,7 @@ const DevAccess = require('./devAccess.js');
 const DevPolicy = require('./devPolicy.js');
 const DevTests = require('./devTests.js');
 const DevAi = require('./devAi.js');
+const LiveActionExecutor = require('./liveActionExecutor.js');
 const GitHubIntegration = require('./githubIntegration.js');
 const RailwayIntegration = require('./railwayIntegration.js');
 const ActivityLogger = require('./activityLogger.js');
@@ -125,7 +126,7 @@ function extractCommandNames(files) {
   return cmds;
 }
 
-async function notifyOwnerPrAndMaybeAutoDeploy(client, session, prRes, promptText, summaryText) {
+async function notifyOwnerPrAndMaybeAutoDeploy(client, session, prRes, promptText, summaryText, liveAction = null) {
   const cmdNames = extractCommandNames(prRes.filesModified);
   const state = DevAccess.loadState();
   let autoDeployed = false;
@@ -146,12 +147,15 @@ async function notifyOwnerPrAndMaybeAutoDeploy(client, session, prRes, promptTex
     }
   }
 
+  const liveActionText = liveAction?.summary ? `\n⚡ **Live Discord Action:**\n${liveAction.summary}\n` : '';
+
   const dmBody =
     `👨‍💻 **Kisne Kiya (Developer):** <@${session.discordId}> (\`${session.discordTag}\` • \`${session.discordId}\`)\n` +
     `💬 **Prompt / Command Request:** \`${String(promptText || summaryText || '').slice(0, 220)}\`\n` +
     `🛠️ **Command / Files Changed:** ${cmdNames.length ? cmdNames.map(c => `\`${c}\``).join(', ') : prRes.filesModified.map(f => `\`${f}\``).join(', ')}\n` +
     `📄 **Files Modified:** ${prRes.filesModified.map(f => `\`${f}\``).join(', ')}\n` +
     `🧪 **Sandbox Tests:** \`PASSED ✅\`\n` +
+    liveActionText +
     `🐙 **GitHub PR:** [#${prRes.prNumber}](${prRes.prUrl}) (\`${prRes.branch}\` → \`main\`)\n` +
     `🚂 **Status:** ${deployStatus}`;
 
@@ -421,12 +425,21 @@ module.exports = {
       });
     }
 
-    const notifyOut = await notifyOwnerPrAndMaybeAutoDeploy(client, session, prRes, prompt, diagnosis?.errorFixed);
+    // Execute live Discord server action automatically so user never has to enter a command manually!
+    const liveAction = await LiveActionExecutor.execute({
+      client,
+      prompt,
+      files: draftFiles,
+      actor: session
+    }).catch(e => ({ executed: false, summary: `Live execution error: ${e.message}` }));
+
+    const notifyOut = await notifyOwnerPrAndMaybeAutoDeploy(client, session, prRes, prompt, diagnosis?.errorFixed, liveAction);
     return sendJson(res, 200, {
       stage: 'completed',
       success: true,
       diagnosis,
       testResults: testRes.results,
+      liveAction,
       ...prRes,
       ...notifyOut
     });
