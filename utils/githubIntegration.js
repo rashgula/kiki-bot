@@ -190,7 +190,8 @@ const GitHubIntegration = {
     const mainBranch = summary.mainBranch;
     const maintBaseBranch = summary.maintenanceBranch || 'bot-maintenance';
     const slug = String(title || 'fix').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 32) || 'fix';
-    const fixBranch = `${maintBaseBranch}/${slug}-${Date.now().toString(36)}`;
+    // Use flat branch prefix (maint-...) without subdirectories to prevent Git D/F conflict with existing bot-maintenance branch!
+    let fixBranch = `maint-${slug}-${Date.now().toString(36)}`;
 
     // Never allow target branch to be main
     if (fixBranch === mainBranch || fixBranch === 'master') {
@@ -198,23 +199,14 @@ const GitHubIntegration = {
     }
 
     try {
-      // 1. Get latest main SHA
+      // 1. Get latest main SHA & base tree
       const mainRefRes = await axios.get(`${API_BASE}/repos/${repo}/git/ref/heads/${mainBranch}`, { headers: auth.headers, timeout: 10000 });
       const mainSha = mainRefRes.data.object.sha;
-
-      // 2. Ensure dedicated bot-maintenance branch exists (create from main if absent)
-      const maintRef = await axios.get(`${API_BASE}/repos/${repo}/git/ref/heads/${maintBaseBranch}`, { headers: auth.headers, timeout: 10000 }).catch(() => null);
-      if (!maintRef) {
-        await axios.post(`${API_BASE}/repos/${repo}/git/refs`, { ref: `refs/heads/${maintBaseBranch}`, sha: mainSha }, { headers: auth.headers, timeout: 10000 });
-      }
-
-      // 3. Create branch for this specific PR from mainSha so PR diff stays crisp & never overwrites owner work
-      await axios.post(`${API_BASE}/repos/${repo}/git/refs`, { ref: `refs/heads/${fixBranch}`, sha: mainSha }, { headers: auth.headers, timeout: 10000 });
 
       const baseCommitRes = await axios.get(`${API_BASE}/repos/${repo}/git/commits/${mainSha}`, { headers: auth.headers, timeout: 10000 });
       const baseTreeSha = baseCommitRes.data.tree.sha;
 
-      // 4. Create blobs & tree
+      // 2. Create blobs & tree
       const treeItems = [];
       for (const f of safeFiles) {
         const blobRes = await axios.post(
@@ -231,22 +223,43 @@ const GitHubIntegration = {
         { headers: auth.headers, timeout: 10000 }
       );
 
-      // 5. Commit with full audit attribution
+      // 3. Create commit pointing directly to mainSha as parent
       const commitMsg = `[bot-maintenance] ${title || 'Maintenance fix'}\n\nRequested by: ${actor.discordTag} (${actor.discordId})\nError Fixed: ${errorFixed || description || 'Bug fix'}`;
       const newCommitRes = await axios.post(
         `${API_BASE}/repos/${repo}/git/commits`,
         { message: commitMsg, tree: newTreeRes.data.sha, parents: [mainSha] },
         { headers: auth.headers, timeout: 10000 }
       );
+      const newCommitSha = newCommitRes.data.sha;
 
-      // 6. Advance fixBranch AND bot-maintenance pointer (non-forced!)
-      await axios.patch(
-        `${API_BASE}/repos/${repo}/git/refs/heads/${fixBranch}`,
-        { sha: newCommitRes.data.sha, force: false },
-        { headers: auth.headers, timeout: 10000 }
-      );
+      // 4. Create branch pointing directly to newCommitSha (Single atomic operation, zero race condition or PATCH failure)
+      try {
+        await axios.post(
+          `${API_BASE}/repos/${repo}/git/refs`,
+          { ref: `refs/heads/${fixBranch}`, sha: newCommitSha },
+          { headers: auth.headers, timeout: 10000 }
+        );
+      } catch (refErr) {
+        const altBranch = `maint-${slug}-${Date.now().toString(36)}-${crypto.randomBytes(2).toString('hex')}`;
+        await axios.post(
+          `${API_BASE}/repos/${repo}/git/refs`,
+          { ref: `refs/heads/${altBranch}`, sha: newCommitSha },
+          { headers: auth.headers, timeout: 10000 }
+        );
+        fixBranch = altBranch;
+      }
 
-      // 7. Open Pull Request into protected main branch
+      // 5. Keep dedicated bot-maintenance branch synced with latest maintenance commits
+      try {
+        const maintRef = await axios.get(`${API_BASE}/repos/${repo}/git/ref/heads/${maintBaseBranch}`, { headers: auth.headers, timeout: 6000 }).catch(() => null);
+        if (!maintRef) {
+          await axios.post(`${API_BASE}/repos/${repo}/git/refs`, { ref: `refs/heads/${maintBaseBranch}`, sha: newCommitSha }, { headers: auth.headers, timeout: 6000 });
+        } else {
+          await axios.patch(`${API_BASE}/repos/${repo}/git/refs/heads/${maintBaseBranch}`, { sha: newCommitSha, force: true }, { headers: auth.headers, timeout: 6000 });
+        }
+      } catch {}
+
+      // 6. Open Pull Request into protected main branch
       const prBody =
         `### 🔧 KIKI Maintenance Fix Pull Request\n\n` +
         `- **Author (Trusted Developer):** \`${actor.discordTag}\` (\`${actor.discordId}\`)\n` +
@@ -288,9 +301,13 @@ const GitHubIntegration = {
 
       return result;
     } catch (err) {
+      const mainErr = err.response?.data?.message || err.message;
+      const subErrors = Array.isArray(err.response?.data?.errors)
+        ? ': ' + err.response.data.errors.map(e => e.message || JSON.stringify(e)).join('; ')
+        : '';
       return {
         success: false,
-        error: err.response?.data?.message || err.message
+        error: `${mainErr}${subErrors}`
       };
     }
   },

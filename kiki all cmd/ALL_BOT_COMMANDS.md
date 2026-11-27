@@ -2,7 +2,7 @@
 
 > Complete catalog of all commands loaded in KIKI Gothic Purple Bot.
 > Prefix: `&` | Slash: `/<command>`
-> Last Synchronized: 27/11/2026, 5:46:40 pm
+> Last Synchronized: 27/11/2026, 5:57:12 pm
 
 ═══════════════════════════════════════════════════════════════════
 
