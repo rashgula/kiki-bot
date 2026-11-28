@@ -224,11 +224,12 @@ const CloudSync = {
         writeJsonAtomic(invFile, localInv);
       }
 
-      // 4. Merge Marriages, Social, Warnings & Dev Logs / Encrypted Auth State
+      // 4. Merge Marriages, Social, Warnings, VoiceMaster Temp Channels & Dev Logs / Encrypted Auth State
       for (const [key, fname] of [
         ['marriages', 'marriages.json'],
         ['social', 'social.json'],
         ['warnings', 'warnings.json'],
+        ['tempChannels', 'temp_channels.json'],
         ['devActivityLogs', 'dev_activity_logs.json']
       ]) {
         if (snapshot[key] && typeof snapshot[key] === 'object') {
@@ -286,6 +287,7 @@ const CloudSync = {
         marriages: readJsonSafe(getDataFile('marriages.json'), {}),
         social: readJsonSafe(getDataFile('social.json'), {}),
         warnings: readJsonSafe(getDataFile('warnings.json'), {}),
+        tempChannels: readJsonSafe(getDataFile('temp_channels.json'), {}),
         devAccess: readJsonSafe(getDataFile('dev_access.json'), null),
         devActivityLogs: readJsonSafe(getDataFile('dev_activity_logs.json'), { entries: [] })
       };

@@ -18,16 +18,20 @@ const KikiEmbed = require('./embed.js');
 const KIKI = require('./kiki.js');
 const KikiEmojis = require('./emojis.js');
 const config = require('../config.js');
+const CloudSync = require('./cloudSync.js');
 
-const TEMP_DATA_FILE = path.join(__dirname, '..', 'data', 'temp_channels.json');
+function getTempDataFile() {
+  return CloudSync.getDataFile('temp_channels.json');
+}
 
 // Map: channelId -> { ownerId, guildId, createdAt, isLocked, isHidden, limit, trusted: [] }
 const tempChannels = new Map();
 
 function loadTempData() {
   try {
-    if (fs.existsSync(TEMP_DATA_FILE)) {
-      const data = JSON.parse(fs.readFileSync(TEMP_DATA_FILE, 'utf8'));
+    const data = CloudSync.readJsonSafe(getTempDataFile(), null);
+    if (data && typeof data === 'object') {
+      tempChannels.clear();
       for (const [id, val] of Object.entries(data)) {
         tempChannels.set(id, val);
       }
@@ -43,7 +47,7 @@ function saveTempData() {
     for (const [id, val] of tempChannels.entries()) {
       obj[id] = val;
     }
-    fs.writeFileSync(TEMP_DATA_FILE, JSON.stringify(obj, null, 2), 'utf8');
+    CloudSync.writeJsonAtomic(getTempDataFile(), obj);
   } catch (err) {
     console.error('[VOICE MASTER] Error saving temp channels:', err.message);
   }
@@ -228,12 +232,13 @@ const VoiceMaster = {
     return [row1, row2];
   },
 
-  // ── Lifecycle: Clean Dead Channels on Boot ─────────────────────
+  // ── Lifecycle: Clean Dead Channels & Recover on Boot ───────────
   async init(client) {
     loadTempData();
     console.log(chalk.magenta('[VOICE MASTER] Initializing Voice Master Engine...'));
 
     let cleaned = 0;
+    // 1. Clean dead channels currently in tracking
     for (const [channelId, info] of tempChannels.entries()) {
       try {
         const guild = client.guilds.cache.get(info.guildId);
@@ -258,8 +263,54 @@ const VoiceMaster = {
       }
     }
 
+    // 2. Discover and recover any live channels under Voice Master category on Discord
+    try {
+      const cfg = KIKI.loadConfig();
+      for (const guild of client.guilds.cache.values()) {
+        const gData = cfg.guilds?.[guild.id] || {};
+        const joinChannelId = gData.voice_master_channel_id || (guild.channels.cache.has(cfg.voice_master_channel_id) ? cfg.voice_master_channel_id : null);
+        const categoryId = gData.voice_master_category_id || (guild.channels.cache.has(cfg.voice_master_category_id) ? cfg.voice_master_category_id : null);
+        if (!categoryId) continue;
+
+        const category = guild.channels.cache.get(categoryId) || await guild.channels.fetch(categoryId).catch(() => null);
+        if (!category) continue;
+
+        const children = guild.channels.cache.filter(c => c.parentId === category.id && c.type === ChannelType.GuildVoice && c.id !== joinChannelId);
+        for (const ch of children.values()) {
+          if (ch.members.size === 0) {
+            await ch.delete('Voice Master: Auto-cleaned empty channel on startup').catch(() => {});
+            tempChannels.delete(ch.id);
+            cleaned++;
+          } else if (!tempChannels.has(ch.id)) {
+            // Find owner from overwrite or first member
+            let ownerId = null;
+            for (const [id, overwrite] of ch.permissionOverwrites.cache.entries()) {
+              if (overwrite.type === 1 && id !== client.user?.id) {
+                if (overwrite.allow.has(PermissionFlagsBits.ManageChannels)) {
+                  ownerId = id;
+                  break;
+                }
+              }
+            }
+            if (!ownerId) ownerId = ch.members.first()?.id;
+            tempChannels.set(ch.id, {
+              ownerId: ownerId || ch.members.first()?.id,
+              guildId: guild.id,
+              createdAt: ch.createdTimestamp || Date.now(),
+              isLocked: !ch.permissionsFor(guild.roles.everyone)?.has(PermissionFlagsBits.Connect),
+              isHidden: !ch.permissionsFor(guild.roles.everyone)?.has(PermissionFlagsBits.ViewChannel),
+              limit: ch.userLimit || 0,
+              trusted: []
+            });
+          }
+        }
+      }
+    } catch (err) {
+      console.error('[VOICE MASTER INIT DISCOVERY ERROR]', err.message);
+    }
+
+    saveTempData();
     if (cleaned > 0) {
-      saveTempData();
       console.log(chalk.yellow(`[VOICE MASTER] Cleaned up ${cleaned} orphaned temp voice channel(s).`));
     }
   },
@@ -283,7 +334,7 @@ const VoiceMaster = {
         const category = categoryId ? guild.channels.cache.get(categoryId) : null;
         const channelName = `🔊・${member.displayName}'s Lounge`;
 
-        // Create temporary voice channel
+        // Create temporary voice channel with full bot management permissions
         const newVoiceChannel = await guild.channels.create({
           name: channelName,
           type: ChannelType.GuildVoice,
@@ -313,6 +364,7 @@ const VoiceMaster = {
                 PermissionFlagsBits.Speak,
                 PermissionFlagsBits.ManageChannels,
                 PermissionFlagsBits.MoveMembers,
+                PermissionFlagsBits.ManageRoles,
               ],
             }
           ],
@@ -336,7 +388,7 @@ const VoiceMaster = {
 
         console.log(chalk.cyan(`  🔊 [VOICE MASTER] Created temp VC #${newVoiceChannel.name} for ${member.user.tag}`));
 
-        // ── Voice Master Log: Channel Created ───────────────────
+        // ── Voice Master Log: Channel Created (Async non-blocking) ──
         const createEmbed = KikiEmbed.build({
           title: '🔊 Temporary Voice Channel Created',
           description:
@@ -350,7 +402,7 @@ const VoiceMaster = {
           thumbnail: member.user.displayAvatarURL({ dynamic: true }),
           footer: { text: `Voice Master Audit Logs • KIKI v${config.BOT_VERSION}` }
         });
-        await this.sendLog(guild, createEmbed);
+        this.sendLog(guild, createEmbed).catch(() => {});
       } catch (err) {
         console.error('[VOICE MASTER CREATE ERROR]', err);
       }
@@ -389,7 +441,7 @@ const VoiceMaster = {
                 color: config.COLORS.RED || 0xE74C3C,
                 footer: { text: `Voice Master Audit Logs • KIKI v${config.BOT_VERSION}` }
               });
-              await this.sendLog(guild, delEmbed);
+              this.sendLog(guild, delEmbed).catch(() => {});
             } catch (err) {
               console.error('[VOICE MASTER DELETE ERROR]', err.message);
             }
@@ -408,40 +460,185 @@ const VoiceMaster = {
     const guild = interaction.guild;
     if (!guild || !member) return;
 
-    // Check if member is in a voice channel
-    const currentVc = member.voice?.channel;
+    // Helper for safe reply or edit
+    const replyOrEdit = async (payload) => {
+      try {
+        if (interaction.deferred || interaction.replied) {
+          return await interaction.editReply(payload);
+        }
+        return await interaction.reply({ ...payload, ephemeral: true });
+      } catch (e) {
+        console.error('[VOICE MASTER REPLY ERROR]', e.message);
+      }
+    };
 
-    // ── Modals Handling ──────────────────────────────────────────
+    // 1. Resolve Voice Channel reliably (with fetch fallback)
+    let currentVc = member.voice?.channel;
+    if (!currentVc && member.voice?.channelId) {
+      currentVc = guild.channels.cache.get(member.voice.channelId) || await guild.channels.fetch(member.voice.channelId).catch(() => null);
+    }
+
+    if (!currentVc) {
+      return interaction.reply({
+        embeds: [KikiEmbed.error('Not in Voice 🔇', 'Aapko pehle apne temporary voice channel me join hona hoga tabhi ye controls kaam karenge!')],
+        ephemeral: true
+      });
+    }
+
+    // 2. Resolve or dynamically auto-recover temp channel tracking
+    let tempInfo = tempChannels.get(currentVc.id);
+    if (!tempInfo) {
+      const cfg = KIKI.loadConfig();
+      const gData = cfg.guilds?.[guild.id] || {};
+      const joinChannelId = gData.voice_master_channel_id || (guild.channels.cache.has(cfg.voice_master_channel_id) ? cfg.voice_master_channel_id : null);
+      const categoryId = gData.voice_master_category_id || (guild.channels.cache.has(cfg.voice_master_category_id) ? cfg.voice_master_category_id : null);
+
+      const isUnderVmCategory = categoryId && currentVc.parentId === categoryId && currentVc.id !== joinChannelId;
+      const isNamedLikeVm = currentVc.name.includes("'s Lounge") || currentVc.name.startsWith('🔊・');
+
+      if (isUnderVmCategory || isNamedLikeVm) {
+        let detectedOwnerId = null;
+        for (const [id, overwrite] of currentVc.permissionOverwrites.cache.entries()) {
+          if (overwrite.type === 1 && id !== client.user?.id) { // Member overwrite
+            if (overwrite.allow.has(PermissionFlagsBits.ManageChannels)) {
+              detectedOwnerId = id;
+              break;
+            }
+          }
+        }
+        if (!detectedOwnerId) {
+          detectedOwnerId = currentVc.members.has(member.id) ? member.id : (currentVc.members.first()?.id || member.id);
+        }
+
+        const everyoneId = guild.roles.everyone?.id || guild.id;
+        const everyoneOverwrites = currentVc.permissionOverwrites.cache.get(everyoneId);
+        tempInfo = {
+          ownerId: detectedOwnerId,
+          guildId: guild.id,
+          createdAt: currentVc.createdTimestamp || Date.now(),
+          isLocked: everyoneOverwrites ? everyoneOverwrites.deny.has(PermissionFlagsBits.Connect) : false,
+          isHidden: everyoneOverwrites ? everyoneOverwrites.deny.has(PermissionFlagsBits.ViewChannel) : false,
+          limit: currentVc.userLimit || 0,
+          trusted: []
+        };
+        tempChannels.set(currentVc.id, tempInfo);
+        saveTempData();
+      }
+    }
+
+    if (!tempInfo) {
+      return interaction.reply({
+        embeds: [KikiEmbed.error('Invalid Channel ⚠️', 'Ye channel Voice Master dwara banaya gaya temporary channel nahi hai!')],
+        ephemeral: true
+      });
+    }
+
+    // 3. Permission checks (Owner or Server Admin / Safe User)
+    const isOwner = tempInfo.ownerId === member.id;
+    const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator) ||
+                    guild.ownerId === member.id ||
+                    KIKI.isSafe(guild, member.id, client);
+    const canManage = isOwner || isAdmin;
+
+    // ── 4. Modal Launcher Buttons (Must NOT be deferred!) ────────
+    if (interaction.isButton()) {
+      if (['vm_rename', 'vm_limit', 'vm_kick', 'vm_permit'].includes(customId)) {
+        if (!canManage) {
+          return interaction.reply({
+            embeds: [KikiEmbed.error('Owner Only 🔒', `Sirf is channel ke owner (<@${tempInfo.ownerId}>) ya server admin ke paas ye control use karne ka right hai!`)],
+            ephemeral: true
+          });
+        }
+
+        if (customId === 'vm_rename') {
+          const modal = new ModalBuilder()
+            .setCustomId('vm_modal_rename')
+            .setTitle('✏️ Rename Voice Channel');
+
+          const nameInput = new TextInputBuilder()
+            .setCustomId('vm_input_rename')
+            .setLabel('Naya Channel Name Dalein')
+            .setStyle(TextInputStyle.Short)
+            .setPlaceholder('e.g. 🎧・Vibe Lounge')
+            .setValue(currentVc.name)
+            .setRequired(true)
+            .setMaxLength(50);
+
+          modal.addComponents(new ActionRowBuilder().addComponents(nameInput));
+          return await interaction.showModal(modal);
+        }
+
+        if (customId === 'vm_limit') {
+          const modal = new ModalBuilder()
+            .setCustomId('vm_modal_limit')
+            .setTitle('👥 Set Channel User Limit');
+
+          const limitInput = new TextInputBuilder()
+            .setCustomId('vm_input_limit')
+            .setLabel('User Limit (0 = Unlimited, Max = 99)')
+            .setStyle(TextInputStyle.Short)
+            .setPlaceholder('e.g. 5')
+            .setValue(currentVc.userLimit ? String(currentVc.userLimit) : '0')
+            .setRequired(true)
+            .setMaxLength(2);
+
+          modal.addComponents(new ActionRowBuilder().addComponents(limitInput));
+          return await interaction.showModal(modal);
+        }
+
+        if (customId === 'vm_kick') {
+          const modal = new ModalBuilder()
+            .setCustomId('vm_modal_kick')
+            .setTitle('🚫 Kick Member from Channel');
+
+          const kickInput = new TextInputBuilder()
+            .setCustomId('vm_input_kick')
+            .setLabel('Member ka Username ya ID')
+            .setStyle(TextInputStyle.Short)
+            .setPlaceholder('Member username ya User ID')
+            .setRequired(true)
+            .setMaxLength(32);
+
+          modal.addComponents(new ActionRowBuilder().addComponents(kickInput));
+          return await interaction.showModal(modal);
+        }
+
+        if (customId === 'vm_permit') {
+          const modal = new ModalBuilder()
+            .setCustomId('vm_modal_permit')
+            .setTitle('🤝 Permit Member to Join');
+
+          const permitInput = new TextInputBuilder()
+            .setCustomId('vm_input_permit')
+            .setLabel('Member ka ID ya Mention dalein')
+            .setStyle(TextInputStyle.Short)
+            .setPlaceholder('User ID ya Username')
+            .setRequired(true)
+            .setMaxLength(32);
+
+          modal.addComponents(new ActionRowBuilder().addComponents(permitInput));
+          return await interaction.showModal(modal);
+        }
+      }
+    }
+
+    // ── 5. Modal Submissions Handling ────────────────────────────
     if (interaction.isModalSubmit()) {
-      if (!currentVc) {
+      if (!canManage) {
         return interaction.reply({
-          embeds: [KikiEmbed.error('Not in Voice', 'Aapko pehle apne temporary voice channel me hona hoga!')],
+          embeds: [KikiEmbed.error('Owner Only 🔒', `Sirf channel owner (<@${tempInfo.ownerId}>) ya server admin ye setting change kar sakta hai!`)],
           ephemeral: true
         });
       }
 
-      const tempInfo = tempChannels.get(currentVc.id);
-      if (!tempInfo) {
-        return interaction.reply({
-          embeds: [KikiEmbed.error('Invalid Channel', 'Ye channel Voice Master ka temporary channel nahi hai!')],
-          ephemeral: true
-        });
-      }
+      await interaction.deferReply({ ephemeral: true }).catch(() => {});
 
-      if (tempInfo.ownerId !== member.id) {
-        return interaction.reply({
-          embeds: [KikiEmbed.error('Owner Only', `Sirf channel owner (<@${tempInfo.ownerId}>) ye setting change kar sakta hai!`)],
-          ephemeral: true
-        });
-      }
-
-      // 1. Rename Modal Submit
+      // 5.1 Rename Modal Submit
       if (customId === 'vm_modal_rename') {
         const newName = interaction.fields.getTextInputValue('vm_input_rename').trim();
         if (!newName || newName.length < 1 || newName.length > 50) {
-          return interaction.reply({
-            embeds: [KikiEmbed.error('Invalid Name', 'Channel name 1 se 50 characters ke beech hona chahiye!')],
-            ephemeral: true
+          return await replyOrEdit({
+            embeds: [KikiEmbed.error('Invalid Name', 'Channel name 1 se 50 characters ke beech hona chahiye!')]
           });
         }
 
@@ -449,7 +646,7 @@ const VoiceMaster = {
           const oldName = currentVc.name;
           await currentVc.setName(newName, `Voice Master: Renamed by ${member.user.tag}`);
 
-          // Audit Log
+          // Audit Log (non-blocking)
           const renameEmbed = KikiEmbed.build({
             title: '✏️ Voice Channel Renamed',
             description:
@@ -462,35 +659,35 @@ const VoiceMaster = {
             color: config.COLORS.BLUE || 0x3498DB,
             footer: { text: `Voice Master Audit Logs • KIKI v${config.BOT_VERSION}` }
           });
-          this.sendLog(guild, renameEmbed);
+          this.sendLog(guild, renameEmbed).catch(() => {});
 
-          return interaction.reply({
-            embeds: [KikiEmbed.success('Channel Renamed', `Aapka voice channel successfully rename ho gaya:\n**\`${newName}\`**`)],
-            ephemeral: true
+          return await replyOrEdit({
+            embeds: [KikiEmbed.success('Channel Renamed', `Aapka voice channel successfully rename ho gaya:\n**\`${newName}\`**`)]
           });
         } catch (err) {
-          return interaction.reply({
-            embeds: [KikiEmbed.error('Rename Failed', `Discord rate limit ya error: ${err.message}`)],
-            ephemeral: true
+          return await replyOrEdit({
+            embeds: [KikiEmbed.error('Rename Failed', `Discord rate limit ya error: ${err.message}`)]
           });
         }
       }
 
-      // 2. Limit Modal Submit
+      // 5.2 Limit Modal Submit
       if (customId === 'vm_modal_limit') {
         const limitStr = interaction.fields.getTextInputValue('vm_input_limit').trim();
         const limitNum = parseInt(limitStr, 10);
 
         if (isNaN(limitNum) || limitNum < 0 || limitNum > 99) {
-          return interaction.reply({
-            embeds: [KikiEmbed.error('Invalid Limit', 'User limit 0 se 99 ke beech koi number hona chahiye (0 = Unlimited)!')],
-            ephemeral: true
+          return await replyOrEdit({
+            embeds: [KikiEmbed.error('Invalid Limit', 'User limit 0 se 99 ke beech koi number hona chahiye (0 = Unlimited)!')]
           });
         }
 
         try {
           await currentVc.setUserLimit(limitNum, `Voice Master: Limit updated by ${member.user.tag}`);
           tempInfo.limit = limitNum;
+          if (tempInfo.originalLimit !== undefined) {
+            tempInfo.originalLimit = limitNum;
+          }
           saveTempData();
 
           // Audit Log
@@ -505,21 +702,19 @@ const VoiceMaster = {
             color: config.COLORS.TEAL || 0x1ABC9C,
             footer: { text: `Voice Master Audit Logs • KIKI v${config.BOT_VERSION}` }
           });
-          this.sendLog(guild, limitEmbed);
+          this.sendLog(guild, limitEmbed).catch(() => {});
 
-          return interaction.reply({
-            embeds: [KikiEmbed.success('Limit Updated', `Aapke channel ki user limit **${limitNum === 0 ? 'Unlimited (0)' : `${limitNum} members`}** set ho gayi!`)],
-            ephemeral: true
+          return await replyOrEdit({
+            embeds: [KikiEmbed.success('Limit Updated', `Aapke channel ki user limit **${limitNum === 0 ? 'Unlimited (0)' : `${limitNum} members`}** set ho gayi!`)]
           });
         } catch (err) {
-          return interaction.reply({
-            embeds: [KikiEmbed.error('Limit Failed', `Error updating limit: ${err.message}`)],
-            ephemeral: true
+          return await replyOrEdit({
+            embeds: [KikiEmbed.error('Limit Failed', `Error updating limit: ${err.message}`)]
           });
         }
       }
 
-      // 3. Kick Modal Submit
+      // 5.3 Kick Modal Submit
       if (customId === 'vm_modal_kick') {
         const query = interaction.fields.getTextInputValue('vm_input_kick').trim().toLowerCase();
         const targetMember = currentVc.members.find(m =>
@@ -529,49 +724,47 @@ const VoiceMaster = {
         );
 
         if (!targetMember) {
-          return interaction.reply({
-            embeds: [KikiEmbed.error('User Not Found', 'Wo user abhi aapke voice channel me connected nahi hai!')],
-            ephemeral: true
+          return await replyOrEdit({
+            embeds: [KikiEmbed.error('User Not Found', 'Wo user abhi aapke voice channel me connected nahi hai!')]
           });
         }
 
         if (targetMember.id === member.id) {
-          return interaction.reply({
-            embeds: [KikiEmbed.error('Invalid Action', 'Aap khud ko kick nahi kar sakte!')],
-            ephemeral: true
+          return await replyOrEdit({
+            embeds: [KikiEmbed.error('Invalid Action', 'Aap khud ko kick nahi kar sakte!')]
           });
         }
 
         try {
-          await targetMember.voice.disconnect(`Voice Master: Kicked by owner ${member.user.tag}`);
+          await targetMember.voice.disconnect(`Voice Master: Kicked by ${member.user.tag}`);
+          // Prevent target from immediately reconnecting
+          await currentVc.permissionOverwrites.edit(targetMember.id, { Connect: false }).catch(() => {});
 
           // Audit Log
           const kickEmbed = KikiEmbed.build({
             title: '🚫 Member Kicked from Voice Channel',
             description:
               `Ek user ko temporary voice channel se disconnect kiya gaya.\n\n` +
-              `• 👤 **Kicked By Owner:** ${member.user.toString()} (\`${member.user.tag}\`)\n` +
+              `• 👤 **Kicked By:** ${member.user.toString()} (\`${member.user.tag}\`)\n` +
               `• 👢 **Target Member:** ${targetMember.user.toString()} (\`${targetMember.user.tag}\` • ID: \`${targetMember.id}\`)\n` +
               `• 🔊 **Channel:** ${currentVc.toString()} (\`${currentVc.name}\`)\n` +
               `• ⏰ **Time:** <t:${Math.floor(Date.now() / 1000)}:R>`,
             color: config.COLORS.GOLD || 0xE67E22,
             footer: { text: `Voice Master Audit Logs • KIKI v${config.BOT_VERSION}` }
           });
-          this.sendLog(guild, kickEmbed);
+          this.sendLog(guild, kickEmbed).catch(() => {});
 
-          return interaction.reply({
-            embeds: [KikiEmbed.success('User Disconnected', `**${targetMember.user.tag}** ko aapke voice channel se disconnect kar diya gaya!`)],
-            ephemeral: true
+          return await replyOrEdit({
+            embeds: [KikiEmbed.success('User Disconnected', `**${targetMember.user.tag}** ko aapke voice channel se disconnect kar diya gaya!`)]
           });
         } catch (err) {
-          return interaction.reply({
-            embeds: [KikiEmbed.error('Kick Failed', `User disconnect karne me error aaya: ${err.message}`)],
-            ephemeral: true
+          return await replyOrEdit({
+            embeds: [KikiEmbed.error('Kick Failed', `User disconnect karne me error aaya: ${err.message}`)]
           });
         }
       }
 
-      // 4. Permit Modal Submit
+      // 5.4 Permit Modal Submit
       if (customId === 'vm_modal_permit') {
         const query = interaction.fields.getTextInputValue('vm_input_permit').trim().toLowerCase();
         const targetId = query.replace(/[<@!>]/g, '');
@@ -584,9 +777,8 @@ const VoiceMaster = {
         }
 
         if (!targetMember) {
-          return interaction.reply({
-            embeds: [KikiEmbed.error('User Not Found', 'Server me wo member nahi mila! Please valid User ID ya mention provide karein.')],
-            ephemeral: true
+          return await replyOrEdit({
+            embeds: [KikiEmbed.error('User Not Found', 'Server me wo member nahi mila! Please valid User ID ya mention provide karein.')]
           });
         }
 
@@ -596,6 +788,11 @@ const VoiceMaster = {
             Connect: true,
             Speak: true
           });
+
+          // If channel was locked with member cap, increase limit by 1 so target can enter
+          if (tempInfo.isLocked && currentVc.userLimit > 0) {
+            await currentVc.setUserLimit(currentVc.userLimit + 1).catch(() => {});
+          }
 
           if (!tempInfo.trusted) tempInfo.trusted = [];
           if (!tempInfo.trusted.includes(targetMember.id)) {
@@ -615,55 +812,36 @@ const VoiceMaster = {
             color: config.COLORS.GREEN || 0x2ECC71,
             footer: { text: `Voice Master Audit Logs • KIKI v${config.BOT_VERSION}` }
           });
-          this.sendLog(guild, permitEmbed);
+          this.sendLog(guild, permitEmbed).catch(() => {});
 
-          return interaction.reply({
-            embeds: [KikiEmbed.success('User Permitted 🤝', `**${targetMember.user.tag}** ko aapke channel me aane ki permission de di gayi hai (chahe channel locked ho)!`)],
-            ephemeral: true
+          return await replyOrEdit({
+            embeds: [KikiEmbed.success('User Permitted 🤝', `**${targetMember.user.tag}** ko aapke channel me aane ki permission de di gayi hai!`)]
           });
         } catch (err) {
-          return interaction.reply({
-            embeds: [KikiEmbed.error('Permit Failed', `Permission update error: ${err.message}`)],
-            ephemeral: true
+          return await replyOrEdit({
+            embeds: [KikiEmbed.error('Permit Failed', `Permission update error: ${err.message}`)]
           });
         }
       }
     }
 
-    // ── Button Clicks Handling ───────────────────────────────────
+    // ── 6. Action Button Clicks (Must be deferred) ───────────────
     if (interaction.isButton()) {
-      if (!currentVc) {
-        return interaction.reply({
-          embeds: [KikiEmbed.error('Not in Voice 🔇', 'Aapko pehle apne temporary voice channel me join hona hoga tabhi ye button kaam karega!')],
-          ephemeral: true
-        });
-      }
+      await interaction.deferReply({ ephemeral: true }).catch(() => {});
 
-      const tempInfo = tempChannels.get(currentVc.id);
-      if (!tempInfo) {
-        return interaction.reply({
-          embeds: [KikiEmbed.error('Invalid Channel ⚠️', 'Ye channel Voice Master dwara banaya gaya temporary channel nahi hai!')],
-          ephemeral: true
-        });
-      }
-
-      const isOwner = tempInfo.ownerId === member.id;
-
-      // ── Claim Button (Available to non-owners if owner left) ────
+      // 6.1 Claim Ownership Button
       if (customId === 'vm_claim') {
         const currentOwnerInVc = currentVc.members.has(tempInfo.ownerId);
 
         if (isOwner) {
-          return interaction.reply({
-            embeds: [KikiEmbed.warn('Already Owner 👑', 'Aap pehle se hi is voice channel ke owner hain!')],
-            ephemeral: true
+          return await replyOrEdit({
+            embeds: [KikiEmbed.warn('Already Owner 👑', 'Aap pehle se hi is voice channel ke owner hain!')]
           });
         }
 
-        if (currentOwnerInVc) {
-          return interaction.reply({
-            embeds: [KikiEmbed.warn('Owner Still Present ⚠️', `Channel owner (<@${tempInfo.ownerId}>) abhi bhi voice channel me maujood hai! Aap claim nahi kar sakte.`)],
-            ephemeral: true
+        if (currentOwnerInVc && !isAdmin) {
+          return await replyOrEdit({
+            embeds: [KikiEmbed.warn('Owner Still Present ⚠️', `Channel owner (<@${tempInfo.ownerId}>) abhi bhi voice channel me maujood hai! Aap claim nahi kar sakte.`)]
           });
         }
 
@@ -673,9 +851,7 @@ const VoiceMaster = {
         saveTempData();
 
         try {
-          // Remove old owner special perms
           await currentVc.permissionOverwrites.delete(oldOwnerId).catch(() => {});
-          // Add new owner perms
           await currentVc.permissionOverwrites.edit(member.id, {
             ViewChannel: true,
             Connect: true,
@@ -684,7 +860,7 @@ const VoiceMaster = {
             MoveMembers: true,
             MuteMembers: true,
             DeafenMembers: true,
-          });
+          }).catch(() => {});
         } catch {}
 
         // Audit Log
@@ -699,28 +875,51 @@ const VoiceMaster = {
           color: config.COLORS.GOLD || 0xF1C40F,
           footer: { text: `Voice Master Audit Logs • KIKI v${config.BOT_VERSION}` }
         });
-        this.sendLog(guild, claimEmbed);
+        this.sendLog(guild, claimEmbed).catch(() => {});
 
-        return interaction.reply({
-          embeds: [KikiEmbed.success('Ownership Claimed 👑', `Aap ab is voice channel (${currentVc.toString()}) ke naye **Owner** ban gaye hain!`)],
-          ephemeral: true
+        return await replyOrEdit({
+          embeds: [KikiEmbed.success('Ownership Claimed 👑', `Aap ab is voice channel (${currentVc.toString()}) ke naye **Owner** ban gaye hain!`)]
         });
       }
 
-      // All remaining buttons require owner status!
-      if (!isOwner) {
-        return interaction.reply({
-          embeds: [KikiEmbed.error('Owner Only 🔒', `Sirf is channel ke owner (<@${tempInfo.ownerId}>) ke paas ye controls use karne ka right hai!\n*(Agar owner VC chhod ke chala gaya hai, toh aap **👑 Claim** par click kar sakte hain).*`)],
-          ephemeral: true
+      // Check owner / admin authority for remaining buttons
+      if (!canManage) {
+        return await replyOrEdit({
+          embeds: [KikiEmbed.error('Owner Only 🔒', `Sirf is channel ke owner (<@${tempInfo.ownerId}>) ya server admin ke paas ye controls use karne ka right hai!\n*(Agar owner VC chhod ke chala gaya hai, toh aap **👑 Claim** par click kar sakte hain).*`)]
         });
       }
 
-      // ── 1. Lock ────────────────────────────────────────────────
+      const botId = client.user?.id || guild.members.me?.id;
+      const everyoneId = guild.roles.everyone?.id || guild.id;
+
+      // 6.2 Lock
       if (customId === 'vm_lock') {
         try {
-          await currentVc.permissionOverwrites.edit(guild.id, { Connect: false });
-          // Ensure owner and trusted still have connect
-          await currentVc.permissionOverwrites.edit(member.id, { Connect: true });
+          // Explicitly ensure bot retains full permissions
+          if (botId) {
+            await currentVc.permissionOverwrites.edit(botId, {
+              ViewChannel: true,
+              Connect: true,
+              ManageChannels: true,
+              MoveMembers: true,
+              ManageRoles: true
+            }).catch(() => {});
+          }
+          // Explicitly ensure owner retains Connect
+          await currentVc.permissionOverwrites.edit(tempInfo.ownerId, {
+            ViewChannel: true,
+            Connect: true
+          }).catch(() => {});
+
+          // Lock @everyone
+          await currentVc.permissionOverwrites.edit(everyoneId, { Connect: false });
+
+          // Prevent role bypass by setting userLimit to current members (minimum 1)
+          if (tempInfo.originalLimit === undefined) {
+            tempInfo.originalLimit = tempInfo.limit !== undefined ? tempInfo.limit : (currentVc.userLimit || 0);
+          }
+          await currentVc.setUserLimit(Math.max(1, currentVc.members.size)).catch(() => {});
+
           tempInfo.isLocked = true;
           saveTempData();
 
@@ -736,24 +935,28 @@ const VoiceMaster = {
             color: config.COLORS.GOLD || 0xF1C40F,
             footer: { text: `Voice Master Audit Logs • KIKI v${config.BOT_VERSION}` }
           });
-          this.sendLog(guild, lockEmbed);
+          this.sendLog(guild, lockEmbed).catch(() => {});
 
-          return interaction.reply({
-            embeds: [KikiEmbed.success('Channel Locked 🔒', 'Aapka channel lock kar diya gaya hai! Ab koi naya user bina permission ke join nahi kar sakta.')],
-            ephemeral: true
+          return await replyOrEdit({
+            embeds: [KikiEmbed.success('Channel Locked 🔒', 'Aapka channel lock kar diya gaya hai! Ab koi naya user bina permission ke join nahi kar sakta.')]
           });
         } catch (err) {
-          return interaction.reply({
-            embeds: [KikiEmbed.error('Lock Error', `Error locking channel: ${err.message}`)],
-            ephemeral: true
+          return await replyOrEdit({
+            embeds: [KikiEmbed.error('Lock Error', `Error locking channel: ${err.message}`)]
           });
         }
       }
 
-      // ── 2. Unlock ──────────────────────────────────────────────
+      // 6.3 Unlock
       if (customId === 'vm_unlock') {
         try {
-          await currentVc.permissionOverwrites.edit(guild.id, { Connect: null });
+          await currentVc.permissionOverwrites.edit(everyoneId, { Connect: null });
+
+          // Restore original user limit
+          const restoreLimit = tempInfo.originalLimit !== undefined ? tempInfo.originalLimit : (tempInfo.limit || 0);
+          await currentVc.setUserLimit(restoreLimit).catch(() => {});
+          delete tempInfo.originalLimit;
+
           tempInfo.isLocked = false;
           saveTempData();
 
@@ -769,25 +972,27 @@ const VoiceMaster = {
             color: config.COLORS.GREEN || 0x2ECC71,
             footer: { text: `Voice Master Audit Logs • KIKI v${config.BOT_VERSION}` }
           });
-          this.sendLog(guild, unlockEmbed);
+          this.sendLog(guild, unlockEmbed).catch(() => {});
 
-          return interaction.reply({
-            embeds: [KikiEmbed.success('Channel Unlocked 🔓', 'Aapka channel unlock ho gaya hai! Sabhi log join kar sakte hain.')],
-            ephemeral: true
+          return await replyOrEdit({
+            embeds: [KikiEmbed.success('Channel Unlocked 🔓', 'Aapka channel unlock ho gaya hai! Sabhi log join kar sakte hain.')]
           });
         } catch (err) {
-          return interaction.reply({
-            embeds: [KikiEmbed.error('Unlock Error', `Error unlocking channel: ${err.message}`)],
-            ephemeral: true
+          return await replyOrEdit({
+            embeds: [KikiEmbed.error('Unlock Error', `Error unlocking channel: ${err.message}`)]
           });
         }
       }
 
-      // ── 3. Hide ────────────────────────────────────────────────
+      // 6.4 Hide
       if (customId === 'vm_hide') {
         try {
-          await currentVc.permissionOverwrites.edit(guild.id, { ViewChannel: false });
-          await currentVc.permissionOverwrites.edit(member.id, { ViewChannel: true });
+          if (botId) {
+            await currentVc.permissionOverwrites.edit(botId, { ViewChannel: true }).catch(() => {});
+          }
+          await currentVc.permissionOverwrites.edit(tempInfo.ownerId, { ViewChannel: true }).catch(() => {});
+          await currentVc.permissionOverwrites.edit(everyoneId, { ViewChannel: false });
+
           tempInfo.isHidden = true;
           saveTempData();
 
@@ -802,24 +1007,22 @@ const VoiceMaster = {
             color: config.COLORS.PRIMARY || 0x9B59B6,
             footer: { text: `Voice Master Audit Logs • KIKI v${config.BOT_VERSION}` }
           });
-          this.sendLog(guild, hideEmbed);
+          this.sendLog(guild, hideEmbed).catch(() => {});
 
-          return interaction.reply({
-            embeds: [KikiEmbed.success('Channel Hidden 👻', 'Aapka channel hide kar diya gaya hai! Ab ye baaki members ko nahi dikhega.')],
-            ephemeral: true
+          return await replyOrEdit({
+            embeds: [KikiEmbed.success('Channel Hidden 👻', 'Aapka channel hide kar diya gaya hai! Ab ye baaki members ko nahi dikhega.')]
           });
         } catch (err) {
-          return interaction.reply({
-            embeds: [KikiEmbed.error('Hide Error', `Error hiding channel: ${err.message}`)],
-            ephemeral: true
+          return await replyOrEdit({
+            embeds: [KikiEmbed.error('Hide Error', `Error hiding channel: ${err.message}`)]
           });
         }
       }
 
-      // ── 4. Unhide ──────────────────────────────────────────────
+      // 6.5 Unhide
       if (customId === 'vm_unhide') {
         try {
-          await currentVc.permissionOverwrites.edit(guild.id, { ViewChannel: null });
+          await currentVc.permissionOverwrites.edit(everyoneId, { ViewChannel: null });
           tempInfo.isHidden = false;
           saveTempData();
 
@@ -834,128 +1037,49 @@ const VoiceMaster = {
             color: config.COLORS.TEAL || 0x1ABC9C,
             footer: { text: `Voice Master Audit Logs • KIKI v${config.BOT_VERSION}` }
           });
-          this.sendLog(guild, unhideEmbed);
+          this.sendLog(guild, unhideEmbed).catch(() => {});
 
-          return interaction.reply({
-            embeds: [KikiEmbed.success('Channel Unhidden 👁️', 'Aapka channel ab sabhi ko dikhai dega!')],
-            ephemeral: true
+          return await replyOrEdit({
+            embeds: [KikiEmbed.success('Channel Unhidden 👁️', 'Aapka channel ab sabhi ko dikhai dega!')]
           });
         } catch (err) {
-          return interaction.reply({
-            embeds: [KikiEmbed.error('Unhide Error', `Error unhiding channel: ${err.message}`)],
-            ephemeral: true
+          return await replyOrEdit({
+            embeds: [KikiEmbed.error('Unhide Error', `Error unhiding channel: ${err.message}`)]
           });
         }
       }
 
-      // ── 5. Rename Modal Launcher ───────────────────────────────
-      if (customId === 'vm_rename') {
-        const modal = new ModalBuilder()
-          .setCustomId('vm_modal_rename')
-          .setTitle('✏️ Rename Voice Channel');
-
-        const nameInput = new TextInputBuilder()
-          .setCustomId('vm_input_rename')
-          .setLabel('Naya Channel Name Dalein')
-          .setStyle(TextInputStyle.Short)
-          .setPlaceholder('e.g. 🎧・Vibe Lounge')
-          .setValue(currentVc.name)
-          .setRequired(true)
-          .setMaxLength(50);
-
-        modal.addComponents(new ActionRowBuilder().addComponents(nameInput));
-        return await interaction.showModal(modal);
-      }
-
-      // ── 6. Limit Modal Launcher ────────────────────────────────
-      if (customId === 'vm_limit') {
-        const modal = new ModalBuilder()
-          .setCustomId('vm_modal_limit')
-          .setTitle('👥 Set Channel User Limit');
-
-        const limitInput = new TextInputBuilder()
-          .setCustomId('vm_input_limit')
-          .setLabel('User Limit (0 = Unlimited, Max = 99)')
-          .setStyle(TextInputStyle.Short)
-          .setPlaceholder('e.g. 5')
-          .setValue(currentVc.userLimit ? String(currentVc.userLimit) : '0')
-          .setRequired(true)
-          .setMaxLength(2);
-
-        modal.addComponents(new ActionRowBuilder().addComponents(limitInput));
-        return await interaction.showModal(modal);
-      }
-
-      // ── 7. Kick Modal Launcher ─────────────────────────────────
-      if (customId === 'vm_kick') {
-        const modal = new ModalBuilder()
-          .setCustomId('vm_modal_kick')
-          .setTitle('🚫 Kick Member from Channel');
-
-        const kickInput = new TextInputBuilder()
-          .setCustomId('vm_input_kick')
-          .setLabel('Member ka Username ya ID')
-          .setStyle(TextInputStyle.Short)
-          .setPlaceholder('Member username ya User ID')
-          .setRequired(true)
-          .setMaxLength(32);
-
-        modal.addComponents(new ActionRowBuilder().addComponents(kickInput));
-        return await interaction.showModal(modal);
-      }
-
-      // ── 8. Permit Modal Launcher ───────────────────────────────
-      if (customId === 'vm_permit') {
-        const modal = new ModalBuilder()
-          .setCustomId('vm_modal_permit')
-          .setTitle('🤝 Permit Member to Join');
-
-        const permitInput = new TextInputBuilder()
-          .setCustomId('vm_input_permit')
-          .setLabel('Member ka ID ya Mention dalein')
-          .setStyle(TextInputStyle.Short)
-          .setPlaceholder('User ID ya Username')
-          .setRequired(true)
-          .setMaxLength(32);
-
-        modal.addComponents(new ActionRowBuilder().addComponents(permitInput));
-        return await interaction.showModal(modal);
-      }
-
-      // ── 9. Delete ──────────────────────────────────────────────
+      // 6.6 Delete
       if (customId === 'vm_delete') {
         try {
-          const info = tempChannels.get(currentVc.id);
-          const durationMs = info?.createdAt ? Date.now() - info.createdAt : 0;
-          const durationStr = KIKI.formatDuration(Math.floor(durationMs / 1000));
+          const durationMs = tempInfo?.createdAt ? Date.now() - tempInfo.createdAt : 0;
+          const durationStr = KIKI.formatDuration(durationMs);
           const chName = currentVc.name;
 
           tempChannels.delete(currentVc.id);
           saveTempData();
-          await currentVc.delete(`Voice Master: Deleted by owner ${member.user.tag}`);
+          await currentVc.delete(`Voice Master: Deleted by ${member.user.tag}`);
 
           // Audit Log
           const delEmbed = KikiEmbed.build({
             title: '🗑️ Temporary Voice Channel Deleted',
             description:
-              `Voice channel owner ne apna channel manually delete kar diya.\n\n` +
+              `Voice channel manually delete kar diya gaya.\n\n` +
               `• 🔊 **Channel:** \`#${chName}\`\n` +
-              `• 👤 **Deleted By Owner:** ${member.user.toString()} (\`${member.user.tag}\`)\n` +
+              `• 👤 **Deleted By:** ${member.user.toString()} (\`${member.user.tag}\`)\n` +
               `• ⏱️ **Total Active Duration:** \`${durationStr || '0s'}\`\n` +
               `• ⏰ **Deleted At:** <t:${Math.floor(Date.now() / 1000)}:F>`,
             color: config.COLORS.RED || 0xE74C3C,
             footer: { text: `Voice Master Audit Logs • KIKI v${config.BOT_VERSION}` }
           });
-          this.sendLog(guild, delEmbed);
+          this.sendLog(guild, delEmbed).catch(() => {});
 
-          return interaction.reply({
-            embeds: [KikiEmbed.success('Channel Deleted 🗑️', 'Aapka temporary voice channel turant delete kar diya gaya!')],
-            ephemeral: true
+          return await replyOrEdit({
+            embeds: [KikiEmbed.success('Channel Deleted 🗑️', 'Aapka temporary voice channel turant delete kar diya gaya!')]
           });
         } catch (err) {
-          return interaction.reply({
-            embeds: [KikiEmbed.error('Delete Error', `Channel delete karne me error aaya: ${err.message}`)],
-            ephemeral: true
+          return await replyOrEdit({
+            embeds: [KikiEmbed.error('Delete Error', `Channel delete karne me error aaya: ${err.message}`)]
           });
         }
       }
