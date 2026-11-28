@@ -85,6 +85,14 @@ function extractActionDetails(prompt) {
     };
   }
 
+  // 5. AFK Voice Mover Panel intent
+  if (/\b(afk\s*panel|deaf\s*panel|afk\s*vala\s*panel|deafafkpanel)\b/i.test(p) || (/\b(afk|deaf)\b/i.test(p) && /\b(panel)\b/i.test(p))) {
+    return {
+      type: 'AFK_PANEL',
+      summary: 'AFK / Deaf Mover & Bypass Panel setup active.'
+    };
+  }
+
   return null;
 }
 
@@ -161,6 +169,26 @@ const LiveActionExecutor = {
         }
       } else if (intent.type === 'VOICE_LEVEL_CONFIG') {
         executedActions.push(`⚡ Voice Level Config Active: Voice XP rate set to 8-12 XP/min & announcements restricted to 10-level milestones (no spam pings).`);
+      } else if (intent.type === 'AFK_PANEL') {
+        try {
+          const panelCmd = require('../commands/admin/deafafkpanel.js');
+          const targetChannel = guild.channels.cache.find(c => c.isTextBased() && c.permissionsFor(botMember)?.has(PermissionFlagsBits.SendMessages));
+          if (targetChannel && typeof panelCmd.run === 'function') {
+            const mockMsg = {
+              guild,
+              channel: targetChannel,
+              member: botMember,
+              author: client.user,
+              reply: async (payload) => targetChannel.send(payload).catch(() => {})
+            };
+            await panelCmd.run(mockMsg, [], client);
+            executedActions.push(`💤 Deaf AFK Mover & Member Bypass Panel sent directly to #${targetChannel.name} (<#${targetChannel.id}>)!`);
+          } else {
+            executedActions.push(`💤 AFK Panel command configured and ready. In Discord use: &afkpanel or /deafafkpanel`);
+          }
+        } catch (e) {
+          executedActions.push(`💤 AFK Panel ready. Trigger in Discord via &afkpanel`);
+        }
       }
     }
 

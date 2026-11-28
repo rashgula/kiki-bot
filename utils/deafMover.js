@@ -68,6 +68,8 @@ const DeafMover = {
 
       const timeoutMinutes = Number(gData.deaf_timeout_minutes || cfg.deaf_timeout_minutes) || 10;
       const thresholdMs = timeoutMinutes * 60 * 1000;
+      const bypassUsers = Array.isArray(gData.afk_bypass_users) ? gData.afk_bypass_users : [];
+      const bypassRoles = Array.isArray(gData.afk_bypass_roles) ? gData.afk_bypass_roles : [];
 
       const botMember = guild.members.me;
       if (!botMember || !botMember.permissions.has(PermissionFlagsBits.MoveMembers)) {
@@ -99,16 +101,28 @@ const DeafMover = {
           continue;
         }
 
-        // If deaf, track start time if not already tracked
+        // Check if member is exempt/bypassed from AFK move (stays in VC even after being deafened)
+        const member = state.member || await guild.members.fetch(state.id).catch(() => null);
+        if (!member || member.user?.bot) {
+          deafTimestamps.delete(state.id);
+          continue;
+        }
+
+        const isBypassed = bypassUsers.includes(member.id) ||
+          (bypassRoles.length > 0 && member.roles.cache.some(r => bypassRoles.includes(r.id)));
+
+        if (isBypassed) {
+          deafTimestamps.delete(state.id);
+          continue;
+        }
+
+        // If deaf and not bypassed, track start time if not already tracked
         if (!deafTimestamps.has(state.id)) {
           deafTimestamps.set(state.id, Date.now());
         }
 
         const deafDurationMs = Date.now() - deafTimestamps.get(state.id);
         if (deafDurationMs >= thresholdMs) {
-          const member = state.member || await guild.members.fetch(state.id).catch(() => null);
-          if (!member || member.user.bot) continue;
-
           const oldVc = guild.channels.cache.get(state.channelId);
           const oldVcName = oldVc?.name || 'Voice Channel';
           const durationMins = Math.floor(deafDurationMs / 60000);

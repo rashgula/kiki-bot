@@ -1,9 +1,11 @@
-// KIKI Bot - Interactive Deaf AFK Voice Mover Setup Panel
+// KIKI Bot - Interactive Deaf AFK Voice Mover Setup Panel with Member & Role Bypass
 const {
   SlashCommandBuilder,
   PermissionFlagsBits,
   ActionRowBuilder,
   ChannelSelectMenuBuilder,
+  UserSelectMenuBuilder,
+  RoleSelectMenuBuilder,
   ButtonBuilder,
   ButtonStyle,
   ChannelType
@@ -25,6 +27,19 @@ function buildPanelEmbed(guild, stagedChannelId = null, notice = null) {
   const targetChannel = targetChannelId ? guild.channels.cache.get(targetChannelId) : null;
   const stagedChannel = stagedChannelId ? guild.channels.cache.get(stagedChannelId) : null;
 
+  const bypassUsers = Array.isArray(gData.afk_bypass_users) ? gData.afk_bypass_users : [];
+  const bypassRoles = Array.isArray(gData.afk_bypass_roles) ? gData.afk_bypass_roles : [];
+
+  let bypassUsersDisplay = '`None (Sabhi deaf members move honge)`';
+  if (bypassUsers.length > 0) {
+    bypassUsersDisplay = bypassUsers.map(id => `<@${id}>`).join(', ');
+  }
+
+  let bypassRolesDisplay = '`None`';
+  if (bypassRoles.length > 0) {
+    bypassRolesDisplay = bypassRoles.map(id => `<@&${id}>`).join(', ');
+  }
+
   const botMember = guild.members.me;
   const hasMovePerm = botMember?.permissions.has(PermissionFlagsBits.MoveMembers);
 
@@ -45,19 +60,23 @@ function buildPanelEmbed(guild, stagedChannelId = null, notice = null) {
     `• 🤖 **Bot Move Permission:** ${hasMovePerm ? '🟢 `Allowed (Move Members: OK)`' : '🔴 `Missing MoveMembers Permission!`'}\n` +
     `• 👥 **Currently Monitored Deaf Members:** \`${DeafMover.getTrackedCount()} members\`\n` +
     (stagedChannel ? `• 🟡 **Selected Staged Channel:** ${stagedChannel.toString()} *(Click "🚀 Run & Save Engine" button to activate!)*\n` : '') +
+    `\n🛡️ **AFK Bypass / Whitelist (Deaf hone par bhi VAHI rahenge):**\n` +
+    `• 👤 **Exempt Members:** ${bypassUsersDisplay}\n` +
+    `• 🏷️ **Exempt Roles:** ${bypassRolesDisplay}\n` +
     (!hasMovePerm ? '\n⚠️ **Warning:** KIKI ke paas **Move Members** permission nahi hai! Server Settings > Roles me KIKI ko Move Members permission dein.\n' : '') +
     `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-    `**⚡ Setup Kaise Karein?**\n` +
-    `1️⃣ Niche diye gaye **Voice Channel Dropdown** se wo channel chunein jahan deaf members ko move karna hai.\n` +
-    `2️⃣ **"🚀 Run & Save Engine"** button par click karein taaki mover start ho jaye.\n` +
-    `3️⃣ **"⚡ Scan & Move Now"** button se turant live test karein.`;
+    `**⚡ Setup & Control Kaise Karein?**\n` +
+    `1️⃣ **Step 1:** Voice Channel Dropdown se target AFK channel chunein.\n` +
+    `2️⃣ **Step 2 (Bypass Selection):** Dropdown se un members ya roles ko select karein jo **deaf hone ke baad bhi AFK na jayein**.\n` +
+    `3️⃣ **Step 3:** **"🚀 Run & Save Engine"** button click karke mover engine activate karein.\n` +
+    `4️⃣ **"⚡ Scan & Move Now"** button se turant live test karein.`;
 
   if (notice) {
     description = `${notice}\n\n` + description;
   }
 
   const embed = KikiEmbed.build({
-    title: `${KikiEmojis.SPARKLE} KIKI • Deaf AFK Voice Mover Panel ${KikiEmojis.FIRE}`,
+    title: `${KikiEmojis.SPARKLE} KIKI • Deaf AFK Voice Mover & Bypass Panel ${KikiEmojis.FIRE}`,
     description: `${KikiEmojis.header()}\n\n` + description,
     color: config.COLORS.GOLD || 0xF1C40F,
     footer: { text: `Deaf AFK Mover Engine • KIKI v${config.BOT_VERSION}` }
@@ -74,7 +93,23 @@ function buildPanelComponents(hasStaged = false) {
     .setChannelTypes([ChannelType.GuildVoice]);
   const row1 = new ActionRowBuilder().addComponents(channelSelect);
 
-  // Row 2: Control Buttons with Animated Custom Emojis
+  // Row 2: User Bypass Select Menu (Members who should stay in VC even when deaf)
+  const userSelect = new UserSelectMenuBuilder()
+    .setCustomId('dm_user_bypass_select')
+    .setPlaceholder('🛡️ Step 2: Member chunein jo deaf hone par bhi AFK na jaye...')
+    .setMinValues(1)
+    .setMaxValues(10);
+  const row2 = new ActionRowBuilder().addComponents(userSelect);
+
+  // Row 3: Role Bypass Select Menu (Roles whose members should stay in VC even when deaf)
+  const roleSelect = new RoleSelectMenuBuilder()
+    .setCustomId('dm_role_bypass_select')
+    .setPlaceholder('🏷️ Step 3: Role chunein jiske members deaf hone par bhi AFK na jaye...')
+    .setMinValues(1)
+    .setMaxValues(5);
+  const row3 = new ActionRowBuilder().addComponents(roleSelect);
+
+  // Row 4: Control Buttons with Animated Custom Emojis
   const runBtn = new ButtonBuilder()
     .setCustomId('dm_btn_run')
     .setLabel('Run & Save Engine')
@@ -93,15 +128,21 @@ function buildPanelComponents(hasStaged = false) {
     .setStyle(ButtonStyle.Primary)
     .setEmoji(KikiEmojis.btn('fire'));
 
+  const clearBypassBtn = new ButtonBuilder()
+    .setCustomId('dm_btn_clear_bypass')
+    .setLabel('Clear Bypass')
+    .setStyle(ButtonStyle.Secondary)
+    .setEmoji(KikiEmojis.btn('trash'));
+
   const refreshBtn = new ButtonBuilder()
     .setCustomId('dm_btn_refresh')
     .setLabel('Refresh')
     .setStyle(ButtonStyle.Secondary)
     .setEmoji(KikiEmojis.btn('loading'));
 
-  const row2 = new ActionRowBuilder().addComponents(runBtn, stopBtn, scanBtn, refreshBtn);
+  const row4 = new ActionRowBuilder().addComponents(runBtn, stopBtn, scanBtn, clearBypassBtn, refreshBtn);
 
-  return [row1, row2];
+  return [row1, row2, row3, row4];
 }
 
 module.exports = {
@@ -110,7 +151,7 @@ module.exports = {
 
   data: new SlashCommandBuilder()
     .setName('deafafkpanel')
-    .setDescription('💤 Open Deaf AFK Voice Mover panel (Auto-move 10+ min deaf members)')
+    .setDescription('💤 Open Deaf AFK Voice Mover & Bypass Panel (Select who never moves to AFK VC)')
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   async execute(interaction, client) {
@@ -128,7 +169,7 @@ module.exports = {
   },
 
   name: 'deafafkpanel',
-  aliases: ['deafafk', 'vcafk', 'afkmover', 'deafmover', 'deafpanel', 'vcafkpanel'],
+  aliases: ['afkpanel', 'deafafk', 'vcafk', 'afkmover', 'deafmover', 'deafpanel', 'vcafkpanel'],
   async run(message, args, client) {
     if (!KIKI.isSafe(message.guild, message.author.id, client)) {
       return message.reply({
@@ -180,7 +221,49 @@ module.exports = {
       return;
     }
 
-    // 2. Buttons
+    // 2. Member Bypass Selected in Menu
+    if (interaction.isUserSelectMenu() && customId === 'dm_user_bypass_select') {
+      const selectedUserIds = interaction.values;
+      const cfg = KIKI.loadConfig();
+      if (!cfg.guilds) cfg.guilds = {};
+      if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
+
+      const current = new Set(Array.isArray(cfg.guilds[guild.id].afk_bypass_users) ? cfg.guilds[guild.id].afk_bypass_users : []);
+      for (const uid of selectedUserIds) current.add(uid);
+      cfg.guilds[guild.id].afk_bypass_users = Array.from(current);
+      KIKI.saveConfig(cfg);
+
+      const notice = `🛡️ **AFK Bypass Members Added:** ${selectedUserIds.map(id => `<@${id}>`).join(', ')}\nYe members ab **deaf hone ke baad bhi AFK VC me nahi jayenge**, vahi rahenge!`;
+      const stagedId = stagedChannels.get(guild.id);
+      const embed = buildPanelEmbed(guild, stagedId, notice);
+      const components = buildPanelComponents(Boolean(stagedId));
+
+      await interaction.update({ embeds: [embed], components });
+      return;
+    }
+
+    // 3. Role Bypass Selected in Menu
+    if (interaction.isRoleSelectMenu() && customId === 'dm_role_bypass_select') {
+      const selectedRoleIds = interaction.values;
+      const cfg = KIKI.loadConfig();
+      if (!cfg.guilds) cfg.guilds = {};
+      if (!cfg.guilds[guild.id]) cfg.guilds[guild.id] = {};
+
+      const current = new Set(Array.isArray(cfg.guilds[guild.id].afk_bypass_roles) ? cfg.guilds[guild.id].afk_bypass_roles : []);
+      for (const rid of selectedRoleIds) current.add(rid);
+      cfg.guilds[guild.id].afk_bypass_roles = Array.from(current);
+      KIKI.saveConfig(cfg);
+
+      const notice = `🏷️ **AFK Bypass Roles Added:** ${selectedRoleIds.map(id => `<@&${id}>`).join(', ')}\nIn roles ke sabhi members ab **deaf hone ke baad bhi AFK VC me nahi jayenge**!`;
+      const stagedId = stagedChannels.get(guild.id);
+      const embed = buildPanelEmbed(guild, stagedId, notice);
+      const components = buildPanelComponents(Boolean(stagedId));
+
+      await interaction.update({ embeds: [embed], components });
+      return;
+    }
+
+    // 4. Buttons
     if (interaction.isButton()) {
       if (customId === 'dm_btn_run') {
         const stagedId = stagedChannels.get(guild.id);
@@ -222,7 +305,7 @@ module.exports = {
         // Run immediate scan
         const scanRes = await DeafMover.checkAndMove(client, guild).catch(() => ({ moved: 0 }));
 
-        let notice = `✅ **Deaf AFK Mover Successfully RUNNING & SAVED!**\nTarget AFK Channel: ${targetChannel.toString()} (\`${targetChannel.name}\`)\n• Ab jo bhi member 10 minute se zyada deaf rahega, bot use auto-move kar dega!`;
+        let notice = `✅ **Deaf AFK Mover Successfully RUNNING & SAVED!**\nTarget AFK Channel: ${targetChannel.toString()} (\`${targetChannel.name}\`)\n• Jo members bypass list me nahi hain, wo 10 minute deaf rehne par auto-move honge!`;
         if (scanRes.moved > 0) {
           notice += `\n⚡ **Instant Action:** ${scanRes.moved} already deaf member(s) were moved right now!`;
         }
@@ -257,10 +340,26 @@ module.exports = {
             'Instant Scan Complete ⚡',
             `**Voice States Checked:** \`${res.checked}\`\n` +
             `**Deaf Members Moved:** \`${res.moved}\`\n\n` +
-            `*(Members must be continuously deafened for 10+ minutes to trigger move).*`
+            `*(Bypassed members will never be moved even if deaf).*`
           )],
           ephemeral: true
         });
+      }
+
+      if (customId === 'dm_btn_clear_bypass') {
+        const cfg = KIKI.loadConfig();
+        if (cfg.guilds?.[guild.id]) {
+          cfg.guilds[guild.id].afk_bypass_users = [];
+          cfg.guilds[guild.id].afk_bypass_roles = [];
+          KIKI.saveConfig(cfg);
+        }
+        const notice = '🗑️ **AFK Bypass List Reset!** Sabhi bypass users aur roles clear kar diye gaye hain.';
+        const stagedId = stagedChannels.get(guild.id);
+        const embed = buildPanelEmbed(guild, stagedId, notice);
+        const components = buildPanelComponents(Boolean(stagedId));
+
+        await interaction.update({ embeds: [embed], components });
+        return;
       }
 
       if (customId === 'dm_btn_refresh') {

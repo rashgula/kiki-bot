@@ -686,6 +686,7 @@
         "category": "admin",
         "description": "💤 Open Deaf AFK Voice Mover panel (Auto-move 10+ min deaf members)",
         "aliases": [
+          "afkpanel",
           "deafafk",
           "vcafk",
           "afkmover",
