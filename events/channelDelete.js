@@ -10,7 +10,7 @@ module.exports = {
     // Ignore Voice Master temporary voice channels
     try {
       const VoiceMaster = require('../utils/voiceMaster.js');
-      if (VoiceMaster.isTempChannel(channel.id)) return;
+      if (VoiceMaster.isTempChannel(channel.id, channel)) return;
     } catch {}
 
     const cfg = KIKI.loadConfig();

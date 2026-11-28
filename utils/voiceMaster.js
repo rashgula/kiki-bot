@@ -61,8 +61,21 @@ const VoiceMaster = {
     return tempChannels.size;
   },
 
-  isTempChannel(channelId) {
-    return tempChannels.has(channelId);
+  isTempChannel(channelId, channel = null) {
+    if (tempChannels.has(channelId)) return true;
+    if (channel) {
+      const cfg = KIKI.loadConfig();
+      const gData = cfg.guilds?.[channel.guild?.id] || {};
+      const joinChannelId = gData.voice_master_channel_id || cfg.voice_master_channel_id;
+      const categoryId = gData.voice_master_category_id || cfg.voice_master_category_id;
+      if (categoryId && channel.parentId === categoryId && channel.id !== joinChannelId) {
+        return true;
+      }
+      if (channel.name && (channel.name.includes("'s Lounge") || channel.name.startsWith('🔊・'))) {
+        return true;
+      }
+    }
+    return false;
   },
 
   getTempChannel(channelId) {
@@ -313,6 +326,48 @@ const VoiceMaster = {
     if (cleaned > 0) {
       console.log(chalk.yellow(`[VOICE MASTER] Cleaned up ${cleaned} orphaned temp voice channel(s).`));
     }
+
+    // Start background auto-cleanup watchdog for empty temporary channels
+    this.startWatchdog(client);
+  },
+
+  // ── Auto-Cleanup Watchdog for Empty Temporary Channels ─────────
+  startWatchdog(client) {
+    if (this._watchdogInterval) return;
+    this._watchdogInterval = setInterval(() => {
+      this.cleanupAllEmptyChannels(client).catch(() => {});
+    }, 25000);
+  },
+
+  async cleanupAllEmptyChannels(client) {
+    if (!client || !client.isReady?.()) return;
+    const cfg = KIKI.loadConfig();
+
+    for (const guild of client.guilds.cache.values()) {
+      const gData = cfg.guilds?.[guild.id] || {};
+      const joinChannelId = gData.voice_master_channel_id || (guild.channels.cache.has(cfg.voice_master_channel_id) ? cfg.voice_master_channel_id : null);
+      const categoryId = gData.voice_master_category_id || (guild.channels.cache.has(cfg.voice_master_category_id) ? cfg.voice_master_category_id : null);
+      if (!categoryId) continue;
+
+      const category = guild.channels.cache.get(categoryId) || await guild.channels.fetch(categoryId).catch(() => null);
+      if (!category) continue;
+
+      const children = guild.channels.cache.filter(
+        c => c.parentId === category.id &&
+             c.type === ChannelType.GuildVoice &&
+             c.id !== joinChannelId
+      );
+
+      for (const ch of children.values()) {
+        const humanCount = ch.members.filter(m => !m.user?.bot).size;
+        if (humanCount === 0) {
+          tempChannels.delete(ch.id);
+          await ch.delete('Voice Master: Auto-cleaned empty channel (all members left or removed)').catch(() => {});
+          console.log(chalk.gray(`  🗑️ [VOICE MASTER WATCHDOG] Deleted empty temp VC #${ch.name}`));
+        }
+      }
+    }
+    saveTempData();
   },
 
   // ── Voice State Update Handler ────────────────────────────────
@@ -409,34 +464,46 @@ const VoiceMaster = {
       return;
     }
 
-    // ── 2. User Left a Voice Channel ─────────────────────────────
+    // ── 2. User Left / Removed from a Voice Channel ──────────────
     if (oldState.channelId && oldState.channelId !== newState.channelId) {
       const oldChannelId = oldState.channelId;
-      if (tempChannels.has(oldChannelId)) {
-        const oldChannel = oldState.channel || guild.channels.cache.get(oldChannelId);
-        if (oldChannel) {
-          // Check if channel is now empty
-          if (oldChannel.members.size === 0) {
+      let oldChannel = oldState.channel || guild.channels.cache.get(oldChannelId);
+      if (!oldChannel && oldChannelId) {
+        oldChannel = await guild.channels.fetch(oldChannelId).catch(() => null);
+      }
+
+      if (oldChannel && oldChannelId !== joinChannelId) {
+        const isTracked = tempChannels.has(oldChannelId);
+        const isUnderVmCategory = categoryId && oldChannel.parentId === categoryId;
+        const isNamedLikeVm = oldChannel.name && (oldChannel.name.includes("'s Lounge") || oldChannel.name.startsWith('🔊・'));
+        const isVmChannel = isTracked || isUnderVmCategory || isNamedLikeVm;
+
+        if (isVmChannel) {
+          // Count remaining human members excluding the leaving member
+          const remainingHumans = oldChannel.members.filter(m => !m.user?.bot && m.id !== member.id && m.voice?.channelId === oldChannelId);
+
+          if (remainingHumans.size === 0) {
             try {
               const info = tempChannels.get(oldChannelId);
-              const durationMs = info?.createdAt ? Date.now() - info.createdAt : 0;
+              const durationMs = info?.createdAt ? Date.now() - info.createdAt : (oldChannel.createdTimestamp ? Date.now() - oldChannel.createdTimestamp : 0);
               const durationStr = KIKI.formatDuration(durationMs);
+              const chName = oldChannel.name;
 
               tempChannels.delete(oldChannelId);
               saveTempData();
-              const chName = oldChannel.name;
-              await oldChannel.delete('Voice Master: Temporary channel became empty');
+
+              await oldChannel.delete('Voice Master: All members left or were removed from temporary channel').catch(() => {});
               console.log(chalk.gray(`  🗑️ [VOICE MASTER] Deleted empty temp VC #${chName}`));
 
               // ── Voice Master Log: Channel Deleted (Empty) ──────
               const delEmbed = KikiEmbed.build({
                 title: '🗑️ Temporary Voice Channel Deleted',
                 description:
-                  `Temporary voice channel empty ho gaya aur use automatically delete kar diya gaya.\n\n` +
+                  `Temporary voice channel se sabhi members hat gaye/chale gaye aur use automatically delete kar diya gaya.\n\n` +
                   `• 🔊 **Channel:** \`#${chName}\`\n` +
                   `• 👤 **Original Creator/Owner:** ${info?.ownerId ? `<@${info.ownerId}> (\`${info.ownerId}\`)` : '`Unknown`'}\n` +
                   `• ⏱️ **Active Duration:** \`${durationStr || '0s'}\`\n` +
-                  `• ℹ️ **Reason:** \`Channel became empty (all members left)\`\n` +
+                  `• ℹ️ **Reason:** \`Channel became empty (all members left or removed)\`\n` +
                   `• ⏰ **Deleted At:** <t:${Math.floor(Date.now() / 1000)}:F>`,
                 color: config.COLORS.RED || 0xE74C3C,
                 footer: { text: `Voice Master Audit Logs • KIKI v${config.BOT_VERSION}` }
@@ -445,6 +512,22 @@ const VoiceMaster = {
             } catch (err) {
               console.error('[VOICE MASTER DELETE ERROR]', err.message);
             }
+          } else {
+            // Secondary fallback check after 1.2s to handle any async disconnect race condition
+            setTimeout(async () => {
+              try {
+                const freshCh = guild.channels.cache.get(oldChannelId) || await guild.channels.fetch(oldChannelId).catch(() => null);
+                if (freshCh) {
+                  const freshHumans = freshCh.members.filter(m => !m.user?.bot);
+                  if (freshHumans.size === 0) {
+                    tempChannels.delete(oldChannelId);
+                    saveTempData();
+                    await freshCh.delete('Voice Master: Auto-deleted empty temporary channel (fallback check)').catch(() => {});
+                    console.log(chalk.gray(`  🗑️ [VOICE MASTER FALLBACK] Deleted empty temp VC #${freshCh.name}`));
+                  }
+                }
+              } catch {}
+            }, 1200);
           }
         }
       }
