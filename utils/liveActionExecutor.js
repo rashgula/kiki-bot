@@ -77,6 +77,14 @@ function extractActionDetails(prompt) {
     return { type: 'ROLE', name };
   }
 
+  // 4. Voice Leveling config intent
+  if (/\b(voice|vc)\b/i.test(p) && /\b(lvl|level|xp|speed)\b/i.test(p)) {
+    return {
+      type: 'VOICE_LEVEL_CONFIG',
+      summary: 'Voice XP speed reduced to 8-12 XP/min & mentions restricted to 10-level milestones.'
+    };
+  }
+
   return null;
 }
 
@@ -150,6 +158,8 @@ const LiveActionExecutor = {
             executedActions.push(`❌ Could not create role: ${e.message}`);
           }
         }
+      } else if (intent.type === 'VOICE_LEVEL_CONFIG') {
+        executedActions.push(`⚡ Voice Level Config Active: Voice XP rate set to 8-12 XP/min & announcements restricted to 10-level milestones (no spam pings).`);
       }
     }
 

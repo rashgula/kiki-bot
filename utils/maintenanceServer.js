@@ -398,14 +398,24 @@ module.exports = {
 
     const testRes = await DevTests.runVerificationSuite({ actor: session, draftFiles });
     if (!testRes.passed) {
+      const failStep = testRes.results?.find(r => !r.passed);
+      const detailMsg = failStep?.detail || failStep?.step || 'Sandbox verification check failed.';
       return sendJson(res, 400, {
         stage: 'test_failed',
-        error: 'Sandbox tests failed. Fix error before submitting.',
+        error: `Sandbox test failed: ${detailMsg}`,
         diagnosis,
         testResults: testRes.results,
         proposedEdits: draftFiles
       });
     }
+
+    // Execute live Discord server action automatically so user never has to enter a command manually!
+    const liveAction = await LiveActionExecutor.execute({
+      client,
+      prompt,
+      files: draftFiles,
+      actor: session
+    }).catch(e => ({ executed: false, summary: `Live execution error: ${e.message}` }));
 
     const prRes = await GitHubIntegration.commitAndOpenPullRequest({
       actor: session,
@@ -421,17 +431,10 @@ module.exports = {
         error: prRes.error,
         diagnosis,
         testResults: testRes.results,
-        proposedEdits: draftFiles
+        proposedEdits: draftFiles,
+        liveAction
       });
     }
-
-    // Execute live Discord server action automatically so user never has to enter a command manually!
-    const liveAction = await LiveActionExecutor.execute({
-      client,
-      prompt,
-      files: draftFiles,
-      actor: session
-    }).catch(e => ({ executed: false, summary: `Live execution error: ${e.message}` }));
 
     const notifyOut = await notifyOwnerPrAndMaybeAutoDeploy(client, session, prRes, prompt, diagnosis?.errorFixed, liveAction);
     return sendJson(res, 200, {

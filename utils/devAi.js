@@ -30,12 +30,22 @@ function listEditableFiles(maxFiles = 400) {
   return results.sort();
 }
 
+const HINGLISH_STOP_WORDS = new Set([
+  'ki', 'ke', 'ka', 'ko', 'se', 'me', 'pe', 'par', 'kro', 'karo', 'kre', 'kare', 'kar', 'do', 'de',
+  'bna', 'bana', 'bnado', 'banado', 'aur', 'and', 'hai', 'he', 'ye', 'yehi', 'har', 'sirf', 'aisa',
+  'aise', 'the', 'is', 'in', 'at', 'to', 'for', 'on', 'with', 'by', 'of', 'a', 'an', 'or', 'not',
+  'na', 'nahi', 'kuch', 'bhi', 'krr', 'kam', 'badhao', 'kardo', 'krdo', 'btao', 'batao', 'ek'
+]);
+
 function findRelevantFiles(query, client = null, limit = 8) {
   const qLower = String(query || '').toLowerCase();
-  const words = qLower
+  const rawWords = qLower
     .replace(/^[&/!]/, '')
     .split(/[^a-z0-9_-]+/)
     .filter(w => w.length >= 2);
+
+  const meaningfulWords = rawWords.filter(w => !HINGLISH_STOP_WORDS.has(w) && w.length >= 3);
+  const words = meaningfulWords.length > 0 ? meaningfulWords : rawWords;
 
   const candidates = new Map();
   function scoreFile(rel, score, reason) {
@@ -44,7 +54,26 @@ function findRelevantFiles(query, client = null, limit = 8) {
     if (!prev || prev.score < score) candidates.set(rel, { path: rel, score, reason });
   }
 
-  // 1. Check command aliases directly from live bot client
+  // A. High-priority semantic concept boosting
+  if (/\b(voice|vc|vcs|level|levels|lvl|xp|rank|leaderboard|vclevel|vcrank)\b/i.test(qLower)) {
+    scoreFile('utils/leveling.js', 110, 'Core Voice/Chat Leveling Engine match');
+    scoreFile('events/voiceStateUpdate.js', 80, 'Voice state update event');
+    scoreFile('commands/utility/rank.js', 75, 'Rank progress card command');
+    scoreFile('commands/utility/leaderboard.js', 75, 'Leaderboard top XP command');
+  }
+  if (/\b(voice\s*channel|vc|cvc|makevc|create-vc)\b/i.test(qLower)) {
+    scoreFile('commands/admin/create-vc.js', 105, 'Voice channel creator command');
+  }
+  if (/\b(welcome|goodbye|join|leave)\b/i.test(qLower)) {
+    scoreFile('events/guildMemberAdd.js', 95, 'Member join welcome event');
+    scoreFile('events/guildMemberRemove.js', 95, 'Member leave goodbye event');
+  }
+  if (/\b(auto\s*role|autorole|role|roles)\b/i.test(qLower)) {
+    scoreFile('commands/admin/autorole.js', 95, 'Auto-role configuration command');
+    scoreFile('commands/admin/autorolepanel.js', 85, 'Auto-role panel command');
+  }
+
+  // B. Check command aliases directly from live bot client
   if (client?.prefixCommands) {
     for (const w of words) {
       const cmd = client.prefixCommands.get(w);
@@ -53,25 +82,30 @@ function findRelevantFiles(query, client = null, limit = 8) {
         const cat = cmd.category || 'utility';
         const guess = `commands/${cat}/${nameGuess}.js`;
         if (fs.existsSync(path.join(DevPolicy.REPO_ROOT, guess))) {
-          scoreFile(guess, 100, `Exact command/alias match for '${w}'`);
+          scoreFile(guess, 120, `Exact command/alias match for '${w}'`);
         }
       }
     }
   }
 
-  // 2. Score by filename & lightweight content search across allowed files
+  // C. Score by filename & lightweight content search across allowed files
   const all = listEditableFiles(1300);
   for (const rel of all) {
     let score = 0;
     const lowerRel = rel.toLowerCase();
+    const baseName = path.basename(lowerRel, '.js');
+
     for (const w of words) {
-      if (lowerRel.includes(w)) score += 15;
+      if (baseName === w) score += 60;
+      else if (baseName.includes(w)) score += 25;
+      else if (lowerRel.includes(w)) score += 10;
     }
+
     if (score === 0 && words.length > 0 && !lowerRel.includes('util-tool-') && !lowerRel.includes('gothic-fun-')) {
       try {
         const content = fs.readFileSync(path.join(DevPolicy.REPO_ROOT, rel), 'utf8').toLowerCase();
         for (const w of words) {
-          if (w.length >= 4 && content.includes(w)) score += 6;
+          if (w.length >= 4 && content.includes(w)) score += 8;
         }
       } catch {}
     }

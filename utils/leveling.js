@@ -299,7 +299,7 @@ const Leveling = {
   },
 
   // Award Voice XP (per-minute tick or positive admin boost)
-  async addVoiceXp(guild, member, xpAmount = 20, seconds = 60) {
+  async addVoiceXp(guild, member, xpAmount = 10, seconds = 60) {
     if (!guild || !member || member.user?.bot) return null;
     const gain = Math.max(0, Math.floor(Number(xpAmount) || 0));
     const secGain = Math.max(0, Math.floor(Number(seconds) || 0));
@@ -405,15 +405,20 @@ const Leveling = {
           });
         }
 
+        // Only mention member on every 10 levels increase (e.g. Level 10, 20, 30...)
+        const isMilestone = (newLevel % 10 === 0);
         const embed = KikiEmbed.build({
-          title: `${KikiEmojis.SPARKLE} LEVEL UP! Voice Master ${KikiEmojis.FIRE}`,
+          title: `${KikiEmojis.SPARKLE} LEVEL UP! Voice Master ${isMilestone ? '🔥 (Milestone Tier)' : ''}`,
           description: `${KikiEmojis.goodbyeBanner()}\n\nCongratulations ${member.user.toString()}! Aap **Level ${newLevel}** par pahunch gaye hain! ${KikiEmojis.HEART}`,
           color: config.COLORS.PRIMARY || 0x9B59B6,
           thumbnail: member.user.displayAvatarURL({ dynamic: true }),
           fields
         });
 
-        await channel.send({ content: `${member.user.toString()}`, embeds: [embed] }).catch(() => {});
+        const msgPayload = isMilestone
+          ? { content: `${member.user.toString()}`, embeds: [embed] }
+          : { embeds: [embed] };
+        await channel.send(msgPayload).catch(() => {});
       }
     } catch (err) {
       console.error('[LEVEL UP HANDLER ERROR]', err.message);
@@ -472,8 +477,8 @@ const Leveling = {
             const vc = guild.channels.cache.get(channelId);
             const vcName = vc?.name || 'Voice Channel';
 
-            // Award 18-23 XP per minute (standard Voice XP)
-            const xpGain = Math.floor(Math.random() * 6) + 18;
+            // Award reduced & balanced Voice XP (8-12 XP per minute instead of 18-23)
+            const xpGain = Math.floor(Math.random() * 5) + 8;
             const res = await this.addVoiceXp(guild, member, xpGain, 60);
 
             if (res) {

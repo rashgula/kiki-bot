@@ -740,7 +740,7 @@ async function sendDiscordBootAlert(guild, stats) {
         `🏷️ **Auto-Role on Join:** ${autoRoleObj ? '🟢 ' + autoRoleDisplay : '⚪ `' + autoRoleDisplay + '`'}\n` +
         `💤 **Deaf AFK Mover:** ${deafMoverActive ? '🟢 ' + deafMoverDisplay : '⚪ `' + deafMoverDisplay + '`'}\n` +
         `📩 **Invite Tracker:** 🟢 ${inviteTrackerDisplay}\n` +
-        `🎙️ **Voice XP Engine:** 🟢 \`RUNNING (18-23 XP/min in VC)\`\n` +
+        `🎙️ **Voice XP Engine:** 🟢 \`RUNNING (8-12 XP/min in VC)\`\n` +
         `💬 **Chat XP Engine:** ${isChatXpOn ? '🟢 `RUNNING (15-25 XP/msg • No Roles)`' : '🔴 `PAUSED`'}\n` +
         `💾 **Auto-Replayed Commands:** 🟢 \`${require('./commandAutoExec.js').getSavedCommands().length} Commands Auto-Run on Boot\`\n` +
         `🔒 **Security Whitelist:** 🟢 \`${(cfg.whitelist || []).length} Whitelisted Members\`\n` +
@@ -832,7 +832,7 @@ module.exports = {
     console.log(chalk.bold.white('   🔊 Voice Master        : ') + (cfg.voice_master_enabled ? chalk.bold.green(`Active (VC: ${cfg.voice_master_channel_id || 'OK'} | Logs: ${cfg.voice_master_log_channel_id || 'Linked'})`) : chalk.bold.gray('Not Configured')));
     console.log(chalk.bold.white('   📩 Invite Tracker      : ') + chalk.bold.green(`Active (Channel: ${cfg.invite_tracker_channel_id ? 'Configured' : 'Auto-Setup Ready'})`));
     console.log(chalk.bold.white('   💾 Auto-Replay Cmds    : ') + chalk.bold.green(`${require('./commandAutoExec.js').getSavedCommands().length} Commands Auto-Run on Boot ✅`));
-    console.log(chalk.bold.white('   🎙️ Voice XP Engine     : ') + chalk.bold.green('RUNNING (18-23 XP/min in VC)'));
+    console.log(chalk.bold.white('   🎙️ Voice XP Engine     : ') + chalk.bold.green('RUNNING (8-12 XP/min in VC)'));
     console.log(chalk.bold.white('   💬 Chat XP Engine      : ') + chalk.bold.green('RUNNING (15-25 XP/msg • No Roles)'));
     console.log(chalk.bold.white('   💾 Persistent Memory   : ') + chalk.bold.green('ZERO SETUP NEEDED ON REBOOT! ✅'));
     console.log(chalk.bold.magenta('  ═════════════════════════════════════════════════════════\n'));
