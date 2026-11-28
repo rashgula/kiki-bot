@@ -189,7 +189,8 @@ const GitHubIntegration = {
     const repo = summary.repo;
     const mainBranch = summary.mainBranch;
     const maintBaseBranch = summary.maintenanceBranch || 'bot-maintenance';
-    const slug = String(title || 'fix').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 32) || 'fix';
+    const rawSlug = String(title || 'fix').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 32);
+    const slug = rawSlug.replace(/-+$/, '') || 'fix';
     // Use flat branch prefix (maint-...) without subdirectories to prevent Git D/F conflict with existing bot-maintenance branch!
     let fixBranch = `maint-${slug}-${Date.now().toString(36)}`;
 
@@ -232,21 +233,29 @@ const GitHubIntegration = {
       );
       const newCommitSha = newCommitRes.data.sha;
 
-      // 4. Create branch pointing directly to newCommitSha (Single atomic operation, zero race condition or PATCH failure)
-      try {
-        await axios.post(
-          `${API_BASE}/repos/${repo}/git/refs`,
-          { ref: `refs/heads/${fixBranch}`, sha: newCommitSha },
-          { headers: auth.headers, timeout: 10000 }
-        );
-      } catch (refErr) {
-        const altBranch = `maint-${slug}-${Date.now().toString(36)}-${crypto.randomBytes(2).toString('hex')}`;
-        await axios.post(
-          `${API_BASE}/repos/${repo}/git/refs`,
-          { ref: `refs/heads/${altBranch}`, sha: newCommitSha },
-          { headers: auth.headers, timeout: 10000 }
-        );
-        fixBranch = altBranch;
+      // 4. Create branch pointing directly to newCommitSha with resilient retry to avoid transient GitHub replication lag
+      let branchCreated = false;
+      let lastRefErr = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const branchName = attempt === 0
+            ? fixBranch
+            : `maint-${slug}-${Date.now().toString(36)}-${crypto.randomBytes(2).toString('hex')}`;
+          await axios.post(
+            `${API_BASE}/repos/${repo}/git/refs`,
+            { ref: `refs/heads/${branchName}`, sha: newCommitSha },
+            { headers: auth.headers, timeout: 10000 }
+          );
+          fixBranch = branchName;
+          branchCreated = true;
+          break;
+        } catch (rErr) {
+          lastRefErr = rErr;
+          await new Promise(r => setTimeout(r, 400 * (attempt + 1)));
+        }
+      }
+      if (!branchCreated && lastRefErr) {
+        throw lastRefErr;
       }
 
       // 5. Keep dedicated bot-maintenance branch synced with latest maintenance commits

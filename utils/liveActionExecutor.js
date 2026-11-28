@@ -89,6 +89,7 @@ function extractActionDetails(prompt) {
 }
 
 const LiveActionExecutor = {
+  extractActionDetails,
   async execute({ client, prompt, files = [], actor = null }) {
     if (!client || !client.isReady?.()) {
       return { executed: false, summary: 'Discord bot client is not connected for live action execution.' };

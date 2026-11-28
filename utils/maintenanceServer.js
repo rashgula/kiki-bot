@@ -371,6 +371,22 @@ module.exports = {
 
     if (draftFiles.length === 0) {
       if (!prompt) return sendJson(res, 400, { error: 'CMD / problem box me kuch likhein ya file edit save karein.' });
+
+      // Immediate live Discord server action check (e.g. "ek voice channel bnado yashu vc name se")
+      const directIntent = LiveActionExecutor.extractActionDetails ? LiveActionExecutor.extractActionDetails(prompt) : null;
+      if (directIntent && client && client.isReady?.()) {
+        const liveRes = await LiveActionExecutor.execute({ client, prompt, files: [], actor: session }).catch(e => ({ executed: false, summary: e.message }));
+        if (liveRes.executed) {
+          return sendJson(res, 200, {
+            stage: 'completed',
+            success: true,
+            liveAction: liveRes,
+            filesModified: [],
+            message: `⚡ Live Discord Action Executed Successfully!\n${liveRes.summary}`
+          });
+        }
+      }
+
       diagnosis = await DevAi.analyzeAndGenerateFix({
         prompt,
         targetPaths: Array.isArray(body.targetPaths) ? body.targetPaths : [],
@@ -379,6 +395,19 @@ module.exports = {
       if (diagnosis.proposedEdits && diagnosis.proposedEdits.length > 0) {
         draftFiles = diagnosis.proposedEdits.map(e => ({ path: e.path, content: e.content, summary: e.summary }));
       } else {
+        // Fallback: If LiveActionExecutor can handle it even after AI analysis
+        if (directIntent) {
+          const liveRes = await LiveActionExecutor.execute({ client, prompt, files: [], actor: session }).catch(e => ({ executed: false, summary: e.message }));
+          if (liveRes.executed) {
+            return sendJson(res, 200, {
+              stage: 'completed',
+              success: true,
+              liveAction: liveRes,
+              filesModified: [],
+              message: `⚡ Live Discord Action Executed Successfully!\n${liveRes.summary}`
+            });
+          }
+        }
         return sendJson(res, 200, {
           stage: 'needs_edit',
           aiPowered: diagnosis.aiPowered,
@@ -426,6 +455,17 @@ module.exports = {
     });
 
     if (!prRes.success) {
+      if (liveAction && liveAction.executed) {
+        return sendJson(res, 200, {
+          stage: 'completed',
+          success: true,
+          liveAction,
+          diagnosis,
+          testResults: testRes.results,
+          filesModified: draftFiles.map(f => f.path),
+          message: `⚡ Live Discord Action Executed Successfully!\n${liveAction.summary}\n(Note: Code PR skipped: ${prRes.error})`
+        });
+      }
       return sendJson(res, 400, {
         stage: 'github_failed',
         error: prRes.error,
